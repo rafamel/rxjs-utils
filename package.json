@@ -1,6 +1,6 @@
 {
   "name": "rxjs-utils",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "Rafa Mel",
   "description": "RxJS 6 observable creation utils and operators",
   "keywords": [
