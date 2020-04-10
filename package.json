@@ -68,7 +68,9 @@
     "rxjs": "^6.5.4",
     "typescript": "^3.6.4"
   },
-  "dependencies": {},
+  "dependencies": {
+    "equal-strategies": "^0.1.0"
+  },
   "peerDependencies": {
     "rxjs": "6.x"
   },
