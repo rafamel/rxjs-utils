@@ -1,11 +1,16 @@
 # Project Specific #
 ####################
+pkg
+build
+deploy
+lib
+dist
+out
+_test*
+.npmrc
 
 # Node, Frameworks, Editors #
 #############################
-_test.js
-build
-dist
 .cache
 .env
 .env.local
@@ -13,6 +18,7 @@ dist
 .env.test.local
 .env.production.local
 coverage
+hint-report
 node_modules
 npm-debug.log
 
@@ -43,6 +49,7 @@ npm-debug.log
 *.log
 *.sql
 *.sqlite
+*.db
 
 # OS generated files #
 ######################

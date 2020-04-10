@@ -1,21 +1,15 @@
-# rxjs-utils
+# multitude
 
-<!-- [![Version](https://img.shields.io/github/package-json/v/rafamel/rxjs-utils.svg)](https://github.com/rafamel/rxjs-utils)
-[![Build Status](https://travis-ci.org/rafamel/rxjs-utils.svg)](https://travis-ci.org/rafamel/rxjs-utils)
-[![Coverage](https://img.shields.io/coveralls/rafamel/rxjs-utils.svg)](https://coveralls.io/github/rafamel/rxjs-utils)
-[![Dependencies](https://david-dm.org/rafamel/rxjs-utils/status.svg)](https://david-dm.org/rafamel/rxjs-utils)
-[![Vulnerabilities](https://snyk.io/test/npm/rxjs-utils/badge.svg)](https://snyk.io/test/npm/rxjs-utils)
-[![Issues](https://img.shields.io/github/issues/rafamel/rxjs-utils.svg)](https://github.com/rafamel/rxjs-utils/issues)
-[![License](https://img.shields.io/github/license/rafamel/rxjs-utils.svg)](https://github.com/rafamel/rxjs-utils/blob/master/LICENSE) -->
+[![Version](https://img.shields.io/npm/v/multitude.svg)](https://www.npmjs.com/package/multitude)
+[![Build Status](https://img.shields.io/travis/rafamel/multitude/master.svg)](https://travis-ci.org/rafamel/multitude)
+[![Coverage](https://img.shields.io/coveralls/rafamel/multitude/master.svg)](https://coveralls.io/github/rafamel/multitude)
+[![Dependencies](https://img.shields.io/david/rafamel/multitude.svg)](https://david-dm.org/rafamel/multitude)
+[![Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/npm/multitude.svg)](https://snyk.io/test/npm/multitude)
+[![License](https://img.shields.io/github/license/rafamel/multitude.svg)](https://github.com/rafamel/multitude/blob/master/LICENSE)
+[![Types](https://img.shields.io/npm/types/multitude.svg)](https://www.npmjs.com/package/multitude)
 
-<!-- markdownlint-disable MD036 -->
-**RxJS 6 observable creation utils and operators**
-<!-- markdownlint-enable MD036 -->
+> A collection of Observable operators and utilities.
 
-## EXPERIMENTAL
+## Install
 
-<!-- ## Install
-
-[`npm install rxjs-utils`](https://www.npmjs.com/package/rxjs-utils)
-
-## Usage -->
+[`npm install multitude`](https://www.npmjs.com/package/multitude)
