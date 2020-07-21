@@ -1,31 +1,26 @@
 import SymbolObservable from 'symbol-observable';
-import {
-  Subscriber,
-  ObservableSpec,
-  Observer,
-  CompatibleObservableSpec
-} from './definitions';
-import { Internal } from '../helpers/Internal';
+import { SafeInternal } from '../helpers/safe-internal';
 import { Subscription } from './Subscription';
+import { Observables as Types } from '@definitions';
 
-const symbol = Symbol('internal');
+type SafeProperties<T> = SafeInternal<{
+  subscriber: Types.Subscriber<T>;
+}>;
 
-type ObservableInternal<T> = Internal<
-  typeof symbol,
-  {
-    subscriber: Subscriber<T>;
-  }
->;
+const map = new WeakMap();
 
-export class Observable<T = any>
-  implements AsyncIterable<T>, ObservableSpec<T> {
+export class Observable<T = any> implements Types.Observable<T> {
   public static of<T>(...items: T[]): Observable<T> {
     return Observable.from(items);
   }
   public static from<T>(
-    item: ObservableSpec<T> | CompatibleObservableSpec<T> | Iterable<T>
+    item: Types.Observable<T> | Types.Compatible<T> | Iterable<T>
   ): Observable<T> {
     const value: any = item;
+
+    if (value instanceof Observable) {
+      return value;
+    }
 
     if (typeof value === 'object' && value !== null) {
       // Observables
@@ -61,9 +56,9 @@ export class Observable<T = any>
       'Invalid type: must receive an Observable or Iterable object'
     );
   }
-  private internal: ObservableInternal<T>;
-  public constructor(subscriber: Subscriber<T>) {
-    this.internal = new Internal(symbol, { subscriber });
+  private safe: SafeProperties<T>;
+  public constructor(subscriber: Types.Subscriber<T>) {
+    this.safe = new SafeInternal(this, map, { subscriber });
   }
   public ['@@observable'](): Observable<T> {
     return this;
@@ -71,26 +66,18 @@ export class Observable<T = any>
   public [SymbolObservable](): Observable<T> {
     return this;
   }
-  // TODO
-  public async *[Symbol.asyncIterator]() {
-    // let i = 0;
-    // const length = toLength((<ArrayLike<TSource>>this._source).length);
-    // while (i < length) {
-    //   yield await this._selector(this._source[i], i++);
-    // }
-  }
-  public subscribe(observer: Observer<T>): Subscription<T>;
+  public subscribe(observer: Types.Observer<T>): Subscription<T>;
   public subscribe(
     onNext: (value: T) => void,
     onError?: (error: Error) => void,
     onComplete?: () => void
   ): Subscription<T>;
   public subscribe(
-    a: Observer<T> | ((value: T) => void),
+    a: Types.Observer<T> | ((value: T) => void),
     b?: (error: Error) => void,
     c?: () => void
   ): Subscription<T> {
-    const { subscriber } = this.internal.get(symbol);
+    const { subscriber } = this.safe.get(map);
 
     return new Subscription(
       typeof a === 'function' ? { next: a, error: b, complete: c } : a,

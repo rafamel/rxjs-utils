@@ -1,21 +1,21 @@
-import { Subscriber, Observer, SubscriptionSpec } from './definitions';
 import { SubscriptionObserver } from './SubscriptionObserver';
-import { Internal } from '../helpers/Internal';
+import { SafeInternal } from '../helpers/safe-internal';
+import { Observables as Types } from '@definitions';
 
-const symbol = Symbol('internal');
+type SafeProperties = SafeInternal<{
+  closed: boolean;
+  unsubscribe: () => void;
+}>;
 
-type SubscriptionInternal = Internal<
-  typeof symbol,
-  {
-    closed: boolean;
-    unsubscribe: () => void;
-  }
->;
+const map = new WeakMap();
 
-export class Subscription<T = any> implements SubscriptionSpec {
-  private internal: SubscriptionInternal;
-  public constructor(observer: Observer<T>, subscriber: Subscriber<T>) {
-    this.internal = new Internal(symbol, {
+export class Subscription<T = any> implements Types.Subscription {
+  private safe: SafeProperties;
+  public constructor(
+    observer: Types.Observer<T>,
+    subscriber: Types.Subscriber<T>
+  ) {
+    this.safe = new SafeInternal(this, map, {
       closed: false,
       unsubscribe: () => undefined
     });
@@ -33,8 +33,8 @@ export class Subscription<T = any> implements SubscriptionSpec {
 
     try {
       const unsubscribe = subscriber(subscriptionObserver);
-      this.internal.set(
-        symbol,
+      this.safe.set(
+        map,
         'unsubscribe',
         typeof unsubscribe === 'function'
           ? unsubscribe
@@ -45,13 +45,13 @@ export class Subscription<T = any> implements SubscriptionSpec {
     }
   }
   public get closed(): boolean {
-    return this.internal.get(symbol, 'closed');
+    return this.safe.get(map, 'closed');
   }
   public unsubscribe(): void {
-    const { unsubscribe } = this.internal.get(symbol);
+    const { unsubscribe } = this.safe.get(map);
     unsubscribe();
 
-    this.internal.set(symbol, 'unsubscribe', () => null);
-    this.internal.set(symbol, 'closed', true);
+    this.safe.set(map, 'unsubscribe', () => null);
+    this.safe.set(map, 'closed', true);
   }
 }

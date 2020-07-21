@@ -22,7 +22,8 @@ module.exports = create({
     todo: ['xxx', 'fixme', 'todo', 'refactor'],
     // Source code aliases
     alias: {
-      '~': './src'
+      '@definitions': './src/definitions',
+      '@implementation': './src/implementation'
     }
   },
   extend: {
@@ -38,6 +39,7 @@ module.exports = create({
             files: ['*'],
             rules: {
               // 'rule-name': 0
+              'no-dupe-class-members': 0
             }
           }
         ]
