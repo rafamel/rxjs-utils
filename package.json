@@ -65,14 +65,11 @@
     "husky": "^4.2.5",
     "kpo": "^0.11.1",
     "onchange": "^6.0.0",
-    "rxjs": "^6.5.4",
     "typescript": "^3.6.4"
   },
   "dependencies": {
-    "equal-strategies": "^0.1.0"
-  },
-  "peerDependencies": {
-    "rxjs": "6.x"
+    "equal-strategies": "^0.1.0",
+    "symbol-observable": "^1.2.0"
   },
   "husky": {
     "hooks": {
