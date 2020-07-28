@@ -1,0 +1,65 @@
+@startuml Classes
+
+interface StreamProvider<O, I, Primer> {
+  first(value: I): Primer
+  data(value: I): StreamResult<O>
+  error(error: Error): StreamResult<O>
+  close(): void
+}
+
+interface StreamConsumer<O, I> {
+  first(): I
+  data(value: O): StreamResult<I>
+  error(error: Error): StreamResult<I>
+  close(): void
+}
+
+interface StreamResult<T> {
+  done: boolean
+  value: T | Promise<T>
+}
+
+interface StreamBroker {
+  done: boolean
+  cancel(): void
+}
+
+interface ProcedureStream<O, I, Primer> {
+  primer(): Primer;
+  engage(): StreamProvider<O, I, Primer>
+  consume(executor: (): StreamConsumer<O, I, Primer>): Broker
+}
+
+PureStream <|-- ProcedureStream
+interface PureStream<O, Primer> {
+  primer(): Primer
+  engage(): StreamProvider<O, void, Primer>
+  consume(executor: (): StreamConsumer<O, void, Primer>): Broker
+}
+
+ForeStream <|-- PureStream
+interface ForeStream<O> {
+  primer(): O
+  engage(): StreamProvider<O, void, O>
+  consume(executor: (): StreamConsumer<O, void, O>): Broker
+}
+
+Stream <|.. ProcedureStream
+class Stream<O, I, Primer> {
+  +constructor(executor: (): StreamProvider<O, I, Primer>): Stream<O, I, Primer>
+}
+
+PushStream <|.. PureStream
+PushStream <|-- Stream
+class PushStream<O, Primer> {
+  +subscribe(): Broker
+}
+
+SubjectStream <|-- PushStream
+class SubjectStream<O, Primer> {
+  +data(value: O): void
+  +error(error: Error): void
+  +done(): void
+}
+
+@enduml

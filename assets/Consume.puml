@@ -1,0 +1,173 @@
+@startuml consume
+
+partition "Initialize (Synchronous)" {
+  start
+  : Stream.consume();
+  : Call **Provider** Executor;
+  if (Error?) then (yes)
+    : Throw **Error**;
+    stop
+  else (no) 
+    : Provider.open(): Primer;
+    if (Error?) then (yes)
+      : Provider.close();
+      : Throw **Error**;
+      stop
+    else (no)
+      : Call **Consumer** Executor;
+      if (Error?) then (yes)
+        : Provider.close();
+        : Throw **Error**;
+        stop
+      else (no)
+        : Consumer.open(primer: Primer): I;
+        if (Error?) then (yes)
+          : Consumer.close();
+          : Provider.close();
+          : Throw **Error**;
+          stop
+        else (no)
+          : Return Broker;
+          (P)
+          detach
+        endif
+      endif
+    endif
+  endif
+}
+
+partition "Provider (Asynchronous)" {
+  (P)
+  if (Externally Cancelled?) then (yes)
+    stop
+  else (no)
+    if (Provider.data exists?) then (no)
+      (F)
+      detach
+    else (yes)
+      : Provider.data(value: I): StreamResult<O>;
+      if (Error?) then (yes)
+        ' Externally Cancelled?
+        : Consumer.error(error: Error): StreamResult<I>;
+        if (Error?) then (yes)
+          (T)
+          detach
+        else (no)
+          if (Done?) then (yes)
+            (F)
+            detach
+          else (no)
+            (P)
+            detach
+          endif
+        endif
+      else (no)
+        if (Done?) then (yes)
+          (F)
+          detach
+        else (no)
+          (C)
+          detach
+        endif
+      endif
+    endif
+  endif
+}
+
+partition "Consumer (Asynchronous)" {
+  (C)
+  if (Externally Cancelled?) then (yes)
+    stop
+  else (no)
+    if (Consumer.data exists?) then (no)
+      (F)
+      detach
+    else (yes)
+      : Consumer.data(value: O): StreamResult<I>;
+      if (Error?) then (yes)
+        ' Externally Cancelled?
+        : Provider.error(error: Error): StreamResult<O>;
+        if (Error?) then (yes)
+          (T)
+          detach
+        else (no)
+          if (Done?) then (yes)
+            (F)
+            detach
+          else (no)
+            (C)
+            detach
+          endif
+        endif
+      else (no)
+        if (Done?) then (yes)
+          (F)
+          detach
+        else (no)
+          (P)
+          detach
+        endif
+      endif
+    endif
+  endif
+}
+
+partition Finalization {
+  (F)
+  if (Externally Cancelled?) then (yes)
+    stop
+  else (no)
+    : Consumer.close();
+    if (Error?) then (yes)
+      : Provider.close();
+      : Throw **Uncaught Error**;
+      stop
+    else (no)
+      : Provider.close();
+      if (Error?) then (yes)
+        : Throw **Uncaught Error**;
+        stop
+      else (no)
+        stop
+      endif
+    endif
+  endif
+}
+
+partition Termination {
+  (T)
+  if (Externally Cancelled?) then (yes)
+    stop
+  else (no)
+    : Consumer.close();
+    : Provider.close();
+    : Throw **Uncaught Error**;
+    stop
+  endif
+}
+
+partition "External Cancellation (Synchronous)" {
+  start
+  : Broker.cancel();
+  if (Done?) then (yes)
+    stop
+  else (no)
+    : Consumer.close();
+    if (Error?) then (yes)
+      : Provider.close();
+      : Throw **Error**;
+      stop
+    else (no)
+      : Provider.close();
+      if (Error?) then (yes)
+        : Throw **Error**;
+        stop
+      else (no)
+        : Return;
+        stop
+      endif
+    endif
+  endif
+}
+
+@enduml
