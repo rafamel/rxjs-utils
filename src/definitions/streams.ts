@@ -1,53 +1,73 @@
+import { MultiPipe } from 'pipettes/dist/types/multi';
+
+/* Stream */
 export interface StreamConstructor {
-  new <O, I = void>(executor: Executor<O, I>): Stream<O, I>;
+  new <O, I = void, Primer = void>(
+    executor: () => Provider<O, I, Primer>
+  ): Stream<O, I, Primer>;
 }
 
-export interface Stream<
-  O,
-  I = void,
-  C extends ExecutorResult<I> = ExecutorResult<I>
-> {
-  executor: Executor<O, I, C>;
-  register(executor: Executor<I, O>): Registration;
+export interface Stream<O, I, Primer> {
+  probe(): Primer;
+  engage(): Provider<O, I, Primer>;
+  consume(executor: () => Consumer<O, I, Primer>): Broker;
+  pipe: MultiPipe<Stream<O, I, Primer>, Stream<O, I, Primer>, false, true>;
 }
 
-export type PushStream<T> = Stream<T, void, PushConsumer | void>;
-
-export type PushExecutor<T> = (provider: Provider<T>) => PushConsumer | void;
-
-export type Executor<
-  O,
-  I = void,
-  C extends ExecutorResult<I> = ExecutorResult<I>
-> = Consumer<I> | ((provider: Provider<O>) => C);
-
-export type ExecutorResult<T> = Consumer<T> | DataConsumer<T> | void;
-
-export interface PushConsumer {
-  data?: never;
-  open?(): void;
-  close?(error: Error | undefined): void;
+export interface PushStream<O, Primer> extends Stream<O, void, Primer> {
+  subscribe(): Broker;
 }
 
-export interface Consumer<T> {
-  open?(): void;
-  data?(value: T): void;
-  close?(error: Error | undefined): void;
+export interface SubjectStream<O, Primer = any> extends PushStream<O, Primer> {
+  data(value: O): void;
+  error(error: Error): void;
+  done(): void;
 }
 
-export type DataConsumer<T> = (value: T) => void;
-
-export interface Provider<T> {
-  status: Status;
-  open(): void;
-  data(value: T): void;
-  close(error?: Error): void;
-  unregister(): void;
+/* Provider */
+export interface Provider<O, I, Primer> {
+  open?(): Primer;
+  data?(value: I): Resolve<Response<O>>;
+  error?(error: Error): Resolve<Response<O>>;
+  close?(): void;
 }
 
-export type Status = 'idle' | 'open' | 'close';
+/* Consumer */
+export type Consumer<O, I, Primer> =
+  | ProcedureConsumer<O, I, Primer>
+  | (I extends void | undefined
+      ? PartialConsumer<O, I, Primer>
+      : ProcedureConsumer<O, I, Primer>);
 
-export interface Registration {
+export interface PartialConsumer<O, I, Primer> {
+  open?(primer: Primer): I;
+  data?(value: O): Resolve<Response<I>>;
+  error?(error: Error): Resolve<Response<I>>;
+  close?(): void;
+}
+
+export interface ProcedureConsumer<O, I, Primer>
+  extends PartialConsumer<O, I, Primer> {
+  open(primer: Primer): I;
+  data(value: O): Resolve<Response<I>>;
+}
+
+/* Broker */
+export interface Broker {
   done: boolean;
-  unregister(): void;
+  cancel(): void;
 }
+
+/* Response */
+export type Resolve<T> = T | Promise<T>;
+
+export type Response<T> =
+  | Result<T>
+  | (T extends void | undefined ? Result<T> | void : Result<T>);
+
+export type Result<T> =
+  | { done: true; value?: void }
+  | { done?: false; value: T }
+  | (T extends void | undefined
+      ? { done?: false; value?: T }
+      : { done?: false; value: T });

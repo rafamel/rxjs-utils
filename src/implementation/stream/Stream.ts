@@ -1,42 +1,51 @@
 import { SafeInternal } from '../helpers/safe-internal';
 import { Streams as Types } from '@definitions';
-import { Provider } from './Provider';
-import { Registration } from './Registration';
+import {
+  StreamProvider,
+  StreamConsumer,
+  StreamResponse,
+  StreamBroker
+} from './definitions';
+import { Broker } from './Broker';
 
-type SafeProperties<O, I, C> = SafeInternal<{
-  executor: Types.Executor<O, I, C>;
+type SafeProperties<O, I, Primer> = SafeInternal<{
+  executor: () => StreamProvider<O, I, Primer>;
 }>;
 
 const map = new WeakMap();
 
-export class Stream<
-  O,
-  I = void,
-  C extends Types.ExecutorResult<I> = Types.ExecutorResult<I>
-> implements Types.Stream<O, I, C> {
-  private safe: SafeProperties<O, I, C>;
-  public constructor(executor: Types.Executor<O, I, C>) {
+class Stream<O, I, Primer> implements Types.Stream<O, I, Primer> {
+  private safe: SafeProperties<O, I, Primer>;
+  public constructor(executor: () => StreamProvider<O, I, Primer>) {
     this.safe = new SafeInternal(this, map, { executor });
   }
-  public get executor(): Types.Executor<O, I, C> {
-    return this.safe.get(map, 'executor');
+  public probe(): Primer {
+    let value: Primer = undefined as any;
+
+    const broker = this.consume(() => ({
+      open(primer: Primer): I {
+        value = primer;
+        return undefined as any;
+      },
+      data(): StreamResponse<I> {
+        return { done: true };
+      }
+    }));
+
+    broker.cancel();
+    return value as Primer;
   }
-  public register(executor: Types.Executor<I, O>): Types.Registration {
-    const sourceExecutor = this.executor;
-    const destinationExecutor = executor;
-
-    const [destinationProvider, sourceProvider] = Provider.pair(
-      destinationExecutor,
-      sourceExecutor
-    );
-
-    return new Registration(destinationProvider, sourceProvider);
+  public engage(): StreamProvider<O, I, Primer> {
+    const { executor } = this.safe.get(map);
+    return executor();
+  }
+  public consume(executor: () => StreamConsumer<O, I, Primer>): StreamBroker {
+    return new Broker(this.safe.get(map, 'executor'), executor);
   }
 }
 
-export class PushStream<T> extends Stream<T, void, Types.PushConsumer | void> {
-  // eslint-disable-next-line no-useless-constructor
-  public constructor(executor: Types.PushExecutor<T>) {
-    super(executor);
-  }
-}
+// Stream.prototype.pipe = function pipe(...args: any[]): any {
+//   return into(this, ...args);
+// };
+
+export { Stream };
