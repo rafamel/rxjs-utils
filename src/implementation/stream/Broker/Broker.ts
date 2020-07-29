@@ -1,34 +1,30 @@
 import { Streams as Types } from '@definitions';
 import { SafeInternal } from '../../helpers/safe-internal';
-import { StreamProvider, StreamConsumer } from '../definitions';
 import { consume } from './consume';
+import { StreamProvider, StreamConsumer } from '../definitions';
 
-type SafeProperties<O, I, Primer> = SafeInternal<{
+type SafeProperties = SafeInternal<{
   reference: { done: boolean };
   cancel: () => void;
 }>;
 
 const map = new WeakMap();
 
-export class Broker<O, I, Primer> implements Types.Broker {
-  private safe: SafeProperties<O, I, Primer>;
+export class Broker<T, Primer extends T | void> implements Types.Broker {
+  private safe: SafeProperties;
   public constructor(
-    provider: () => StreamProvider<O, I, Primer>,
-    consumer: () => StreamConsumer<O, I, Primer>
+    provider: () => StreamProvider<T, Primer>,
+    consumer: () => StreamConsumer<T, Primer>
   ) {
     const reference = { done: false };
-    const cancel = consume(
-      {
-        getDone(): boolean {
-          return reference.done;
-        },
-        setDone(): void {
-          reference.done = true;
-        }
+    const cancel = consume(provider, consumer, {
+      getDone(): boolean {
+        return reference.done;
       },
-      provider,
-      consumer
-    );
+      setDone(): void {
+        reference.done = true;
+      }
+    });
 
     this.safe = new SafeInternal(this, map, { reference, cancel });
   }

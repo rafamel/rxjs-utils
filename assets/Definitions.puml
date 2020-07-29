@@ -1,22 +1,20 @@
 @startuml Classes
 
-interface StreamProvider<O, I, Primer> {
-  first(value: I): Primer
-  data(value: I): StreamResult<O>
-  error(error: Error): StreamResult<O>
+interface StreamProvider<T, Primer> {
+  open(): Primer
+  data(): StreamResult<T>
   close(): void
 }
 
-interface StreamConsumer<O, I> {
-  first(): I
-  data(value: O): StreamResult<I>
-  error(error: Error): StreamResult<I>
-  close(): void
+interface StreamConsumer<T, Primer> {
+  open(primer: Primer): void
+  data(value: T): boolean | void
+  close(error?: Error): void
 }
 
 interface StreamResult<T> {
   done: boolean
-  value: T | Promise<T>
+  value: T
 }
 
 interface StreamBroker {
@@ -24,42 +22,35 @@ interface StreamBroker {
   cancel(): void
 }
 
-interface ProcedureStream<O, I, Primer> {
+interface BroadStream<T, Primer> {
   primer(): Primer;
-  engage(): StreamProvider<O, I, Primer>
-  consume(executor: (): StreamConsumer<O, I, Primer>): Broker
+  execute(): Provider<T, Primer>
+  consume(executor: (): StreamConsumer<T, Primer>): StreamBroker
 }
 
-PureStream <|-- ProcedureStream
-interface PureStream<O, Primer> {
-  primer(): Primer
-  engage(): StreamProvider<O, void, Primer>
-  consume(executor: (): StreamConsumer<O, void, Primer>): Broker
+PureStream <|-- BroadStream
+interface PureStream<T> {
+  primer(): void
+  engage(): Provider<T, void>
+  consume(executor: (): StreamConsumer<T, void>): StreamBroker
 }
 
-ForeStream <|-- PureStream
-interface ForeStream<O> {
-  primer(): O
-  engage(): StreamProvider<O, void, O>
-  consume(executor: (): StreamConsumer<O, void, O>): Broker
+ForeStream <|-- BroadStream
+interface ForeStream<T> {
+  primer(): T
+  engage(): Provider<T, T>
+  consume(executor: (): StreamConsumer<T, T>): StreamBroker
 }
 
-Stream <|.. ProcedureStream
-class Stream<O, I, Primer> {
-  +constructor(executor: (): StreamProvider<O, I, Primer>): Stream<O, I, Primer>
+Stream <|-- BroadStream
+class Stream<T, Primer> {
+  +constructor(executor: (): StreamProvider<T, Primer>): Stream<T, Primer>
 }
 
-PushStream <|.. PureStream
-PushStream <|-- Stream
-class PushStream<O, Primer> {
-  +subscribe(): Broker
-}
-
-SubjectStream <|-- PushStream
-class SubjectStream<O, Primer> {
-  +data(value: O): void
-  +error(error: Error): void
-  +done(): void
+SubjectStream <|.. Stream
+class SubjectStream<T, Primer> {
+  +data(value: T): void
+  +close(error?: Error): void
 }
 
 @enduml

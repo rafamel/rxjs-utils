@@ -5,26 +5,26 @@ export interface Controller {
   setDone(): void;
 }
 
-export function consume<O, I, Primer>(
-  controller: Controller,
-  providerExecutor: () => StreamProvider<O, I, Primer>,
-  consumerExecutor: () => StreamConsumer<O, I, Primer>
+export function consume<T, Primer extends T | void>(
+  a: () => StreamProvider<T, Primer>,
+  b: () => StreamConsumer<T, Primer>,
+  controller: Controller
 ): () => void {
-  return consumeInitialization(controller, providerExecutor, consumerExecutor);
+  return consumeInitialization(a, b, controller);
 }
 
-function consumeInitialization<O, I, Primer>(
-  controller: Controller,
-  providerExecutor: () => StreamProvider<O, I, Primer>,
-  consumerExecutor: () => StreamConsumer<O, I, Primer>
+function consumeInitialization<T, Primer extends T | void>(
+  a: () => StreamProvider<T, Primer>,
+  b: () => StreamConsumer<T, Primer>,
+  controller: Controller
 ): () => void {
-  const provider = providerExecutor();
+  const provider = a();
 
   let primer: Primer;
-  let consumer: StreamConsumer<O, I, Primer>;
+  let consumer: StreamConsumer<T, Primer>;
   try {
     primer = provider.open ? provider.open() : (undefined as any);
-    consumer = consumerExecutor();
+    consumer = b();
   } catch (err) {
     try {
       if (provider.close) provider.close();
@@ -32,9 +32,8 @@ function consumeInitialization<O, I, Primer>(
     throw err;
   }
 
-  let initial: I;
   try {
-    initial = consumer.open ? consumer.open(primer) : (undefined as any);
+    consumer.open ? consumer.open(primer) : (undefined as any);
   } catch (err) {
     try {
       if (consumer.close) consumer.close();
@@ -45,76 +44,81 @@ function consumeInitialization<O, I, Primer>(
     throw err;
   }
 
-  consumeProcess(controller, provider, consumer, initial).then(
-    () => consumeFinalize(controller, provider, consumer, null),
-    (err) => consumeFinalize(controller, provider, consumer, err)
+  consumeProcess(provider, consumer, controller).catch((err) =>
+    consumeFinalize(provider, consumer, controller, null, err)
   );
 
   // Cancellation
   return (): void => {
     if (controller.getDone()) return;
-    const error = consumeClose(controller, provider, consumer, null);
+    const error = consumeClose(provider, consumer, controller, null);
     if (error) throw error;
   };
 }
 
-async function consumeProcess<O, I, Primer>(
-  controller: Controller,
-  to: StreamProvider<O, I, Primer> | StreamConsumer<O, I, Primer>,
-  from: StreamConsumer<O, I, Primer> | StreamProvider<O, I, Primer>,
-  value: any
+async function consumeProcess<T, Primer extends T | void>(
+  provider: StreamProvider<T, Primer>,
+  consumer: StreamConsumer<T, Primer>,
+  controller: Controller
 ): Promise<void> {
-  if (controller.getDone() || !to.data) return;
-
-  let result: void | StreamResult<any>;
-  try {
-    result = await to.data(value);
-  } catch (err) {
-    if (!from.error) throw err;
-    if (controller.getDone()) return;
-
-    const errInput: void | StreamResult<any> = await from.error(err);
-    if (!errInput) {
-      return consumeProcess(controller, to, from, undefined);
-    }
-    return errInput.done
-      ? undefined
-      : consumeProcess(controller, to, from, errInput.value);
+  if (controller.getDone()) return;
+  if (!provider.data) {
+    return consumeFinalize(provider, consumer, controller, null, null);
   }
 
-  if (!result) return consumeProcess(controller, from, to, undefined);
-  return result.done
-    ? undefined
-    : consumeProcess(controller, from, to, result.value);
+  let result: StreamResult<T>;
+  try {
+    result = await provider.data();
+  } catch (err) {
+    return consumeFinalize(provider, consumer, controller, err, null);
+  }
+
+  if (controller.getDone()) return;
+  if (result.done || !consumer.data) {
+    return consumeFinalize(provider, consumer, controller, null, null);
+  }
+
+  const isDone = await consumer.data(result.value as T);
+  if (isDone) {
+    return consumeFinalize(provider, consumer, controller, null, null);
+  }
+
+  return consumeProcess(provider, consumer, controller);
 }
 
-function consumeFinalize<O, I, Primer>(
+function consumeFinalize<T, Primer extends T | void>(
+  provider: StreamProvider<T, Primer>,
+  consumer: StreamConsumer<T, Primer>,
   controller: Controller,
-  provider: StreamProvider<O, I, Primer>,
-  consumer: StreamConsumer<O, I, Primer>,
-  error: null | Error
+  capture: Error | null,
+  raise: Error | null
 ): void {
-  error = consumeClose(controller, provider, consumer, error);
+  if (controller.getDone()) return;
+  const err = consumeClose(provider, consumer, controller, capture);
 
-  if (error) {
+  if (raise || err) {
     setTimeout(() => {
-      throw error;
+      throw raise || err;
     }, 0);
   }
 }
 
-function consumeClose<O, I, Primer>(
+function consumeClose<T, Primer extends T | void>(
+  provider: StreamProvider<T, Primer>,
+  consumer: StreamConsumer<T, Primer>,
   controller: Controller,
-  provider: StreamProvider<O, I, Primer>,
-  consumer: StreamConsumer<O, I, Primer>,
-  error: null | Error
-): null | Error {
-  if (controller.getDone()) return null;
+  capture: Error | null
+): Error | null {
+  let error: Error | null = null;
 
-  try {
-    if (consumer.close) consumer.close();
-  } catch (err) {
-    if (!error) error = err;
+  if (consumer.close) {
+    try {
+      consumer.close(capture || undefined);
+    } catch (err) {
+      error = err;
+    }
+  } else {
+    error = capture;
   }
 
   try {

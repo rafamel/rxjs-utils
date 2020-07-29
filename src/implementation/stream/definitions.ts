@@ -1,13 +1,13 @@
 import { Streams as Types } from '@definitions';
 
-/* Streams */
-export type ForeStream<O> = PureStream<O, O>;
-export type PureStream<O, Primer = any> = ProcedureStream<O, void, Primer>;
-export type ProcedureStream<O, I, Primer = any> = Types.Stream<O, I, Primer>;
+export type ForeStream<T> = Types.Stream<T, T>;
+export type PureStream<T> = Types.Stream<T, void>;
+export type BroadStream<T, Primer = any> = Types.Stream<T, Primer>;
 
-/* Other */
 export type StreamBroker = Types.Broker;
+export type StreamProvider<T, Primer> = Types.Provider<T, Primer>;
+export type StreamConsumer<T, Primer> = Types.Consumer<T, Primer>;
+
 export type StreamResult<T> = Types.Result<T>;
+export type StreamResolve<T> = Types.Resolve<T>;
 export type StreamResponse<T> = Types.Response<T>;
-export type StreamProvider<O, I, Primer> = Types.Provider<O, I, Primer>;
-export type StreamConsumer<O, I, Primer> = Types.Consumer<O, I, Primer>;
