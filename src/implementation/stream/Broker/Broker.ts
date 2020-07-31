@@ -4,32 +4,43 @@ import { consume } from './consume';
 import { StreamProvider, StreamConsumer } from '../definitions';
 
 type SafeProperties = SafeInternal<{
-  reference: { done: boolean };
+  done: boolean;
+  promise: Promise<void>;
   cancel: () => void;
 }>;
 
 const map = new WeakMap();
 
-export class Broker<T, Primer extends T | void> implements Types.Broker {
+export class Broker<T, Primer> implements Types.Broker {
   private safe: SafeProperties;
   public constructor(
     provider: () => StreamProvider<T, Primer>,
-    consumer: () => StreamConsumer<T, Primer>
+    consumer: StreamConsumer<T, Primer>
   ) {
-    const reference = { done: false };
-    const cancel = consume(provider, consumer, {
-      getDone(): boolean {
-        return reference.done;
-      },
-      setDone(): void {
-        reference.done = true;
-      }
-    });
-
-    this.safe = new SafeInternal(this, map, { reference, cancel });
+    this.safe = new SafeInternal(this, map, consume(provider, consumer));
+  }
+  public get [Symbol.toStringTag](): string {
+    return 'Promise';
   }
   public get done(): boolean {
-    return this.safe.get(map, 'reference').done;
+    return this.safe.get(map, 'done');
+  }
+  public then<F = void, R = never>(
+    onfulfilled?: ((value: void) => F | Promise<F>) | null,
+    onrejected?: ((reason: any) => R | Promise<R>) | null
+  ): Promise<F | R> {
+    return this.safe.get(map, 'promise').then(onfulfilled, onrejected);
+  }
+  public catch<R = never>(
+    onrejected?: ((reason: any) => R | Promise<R>) | null
+  ): Promise<void | R> {
+    return this.then(undefined, onrejected);
+  }
+  public finally(fn: (() => void) | undefined | null): Promise<void> {
+    return this.then(
+      (value) => Promise.resolve(fn && fn()).then(() => value),
+      (reason) => Promise.resolve(fn && fn()).then(() => Promise.reject(reason))
+    );
   }
   public cancel(): void {
     return this.safe.get(map).cancel();

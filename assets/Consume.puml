@@ -1,121 +1,121 @@
 @startuml consume
 
-partition "Initialize" {
+partition Consume {
   start
-  : Stream.consume();
   : Call **Provider** Executor;
   if (Error?) then (yes)
-    : Throw **Error**;
-    stop
-  else (no) 
-    : Provider.open(): Primer;
-    if (Error?) then (no)
-      : Call **Consumer** Executor;
-      if (Error?) then (yes)
-        : Provider.close();
-        : Throw **Error**;
-        stop
-      else (no)
-        : Consumer.open(primer: Primer): void;
-        if (Error?) then (yes)
-          : Consumer.close();
-          : Provider.close();
-          : Throw **Error**;
-          stop
-        else (no)
-          : Return **StreamBroker**;
-          : Start **Asynchronous** Process;
-          (P)
-          detach
-        endif
-      endif
-    else (yes)
-      : Provider.close();
-      : Throw **Error**;
-      stop
-    endif
-  endif
-}
-
-partition "Process" {
-  (P)
-  if (Externally cancelled?) then (yes)
-    stop
+    (C)
+    detach
   else (no)
-    if (Provider.data exists?) then (no)
-      (F)
+    : Provider.prime(): Primer;
+    if (Error?) then (yes)
+      (A)
       detach
-    else (yes)
-      : Provider.data(): StreamResponse<T>;
-      if (Error?) then (yes)
-        if (Consumer.close exists?) then (no)
-          if (Externally cancelled?) then (yes)
-            stop
-          else (no)
-            : Provider.close();
-            : Throw **Uncaught Error**;
-            stop
-          endif
-        else (yes)
-          (F)
-          detach
+      ' Provider Termination
+      (A)
+      : Provider.close(): void;
+      (C)
+      detach
+      ' Capture
+      (C)
+      if (Consumer.close exists?) then (yes)
+        : Consumer.close(error: Error): void;
+        if (Error?) then (yes)
+          : **Reject** StreamBroker;
+        else (no)
+          : **Resolve** StreamBroker;
         endif
       else (no)
-        if (Done, returns **{ done: true }**?) then (yes)
+        : **Reject** StreamBroker;
+      endif
+      stop
+      ' / Capture
+      ' / Provider Termination
+    else (no)
+      : Consumer.prime(primer: Primer): void | boolean;
+      if (Error) then (yes)
+        (B)
+        detach
+        ' Consumer Termination
+        (B)
+        : Provider.close(): void;
+        if (Error?) then (yes)
+          : Consumer.close(error: Error): void;
+        else (no)
+          : Consumer.close(): void;
+        endif
+        : **Reject** StreamBroker;
+        stop
+        ' / Consumer Termination
+      else (no)
+        if (Done, returns **true**?) then (yes)
           (F)
           detach
-        else (no)
-          if (Externally cancelled?) then (yes)
-            stop
+          ' Finalization
+          (F)
+          : Provider.close(): void;
+          if (Error?) then (yes)
+            (C)
           else (no)
-            if (Consumer.data exists?) then (no)
-              (F)
-              detach
-            else (yes)
-              : Consumer.data(value: T): Resolve<void | boolean>;
-              if (Error?) then (yes)
-                if (Externally cancelled?) then (yes)
-                  stop
-                else (no)
-                  : Consumer.close();
-                  : Provider.close();
-                  : Throw **Uncaught Error**;
-                  stop
-                endif
-              else (no)
-                if (Done, returns **true**?) then (yes)
-                  (F)
-                  detach
-                else (no)
-                  (P)
-                  detach
-                endif
-              endif
+            : Consumer.close(): void;
+            if (Error?) then (yes)
+              : **Reject** StreamBroker;
+            else (no)
+              : **Resolve** StreamBroker;
             endif
           endif
+          stop
+          ' / Finalization
+        else (no)
+          : Queue **Asynchronous** Process **[P]**;
+          : Return **StreamBroker**;
+          (P)
+          detach
+          ' Process
+          (P)
+          if (Externally cancelled?) then (yes)
+            stop
+          else (no)
+            if (Provider.data exists?) then (yes)
+              : Provider.data(): StreamResponse<T>;
+              if (Externally cancelled?) then (yes)
+                stop
+              else (no)
+                if (Error?) then (yes)
+                  (A)
+                  detach
+                else (no)
+                  if (Done, returns **{ done: true }**?) then (yes)
+                    : Consumer.data(value: T): StreamResolve<void | boolean>;
+                    if (Externally cancelled?) then (yes)
+                      stop
+                    else (no)
+                      if (Error?) then (yes)
+                        (B)
+                        detach
+                      else (no)
+                        if (Done, returns **true**?) then (yes)
+                          (F)
+                          detach
+                        else (no)
+                          (P)
+                          detach
+                        endif
+                      endif
+                    endif
+                  else (no)
+                    (F)
+                    detach
+                  endif
+                endif
+              endif
+            else (no)
+              (F)
+              detach
+            endif
+          endif
+          ' / Process
         endif
-      endif
-    endif
-  endif
-}
-
-partition Finalization {
-  (F)
-  if (Externally cancelled?) then (yes)
-    stop
-  else (no)
-    : Consumer.close(error?: Error): void;
-    if (Error?) then (yes)
-      : Provider.close();
-      : Throw **Uncaught Error**;
-      stop
-    else (no)
-      : Provider.close();
-      if (Error?) then (yes)
-        : Throw **Uncaught Error**;
-        stop
-      else (no)
-        stop
       endif
     endif
   endif
@@ -127,20 +127,8 @@ partition "External Cancellation" {
   if (Done?) then (yes)
     stop
   else (no)
-    : Consumer.close();
-    if (Error?) then (yes)
-      : Provider.close();
-      : Throw **Error**;
-      stop
-    else (no)
-      : Provider.close();
-      if (Error?) then (yes)
-        : Throw **Error**;
-        stop
-      else (no)
-        stop
-      endif
-    endif
+    (F)
+    detach
   endif
 }
 

@@ -1,13 +1,13 @@
 @startuml Classes
 
 interface StreamProvider<T, Primer> {
-  open(): Primer
+  prime(): Primer
   data(): StreamResult<T>
   close(): void
 }
 
 interface StreamConsumer<T, Primer> {
-  open(primer: Primer): void
+  prime(primer: Primer): boolean | void
   data(value: T): boolean | void
   close(error?: Error): void
 }
@@ -17,32 +17,16 @@ interface StreamResult<T> {
   value: T
 }
 
+interface Promise {
+  
+}
+
+StreamBroker <|-- Promise
 interface StreamBroker {
   done: boolean
   cancel(): void
 }
 
-interface BroadStream<T, Primer> {
-  primer(): Primer;
-  execute(): Provider<T, Primer>
-  consume(executor: (): StreamConsumer<T, Primer>): StreamBroker
-}
-
-PureStream <|-- BroadStream
-interface PureStream<T> {
-  primer(): void
-  engage(): Provider<T, void>
-  consume(executor: (): StreamConsumer<T, void>): StreamBroker
-}
-
-ForeStream <|-- BroadStream
-interface ForeStream<T> {
-  primer(): T
-  engage(): Provider<T, T>
-  consume(executor: (): StreamConsumer<T, T>): StreamBroker
-}
-
-Stream <|-- BroadStream
 class Stream<T, Primer> {
   +constructor(executor: (): StreamProvider<T, Primer>): Stream<T, Primer>
 }
