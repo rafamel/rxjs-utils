@@ -1,46 +1,39 @@
 /* Stream */
 export interface StreamConstructor {
-  new <T, Primer extends T | void = void>(
-    executor: ProviderExecutor<T, Primer>
-  ): Stream<T, Primer>;
+  new <T, Primer>(executor: Executor<T, Primer>): Stream<T, Primer>;
 }
 
-export interface Stream<T, Primer extends T | void> {
-  primer(): Primer;
-  execute(): Provider<T, Primer>;
-  consume(executor: ConsumerExecutor<T, Primer>): Broker;
-}
+export type Executor<T, Primer> = () => Partial<Provider<T, Primer>>;
 
-export interface SubjectStream<T, Primer extends T | void = any>
-  extends Stream<T, Primer> {
+export interface Subject<T> {
   data(value: T): void;
   close(error?: Error): void;
 }
 
-/* Provider */
-export type ProviderExecutor<T, Primer extends T | void> = () => Partial<
-  Provider<T, Primer>
->;
+export interface Stream<T, Primer> {
+  primer(): Primer;
+  execute(): Provider<T, Primer>;
+  consume(consumer: Partial<Consumer<T, Primer>>): Broker;
+}
 
-export interface Provider<T, Primer extends T | void> {
-  open(): Primer;
+export type SubjectStream<T, Primer> = Stream<T, Primer> & Subject<T>;
+
+/* Provider */
+export interface Provider<T, Primer> {
+  prime(): Primer;
   data(): Response<T>;
   close(): void;
 }
 
 /* Consumer */
-export type ConsumerExecutor<T, Primer extends T | void> = () => Partial<
-  Consumer<T, Primer>
->;
-
-export interface Consumer<T, Primer extends T | void> {
-  open(primer: Primer): void;
+export interface Consumer<T, Primer> {
+  prime(primer: Primer): void | boolean;
   data(value: T): Resolve<void | boolean>;
   close(error?: Error): void;
 }
 
 /* Broker */
-export interface Broker {
+export interface Broker extends Promise<void> {
   done: boolean;
   cancel(): void;
 }
