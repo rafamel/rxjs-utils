@@ -1,6 +1,6 @@
-import { SubscriptionObserver } from './SubscriptionObserver';
+import { ObservableSubscriptionObserver } from './SubscriptionObserver';
 import { SafeInternal } from '../helpers/safe-internal';
-import { Observables as Types } from '@definitions';
+import { Subscription, Observer, Subscriber } from '@definitions';
 
 type SafeProperties = SafeInternal<{
   closed: boolean;
@@ -9,12 +9,9 @@ type SafeProperties = SafeInternal<{
 
 const map = new WeakMap();
 
-export class Subscription<T = any> implements Types.Subscription {
+export class ObservableSubscription<T = any> implements Subscription {
   private safe: SafeProperties;
-  public constructor(
-    observer: Types.Observer<T>,
-    subscriber: Types.Subscriber<T>
-  ) {
+  public constructor(observer: Observer<T>, subscriber: Subscriber<T>) {
     this.safe = new SafeInternal(this, map, {
       closed: false,
       unsubscribe: () => undefined
@@ -29,16 +26,21 @@ export class Subscription<T = any> implements Types.Subscription {
 
     if (this.closed) return;
 
-    const subscriptionObserver = new SubscriptionObserver(observer, this);
+    const subscriptionObserver = new ObservableSubscriptionObserver(
+      observer,
+      this
+    );
 
     try {
       const unsubscribe = subscriber(subscriptionObserver);
       this.safe.set(
         map,
         'unsubscribe',
-        typeof unsubscribe === 'function'
-          ? unsubscribe
-          : () => unsubscribe.unsubscribe()
+        unsubscribe
+          ? typeof unsubscribe === 'function'
+            ? unsubscribe
+            : () => unsubscribe.unsubscribe()
+          : () => undefined
       );
     } catch (err) {
       subscriptionObserver.error(err);

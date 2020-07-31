@@ -1,24 +1,31 @@
 @startuml Classes
 
-interface StreamProvider<T, Primer> {
-  prime(): Primer
+interface Promise<T> {
+  
+}
+
+interface Observable<T> {
+  
+}
+
+interface StreamProvider<T> {
   data(): StreamResult<T>
   close(): void
 }
 
-interface StreamConsumer<T, Primer> {
-  prime(primer: Primer): boolean | void
+interface StreamConsumer<T> {
   data(value: T): boolean | void
   close(error?: Error): void
+}
+
+interface Streamer<T> {
+  +data(value: T): void
+  +close(error?: Error): void
 }
 
 interface StreamResult<T> {
   done: boolean
   value: T
-}
-
-interface Promise {
-  
 }
 
 StreamBroker <|-- Promise
@@ -27,14 +34,28 @@ interface StreamBroker {
   cancel(): void
 }
 
-class Stream<T, Primer> {
-  +constructor(executor: (): StreamProvider<T, Primer>): Stream<T, Primer>
+interface StreamLike<T> {
+  execute(): StreamProvider<T>
+  consume(consumer: StreamConsumer<T>): StreamBroker
 }
 
-SubjectStream <|.. Stream
-class SubjectStream<T, Primer> {
-  +data(value: T): void
-  +close(error?: Error): void
+Stream <|.. StreamLike
+class Stream<T> {
+  +constructor(executor: (): StreamProvider<T>): Stream<T>
 }
+
+StreamObservable <|-- Stream
+StreamObservable <|.. Observable
+class StreamObservable<T> {
+
+}
+
+StreamSubject <|-- StreamObservable
+StreamSubject <|.. Streamer
+class StreamSubject<T> {
+
+}
+
+
 
 @enduml

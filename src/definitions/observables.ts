@@ -3,15 +3,21 @@ export type ObservableSymbol = '@@observable';
 export interface ObservableConstructor {
   new <T>(subscriber: Subscriber<T>): Observable<T>;
   of<T>(...items: T[]): Observable<T>;
-  from<T>(item: Observable<T> | Compatible<T> | Iterable<T>): Observable<T>;
+  from<T>(
+    item: Observable<T> | ObservableCompatible<T> | Iterable<T>
+  ): Observable<T>;
   prototype: Observable;
 }
 
-export type Compatible<T = any> = {
+export type ObservableCompatible<T = any> = {
   [P in ObservableSymbol]: () => Observable<T>;
 };
 
-export interface Observable<T = any> extends Compatible<T> {
+export interface ObservableLike<T = any> {
+  subscribe(observer: Observer<T>): Subscription;
+}
+
+export interface Observable<T = any> extends ObservableCompatible<T> {
   subscribe(observer: Observer<T>): Subscription;
   subscribe(
     onNext: (value: T) => void,
@@ -41,4 +47,4 @@ export interface SubscriptionObserver<T = any> {
 
 export type Subscriber<T = any> = (
   observer: SubscriptionObserver<T>
-) => (() => void) | Subscription;
+) => void | (() => void) | Subscription;

@@ -1,7 +1,6 @@
-import { Streams as Types } from '@definitions';
 import { SafeInternal } from '../../helpers/safe-internal';
 import { consume } from './consume';
-import { StreamProvider, StreamConsumer } from '../definitions';
+import { StreamProvider, StreamConsumer, StreamBroker } from '@definitions';
 
 type SafeProperties = SafeInternal<{
   done: boolean;
@@ -11,11 +10,11 @@ type SafeProperties = SafeInternal<{
 
 const map = new WeakMap();
 
-export class Broker<T, Primer> implements Types.Broker {
+export class Broker<T> implements StreamBroker {
   private safe: SafeProperties;
   public constructor(
-    provider: () => StreamProvider<T, Primer>,
-    consumer: StreamConsumer<T, Primer>
+    provider: () => StreamProvider<T>,
+    consumer: StreamConsumer<T>
   ) {
     this.safe = new SafeInternal(this, map, consume(provider, consumer));
   }

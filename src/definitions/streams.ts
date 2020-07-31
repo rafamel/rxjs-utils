@@ -1,51 +1,51 @@
+import { Resolve } from './utils';
+import { Observable } from './observables';
+
 /* Stream */
 export interface StreamConstructor {
-  new <T, Primer>(executor: Executor<T, Primer>): Stream<T, Primer>;
+  new <T>(executor: StreamExecutor<T>): StreamLike<T>;
 }
 
-export type Executor<T, Primer> = () => Partial<Provider<T, Primer>>;
+export type StreamExecutor<T> = () => Partial<StreamProvider<T>>;
 
-export interface Subject<T> {
+export interface Streamer<T> {
   data(value: T): void;
   close(error?: Error): void;
 }
 
-export interface Stream<T, Primer> {
-  primer(): Primer;
-  execute(): Provider<T, Primer>;
-  consume(consumer: Partial<Consumer<T, Primer>>): Broker;
+export interface StreamLike<T> {
+  execute(): StreamProvider<T>;
+  consume(consumer: Partial<StreamConsumer<T>>): StreamBroker;
 }
 
-export type SubjectStream<T, Primer> = Stream<T, Primer> & Subject<T>;
+export type ObservableStreamLike<T> = Observable<T> & StreamLike<T>;
 
 /* Provider */
-export interface Provider<T, Primer> {
-  prime(): Primer;
-  data(): Response<T>;
+export interface StreamProvider<T> {
+  data(): StreamResponse<T>;
   close(): void;
 }
 
 /* Consumer */
-export interface Consumer<T, Primer> {
-  prime(primer: Primer): void | boolean;
+export interface StreamConsumer<T> {
   data(value: T): Resolve<void | boolean>;
-  close(error?: Error): void;
+  close(reason: StreamReason, error?: Error): void;
 }
 
+export type StreamReason = 'complete' | 'cancel' | 'terminate';
+
 /* Broker */
-export interface Broker extends Promise<void> {
+export interface StreamBroker extends Promise<void> {
   done: boolean;
   cancel(): void;
 }
 
 /* Response */
-export type Response<T> = Resolve<Result<T>>;
+export type StreamResponse<T> = Resolve<StreamResult<T>>;
 
-export type Resolve<T> = T | Promise<T>;
-
-export type Result<T> =
-  | { done: true; value?: void }
-  | { done?: false; value: T }
+export type StreamResult<T> =
+  | { complete: true; value?: void }
+  | { complete?: false; value: T }
   | (T extends void | undefined
-      ? { done?: false; value?: T }
-      : { done?: false; value: T });
+      ? { complete?: false; value?: T }
+      : { complete?: false; value: T });

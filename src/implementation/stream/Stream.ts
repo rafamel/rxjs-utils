@@ -1,5 +1,4 @@
 import { SafeInternal } from '../helpers/safe-internal';
-import { Streams as Types } from '@definitions';
 import {
   StreamBroker,
   StreamResponse,
@@ -7,28 +6,30 @@ import {
   StreamExecutor,
   StreamConsumer,
   StreamResult,
-  StreamSubject
-} from './definitions';
+  StreamReason,
+  StreamLike,
+  Streamer
+} from '@definitions';
 import { Broker } from './Broker';
 import { ExternalPromise, externalPromise } from '../helpers/external-promise';
 
-type SafeProperties<T, Primer> = SafeInternal<{
-  executor: () => StreamProvider<T, Primer>;
+type SafeProperties<T> = SafeInternal<{
+  executor: () => StreamProvider<T>;
 }>;
 
 const map = new WeakMap();
 
 const noop = (): void => undefined;
-const complete = (): StreamResponse<any> => ({ done: true });
+const complete = (): StreamResponse<any> => ({ complete: true });
 const stop = (): boolean => true;
-const raise = (error?: Error): void => {
+const raise = (_: StreamReason, error?: Error): void => {
   if (error) throw error;
 };
 
-class Stream<T, Primer> implements Types.Stream<T, Primer> {
+class Stream<T> implements StreamLike<T> {
   public static push<T>(
-    executor: (subject: StreamSubject<T>) => void | (() => void)
-  ): Stream<T, void> {
+    executor: (streamer: Streamer<T>) => void | (() => void)
+  ): Stream<T> {
     return new this(() => {
       let queue: T[] = [];
       let external: null | ExternalPromise<StreamResult<T>> = null;
@@ -54,7 +55,7 @@ class Stream<T, Primer> implements Types.Stream<T, Primer> {
 
           if (external) {
             if (err) external.reject(err);
-            else external.resolve({ done: true });
+            else external.resolve({ complete: true });
             external = null;
           }
         }
@@ -67,7 +68,7 @@ class Stream<T, Primer> implements Types.Stream<T, Primer> {
 
           if (done) {
             if (error) throw error;
-            return { done: true };
+            return { complete: true };
           }
 
           if (external) return external.promise;
@@ -84,43 +85,24 @@ class Stream<T, Primer> implements Types.Stream<T, Primer> {
       };
     });
   }
-  private safe: SafeProperties<T, Primer>;
-  public constructor(executor: StreamExecutor<T, Primer>) {
+  private safe: SafeProperties<T>;
+  public constructor(executor: StreamExecutor<T>) {
     this.safe = new SafeInternal(this, map, {
       executor() {
         const provider = executor();
         return {
-          prime: provider.prime ? provider.prime.bind(provider) : noop,
           data: provider.data ? provider.data.bind(provider) : complete,
           close: provider.close ? provider.close.bind(provider) : noop
-        } as StreamProvider<T, Primer>;
+        } as StreamProvider<T>;
       }
     });
   }
-  public primer(): Primer {
-    let value: Primer = undefined as any;
-    let error: null | Error = null;
-
-    this.consume({
-      prime(primer: Primer): boolean {
-        value = primer;
-        return true;
-      },
-      close(err?: Error): void {
-        if (err) error = err;
-      }
-    });
-
-    if (error) throw error;
-    return value;
-  }
-  public execute(): StreamProvider<T, Primer> {
+  public execute(): StreamProvider<T> {
     const { executor } = this.safe.get(map);
     return executor();
   }
-  public consume(consumer: Partial<StreamConsumer<T, Primer>>): StreamBroker {
+  public consume(consumer: Partial<StreamConsumer<T>>): StreamBroker {
     return new Broker(this.safe.get(map, 'executor'), {
-      prime: consumer.prime ? consumer.prime.bind(consumer) : noop,
       data: consumer.data ? consumer.data.bind(consumer) : stop,
       close: consumer.close ? consumer.close.bind(consumer) : raise
     });

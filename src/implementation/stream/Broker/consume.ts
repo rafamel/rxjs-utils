@@ -1,37 +1,40 @@
-import { StreamProvider, StreamConsumer, StreamResponse } from '../definitions';
+import { StreamProvider, StreamConsumer, StreamReason } from '@definitions';
 import {
   externalPromise,
   ExternalPromise
 } from '../../helpers/external-promise';
+import { handleMaybePromise } from '../../helpers/maybe-promise';
 
-export interface Result {
+export interface ConsumeResponse {
   done: boolean;
   promise: Promise<void>;
   cancel: () => void;
 }
 
-export function consume<T, Primer>(
-  executor: () => StreamProvider<T, Primer>,
-  consumer: StreamConsumer<T, Primer>
-): Result {
+export function consume<T>(
+  executor: () => StreamProvider<T>,
+  consumer: StreamConsumer<T>
+): ConsumeResponse {
   return consumeInitialization(executor, consumer);
 }
 
-function consumeInitialization<T, Primer>(
-  executor: () => StreamProvider<T, Primer>,
-  consumer: StreamConsumer<T, Primer>
-): Result {
+function consumeInitialization<T>(
+  executor: () => StreamProvider<T>,
+  consumer: StreamConsumer<T>
+): ConsumeResponse {
   const external = externalPromise<void>();
 
-  let provider: StreamProvider<T, Primer>;
+  let provider: StreamProvider<T>;
   try {
     provider = executor();
   } catch (err) {
-    consumeCapture(consumer, external, err);
+    consumeCapture(consumer, external, 'terminate', err);
     return {
       done: true,
       promise: external.promise,
-      cancel: (): void => undefined
+      cancel(): void {
+        return undefined;
+      }
     };
   }
 
@@ -41,103 +44,77 @@ function consumeInitialization<T, Primer>(
     },
     promise: external.promise,
     cancel(): void {
-      if (!external.done) consumeFinalize(provider, consumer, external);
+      if (external.done) return;
+      consumeFinalize(provider, consumer, external, 'cancel');
     }
   };
 
-  let primer: Primer;
-  try {
-    primer = provider.prime();
-  } catch (err) {
-    consumeProviderTerminate(provider, consumer, external, err);
-    return result;
-  }
-
-  let done: boolean | void;
-  try {
-    done = consumer.prime(primer);
-  } catch (err) {
-    consumeConsumerTerminate(provider, consumer, external, err);
-    return result;
-  }
-  if (done) {
-    consumeFinalize(provider, consumer, external);
-    return result;
-  }
-
-  consumeProcess(provider, consumer, external).then(
-    () => {
-      if (external.done) return;
-      consumeFinalize(provider, consumer, external);
-    },
-    (err) => {
-      if (external.done) return;
-      consumeConsumerTerminate(provider, consumer, external, err);
-    }
-  );
+  consumeProcess(provider, consumer, external);
   return result;
 }
 
-async function consumeProcess<T, Primer>(
-  provider: StreamProvider<T, Primer>,
-  consumer: StreamConsumer<T, Primer>,
+function consumeProcess<T>(
+  provider: StreamProvider<T>,
+  consumer: StreamConsumer<T>,
   external: ExternalPromise<void>
-): Promise<void> {
+): void {
   if (external.done) return;
 
-  let response: StreamResponse<T>;
-  try {
-    response = await provider.data();
-  } catch (err) {
-    return external.done
-      ? undefined
-      : consumeProviderTerminate(provider, consumer, external, err);
-  }
+  handleMaybePromise(
+    () => provider.data(),
+    (result) => {
+      if (!result || typeof result !== 'object') {
+        return consumeProviderTerminate(
+          provider,
+          consumer,
+          external,
+          Error('Stream provider response is not an object')
+        );
+      }
 
-  if (external.done) return;
-  if (typeof response !== 'object' || response === null) {
-    return consumeProviderTerminate(
-      provider,
-      consumer,
-      external,
-      Error('Stream provider response is not an object')
-    );
-  }
-  if (response.done) {
-    return consumeFinalize(provider, consumer, external);
-  }
+      if (external.done) return;
+      if (result.complete) {
+        return consumeFinalize(provider, consumer, external, 'complete');
+      }
 
-  let done: void | boolean;
-  try {
-    done = await consumer.data(response.value as T);
-  } catch (err) {
-    return external.done
-      ? undefined
-      : consumeConsumerTerminate(provider, consumer, external, err);
-  }
-
-  if (done) {
-    return consumeFinalize(provider, consumer, external);
-  }
-
-  return consumeProcess(provider, consumer, external);
+      handleMaybePromise(
+        () => consumer.data(result.value as T),
+        (done) => {
+          if (done) {
+            return consumeFinalize(provider, consumer, external, 'cancel');
+          }
+          return consumeProcess(provider, consumer, external);
+        },
+        (err) => {
+          return external.done
+            ? undefined
+            : consumeConsumerTerminate(provider, consumer, external, err);
+        }
+      );
+    },
+    (err) => {
+      return external.done
+        ? undefined
+        : consumeProviderTerminate(provider, consumer, external, err);
+    }
+  );
 }
 
-function consumeProviderTerminate<T, Primer>(
-  provider: StreamProvider<T, Primer>,
-  consumer: StreamConsumer<T, Primer>,
+function consumeProviderTerminate<T>(
+  provider: StreamProvider<T>,
+  consumer: StreamConsumer<T>,
   external: ExternalPromise<void>,
   error: Error
 ): void {
   try {
     provider.close();
   } catch (_) {}
-  return consumeCapture(consumer, external, error);
+  return consumeCapture(consumer, external, 'terminate', error);
 }
 
-function consumeConsumerTerminate<T, Primer>(
-  provider: StreamProvider<T, Primer>,
-  consumer: StreamConsumer<T, Primer>,
+function consumeConsumerTerminate<T>(
+  provider: StreamProvider<T>,
+  consumer: StreamConsumer<T>,
   external: ExternalPromise<void>,
   error: Error
 ): void {
@@ -148,25 +125,26 @@ function consumeConsumerTerminate<T, Primer>(
     err = e;
   }
   try {
-    consumer.close(err);
+    consumer.close('terminate', err);
   } catch (_) {}
 
   return external.reject(error);
 }
 
-function consumeFinalize<T, Primer>(
-  provider: StreamProvider<T, Primer>,
-  consumer: StreamConsumer<T, Primer>,
-  external: ExternalPromise<void>
+function consumeFinalize<T>(
+  provider: StreamProvider<T>,
+  consumer: StreamConsumer<T>,
+  external: ExternalPromise<void>,
+  reason: StreamReason
 ): void {
   try {
     provider.close();
   } catch (err) {
-    return consumeCapture(consumer, external, err);
+    return consumeCapture(consumer, external, reason, err);
   }
 
   try {
-    consumer.close();
+    consumer.close(reason);
   } catch (err) {
     return external.reject(err);
   }
@@ -174,13 +152,14 @@ function consumeFinalize<T, Primer>(
   return external.resolve();
 }
 
-function consumeCapture<T, Primer>(
-  consumer: StreamConsumer<T, Primer>,
+function consumeCapture<T>(
+  consumer: StreamConsumer<T>,
   external: ExternalPromise<void>,
+  reason: StreamReason,
   error: Error
 ): void {
   try {
-    consumer.close(error);
+    consumer.close(reason, error);
   } catch (err) {
     return external.reject(err);
   }

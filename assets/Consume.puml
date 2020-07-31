@@ -4,120 +4,107 @@ partition Consume {
   start
   : Call **Provider** Executor;
   if (Error?) then (yes)
+    : Reason: **terminate**;
     (C)
     detach
-  else (no)
-    : Provider.prime(): Primer;
-    if (Error?) then (yes)
-      (A)
-      detach
-      ' Provider Termination
-      (A)
-      : Provider.close(): void;
-      (C)
-      detach
-      ' Capture
-      (C)
-      if (Consumer.close exists?) then (yes)
-        : Consumer.close(error: Error): void;
-        if (Error?) then (yes)
-          : **Reject** StreamBroker;
-        else (no)
-          : **Resolve** StreamBroker;
-        endif
-      else (no)
+    ' Capture
+    (C)
+    if (Consumer.close exists?) then (yes)
+      : Consumer.close(reason: StreamReason, error: Error): void;
+      if (Error?) then (yes)
         : **Reject** StreamBroker;
+      else (no)
+        : **Resolve** StreamBroker;
       endif
-      stop
-      ' / Capture
-      ' / Provider Termination
     else (no)
-      : Consumer.prime(primer: Primer): void | boolean;
-      if (Error) then (yes)
-        (B)
-        detach
-        ' Consumer Termination
-        (B)
-        : Provider.close(): void;
-        if (Error?) then (yes)
-          : Consumer.close(error: Error): void;
-        else (no)
-          : Consumer.close(): void;
-        endif
-        : **Reject** StreamBroker;
-        stop
-        ' / Consumer Termination
-      else (no)
-        if (Done, returns **true**?) then (yes)
-          (F)
-          detach
-          ' Finalization
-          (F)
-          : Provider.close(): void;
-          if (Error?) then (yes)
-            (C)
-          else (no)
-            : Consumer.close(): void;
-            if (Error?) then (yes)
-              : **Reject** StreamBroker;
-            else (no)
-              : **Resolve** StreamBroker;
-            endif
-          endif
+      : **Reject** StreamBroker;
+    endif
+    stop
+    ' / Capture
+  else (no)
+    (P)
+    detach
+    ' Process
+    (P)
+    if (Externally cancelled?) then (yes)
+      stop
+    else (no)
+      if (Provider.data exists?) then (yes)
+        : Provider.data(): StreamResponse<T>;
+        if (Externally cancelled?) then (yes)
           stop
-          ' / Finalization
         else (no)
-          : Queue **Asynchronous** Process **[P]**;
-          : Return **StreamBroker**;
-          (P)
-          detach
-          ' Process
-          (P)
-          if (Externally cancelled?) then (yes)
-            stop
+          if (Error?) then (yes)
+            : Reason: **terminate**;
+            (A)
+            detach
+            ' Provider Termination
+            (A)
+            : Provider.close(): void;
+            (C)
+            detach
+            ' / Provider Termination
           else (no)
-            if (Provider.data exists?) then (yes)
-              : Provider.data(): StreamResponse<T>;
+            if (Complete, returns **{ complete: true }**?) then (yes)
+              : Consumer.data(value: T): StreamResolve<void | boolean>;
               if (Externally cancelled?) then (yes)
                 stop
               else (no)
                 if (Error?) then (yes)
-                  (A)
+                  : Reason: **terminate**;
+                  (B)
                   detach
-                else (no)
-                  if (Done, returns **{ done: true }**?) then (yes)
-                    : Consumer.data(value: T): StreamResolve<void | boolean>;
-                    if (Externally cancelled?) then (yes)
-                      stop
-                    else (no)
-                      if (Error?) then (yes)
-                        (B)
-                        detach
-                      else (no)
-                        if (Done, returns **true**?) then (yes)
-                          (F)
-                          detach
-                        else (no)
-                          (P)
-                          detach
-                        endif
-                      endif
-                    endif
+                  ' Consumer Termination
+                  (B)
+                  : Provider.close(): void;
+                  if (Error?) then (yes)
+                    : Consumer.close(reason: StreamReason, error: Error): void;
                   else (no)
+                    : Consumer.close(reason: StreamReason): void;
+                  endif
+                  : **Reject** StreamBroker;
+                  stop
+                  ' / Consumer Termination
+                else (no)
+                  if (Cancel, returns **true**?) then (yes)
+                    : Reason: **cancel**;
                     (F)
+                    detach
+                  else (no)
+                    (P)
                     detach
                   endif
                 endif
               endif
             else (no)
+              : Reason: **complete**;
               (F)
               detach
             endif
           endif
-          ' / Process
         endif
+      else (no)
+        : Reason: **complete**;
+        (F)
+        detach
+        ' Finalization
+        (F)
+        : Provider.close(): void;
+        if (Error?) then (yes)
+          (C)
+        else (no)
+          : Consumer.close(reason: StreamReason): void;
+          if (Error?) then (yes)
+            : **Reject** StreamBroker;
+          else (no)
+            : **Resolve** StreamBroker;
+          endif
+        endif
+        stop
+        ' / Finalization
       endif
     endif
+    ' / Process
   endif
 }
 
@@ -127,6 +114,7 @@ partition "External Cancellation" {
   if (Done?) then (yes)
     stop
   else (no)
+    : Reason: **cancel**;
     (F)
     detach
   endif

@@ -1,21 +1,17 @@
 import { SafeInternal } from '../helpers/safe-internal';
-import { Subscription } from './Subscription';
-import { Observables as Types } from '@definitions';
+import { Subscription, Observer, SubscriptionObserver } from '@definitions';
 
 type SafeProperties<T> = SafeInternal<{
-  observer: Types.Observer<T>;
+  observer: Observer<T>;
   subscription: Subscription;
 }>;
 
 const map = new WeakMap();
 
-export class SubscriptionObserver<T = any>
-  implements Types.SubscriptionObserver<T> {
+export class ObservableSubscriptionObserver<T = any>
+  implements SubscriptionObserver<T> {
   private safe: SafeProperties<T>;
-  public constructor(
-    observer: Types.Observer<T>,
-    subscription: Subscription<T>
-  ) {
+  public constructor(observer: Observer<T>, subscription: Subscription) {
     this.safe = new SafeInternal(this, map, {
       observer,
       subscription

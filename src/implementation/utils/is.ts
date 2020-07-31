@@ -1,28 +1,33 @@
 import SymbolObservable from 'symbol-observable';
-import { Observables as Types } from '@definitions';
+import { Observable } from '@definitions';
+import { Stream } from '../stream';
 
-export function isIterable(value: any): value is Iterable<unknown> {
+export function isStream(item: any): item is Stream<unknown> {
+  return item instanceof Stream;
+}
+
+export function isObservable(item: any): item is Observable<unknown> {
+  const typeofItem = typeof item;
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value[Symbol.iterator] === 'function'
+    ((typeofItem === 'object' && item !== null) || typeofItem === 'function') &&
+    (typeof item[SymbolObservable] === 'function' ||
+      typeof item['@@observable'] === 'function') &&
+    typeof item.subscribe === 'function'
   );
 }
 
-export function isAsyncIterable(value: any): value is AsyncIterable<unknown> {
+export function isIterable(item: any): item is Iterable<unknown> {
+  const typeofItem = typeof item;
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value[Symbol.asyncIterator] === 'function'
+    ((typeofItem === 'object' && item !== null) || typeofItem === 'function') &&
+    typeof item[Symbol.iterator] === 'function'
   );
 }
 
-export function isObservable(value: any): value is Types.Observable<unknown> {
+export function isAsyncIterable(item: any): item is AsyncIterable<unknown> {
+  const typeofItem = typeof item;
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    (typeof value[SymbolObservable] === 'function' ||
-      typeof value['@@observable'] === 'function') &&
-    typeof value.subscribe === 'function'
+    ((typeofItem === 'object' && item !== null) || typeofItem === 'function') &&
+    typeof item[Symbol.asyncIterator] === 'function'
   );
 }
