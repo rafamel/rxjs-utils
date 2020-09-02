@@ -70,7 +70,7 @@
   },
   "dependencies": {
     "equal-strategies": "^0.1.0",
-    "symbol-observable": "^1.2.0"
+    "symbol-observable": "^2.0.0"
   },
   "husky": {
     "hooks": {
