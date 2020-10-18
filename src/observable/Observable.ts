@@ -56,10 +56,7 @@ export class Observable<T = any, S = void>
       throw new TypeError('Expected subscriber to be a function');
     }
 
-    this[$subscriber] = (observer: Observables.SubscriptionObserver<T, S>) => {
-      const unsubscribe = subscriber(observer);
-      return unsubscribe || (() => undefined);
-    };
+    this[$subscriber] = subscriber;
   }
   public [SymbolObservable](): Observable<T, S> {
     return this;

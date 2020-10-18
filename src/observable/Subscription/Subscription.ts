@@ -1,6 +1,6 @@
 import { SubscriptionObserver } from './SubscriptionObserver';
 import { NopFn, Observables } from '../../definitions';
-import { isFunction, isObject } from '../../helpers';
+import { isEmpty, isFunction, isObject } from '../../helpers';
 
 const $done = Symbol('done');
 const $teardown = Symbol('teardown');
@@ -28,17 +28,19 @@ class Subscription<T = any, S = void> implements Observables.Subscription {
     let teardown: NopFn = () => undefined;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
-      if (isFunction(unsubscribe)) {
-        teardown = unsubscribe;
-      } else if (
-        isObject(unsubscribe) &&
-        isFunction((unsubscribe as Observables.Subscription).unsubscribe)
-      ) {
-        teardown = () => unsubscribe.unsubscribe();
-      } else {
-        throw new TypeError(
-          'Expected subscriber teardown to be a function or a subscription'
-        );
+      if (!isEmpty(unsubscribe)) {
+        if (isFunction(unsubscribe)) {
+          teardown = unsubscribe;
+        } else if (
+          isObject(unsubscribe) &&
+          isFunction((unsubscribe as Observables.Subscription).unsubscribe)
+        ) {
+          teardown = () => unsubscribe.unsubscribe();
+        } else {
+          throw new TypeError(
+            'Expected subscriber teardown to be a function or a subscription'
+          );
+        }
       }
     } catch (err) {
       subscriptionObserver.error(err);

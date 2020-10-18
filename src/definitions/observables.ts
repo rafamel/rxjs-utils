@@ -63,4 +63,4 @@ export interface SubscriptionObserver<T = any, S = void> {
 
 export type Subscriber<T = any, S = void> = (
   observer: SubscriptionObserver<T, S>
-) => NopFn | Subscription;
+) => NopFn | Subscription | null | undefined | void;
