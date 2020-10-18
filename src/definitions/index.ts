@@ -1,5 +1,4 @@
-import * as Iterators from './iterators';
+import * as Observables from './observables';
 
-export { Iterators };
-export * from './streams';
-export * from './observables';
+export { Observables };
+export * from './types';
