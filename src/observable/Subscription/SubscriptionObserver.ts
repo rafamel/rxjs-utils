@@ -25,8 +25,40 @@ class SubscriptionObserver<T = any, S = void>
   public next(value: T): void {
     if (this.closed) return;
 
+    let res: any;
+    let err: Error | void;
+    let method: UnaryFn<T> | void;
+
+    const subscription = this[$subscription];
     const observer = this[$observer];
-    if (observer.next) observer.next(value);
+
+    try {
+      method = observer.next;
+    } catch (e) {
+      err = e;
+    }
+
+    if (!isEmpty(method)) {
+      if (isFunction(method)) {
+        try {
+          res = method.call(observer, value);
+        } catch (e) {
+          err = e;
+        }
+      } else {
+        err = new TypeError('Expected observer next to be a function');
+      }
+    }
+
+    if (err) {
+      try {
+        subscription.unsubscribe();
+      } finally {
+        throw err;
+      }
+    }
+
+    return res;
   }
   public error(error: Error): void {
     if (this.closed) throw error;
