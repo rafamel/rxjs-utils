@@ -7,13 +7,12 @@ const $teardown = Symbol('teardown');
 
 class Subscription<T = any, S = void> implements Observables.Subscription {
   private [$done]: boolean;
-  private [$teardown]: NopFn | null;
+  private [$teardown]: NopFn | void;
   public constructor(
     observer: Observables.Observer<T, S>,
     subscriber: Observables.Subscriber<T, S>
   ) {
     this[$done] = false;
-    this[$teardown] = null;
 
     try {
       if (observer.start) observer.start(this);
@@ -54,9 +53,9 @@ class Subscription<T = any, S = void> implements Observables.Subscription {
   public unsubscribe(): void {
     if (this.closed) return;
 
+    this[$done] = true;
     const teardown = this[$teardown];
     if (teardown) teardown();
-    this[$done] = true;
   }
 }
 
