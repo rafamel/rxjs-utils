@@ -3,12 +3,16 @@
 import { runTests as compliance } from 'es-observable-tests';
 import { Observable } from '../src';
 
-test(`Observables complies w/ ES Observable spec`, async () => {
+function setup(fn: () => Promise<void>): Promise<void> {
   const log = console.log;
   console.log = (...value: any[]) =>
     process.stdout.write(value.join(' ') + '\n');
-  const { logger } = await compliance(Observable);
-  console.log = log;
+  return fn().finally(() => (console.log = log));
+}
 
-  expect(logger.failed).toBe(0);
+test(`Observables complies w/ ES Observable spec`, async () => {
+  await setup(async () => {
+    const { logger } = await compliance(Observable);
+    expect(logger.failed).toBe(0);
+  });
 });

@@ -1,19 +1,17 @@
-import { NopFn, UnaryFn } from './types';
+import { Empty, NoParamFn, UnaryFn } from './types';
 import 'symbol-observable';
 
-export type ObservableSymbol = '@@observable';
-
 export interface Constructor {
-  new <T = any, S = void>(subscriber: Subscriber<T, S>): Observable<T, S>;
+  new <T = any, R = void>(subscriber: Subscriber<T, R>): Observable<T, R>;
   of<T>(...items: T[]): Observable<T>;
-  from<T, S = void>(
+  from<T, R = void>(
     item:
-      | Subscriber<T, S>
-      | Observable<T, S>
-      | Compatible<T, S>
+      | Subscriber<T, R>
+      | Observable<T, R>
+      | Compatible<T, R>
       | Like<T>
       | Iterable<T>
-  ): Observable<T, S>;
+  ): Observable<T, R>;
   prototype: Observable;
 }
 
@@ -21,18 +19,18 @@ export interface Like<T = any> {
   subscribe(observer: ObserverLike<T>): Subscription;
 }
 
-export type Compatible<T = any, S = void> = {
-  [Symbol.observable]: () => Observable<T, S>;
+export type Compatible<T = any, R = void> = {
+  [Symbol.observable]: () => Observable<T, R>;
 };
 
-export interface Observable<T = any, S = void>
-  extends Compatible<T, S>,
+export interface Observable<T = any, R = void>
+  extends Compatible<T, R>,
     Like<T> {
-  subscribe(observer: Observer<T, S>): Subscription;
+  subscribe(observer: Observer<T, R>): Subscription;
   subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
-    onComplete?: UnaryFn<S>
+    onComplete?: UnaryFn<R>
   ): Subscription;
 }
 
@@ -47,20 +45,22 @@ export interface ObserverLike<T = any> {
   complete?: () => void;
 }
 
-export interface Observer<T = any, S = void> {
+export interface Observer<T = any, R = void> {
   start?: (subscription: Subscription) => void;
   next?: (value: T) => void;
   error?: (error: Error) => void;
-  complete?: (signal: S) => void;
+  complete?: (reason: R) => void;
 }
 
-export interface SubscriptionObserver<T = any, S = void> {
+export interface SubscriptionObserver<T = any, R = void> {
   closed: boolean;
   next(value: T): void;
   error(error: Error): void;
-  complete(signal: S): void;
+  complete(reason: R): void;
 }
 
-export type Subscriber<T = any, S = void> = (
-  observer: SubscriptionObserver<T, S>
-) => NopFn | Subscription | null | undefined | void;
+export type Subscriber<T = any, R = void> = (
+  observer: SubscriptionObserver<T, R>
+) => Teardown;
+
+export type Teardown = Empty | NoParamFn | Subscription;

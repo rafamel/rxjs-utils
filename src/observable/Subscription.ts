@@ -1,31 +1,30 @@
+import { NoParamFn, Observables } from '../definitions';
+import { isEmpty, isFunction, isObject, invoke, Action } from '../helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
-import { NopFn, Observables } from '../../definitions';
-import { isEmpty, isFunction, isObject } from '../../helpers';
 
 const $done = Symbol('done');
 const $teardown = Symbol('teardown');
 
-class Subscription<T = any, S = void> implements Observables.Subscription {
+class Subscription<T = any, R = void> implements Observables.Subscription {
   private [$done]: boolean;
-  private [$teardown]: NopFn | void;
+  private [$teardown]: NoParamFn | void;
   public constructor(
-    observer: Observables.Observer<T, S>,
-    subscriber: Observables.Subscriber<T, S>
+    observer: Observables.Observer<T, R>,
+    subscriber: Observables.Subscriber<T, R>
   ) {
     this[$done] = false;
 
     try {
-      if (observer.start) observer.start(this);
+      invoke(observer, Action.Start, this);
     } catch (err) {
-      if (observer.error) observer.error(err);
-      else throw err;
+      invoke(observer, Action.Error, err);
     }
 
     if (this.closed) return;
 
     const subscriptionObserver = new SubscriptionObserver(observer, this);
 
-    let teardown: NopFn = () => undefined;
+    let teardown: NoParamFn = () => undefined;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
       if (!isEmpty(unsubscribe)) {
