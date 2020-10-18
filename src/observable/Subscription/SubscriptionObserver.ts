@@ -29,26 +29,57 @@ class SubscriptionObserver<T = any, S = void>
     if (observer.next) observer.next(value);
   }
   public error(error: Error): void {
-    if (this.closed) return;
+    if (this.closed) throw error;
 
     this[$done] = true;
+
+    let res: any;
+    let err: Error | void;
+    let method: UnaryFn<Error> | void;
+
+    const subscription = this[$subscription];
+    const observer = this[$observer];
+
     try {
-      const observer = this[$observer];
-      if (observer.error) observer.error(error);
-    } finally {
-      this[$subscription].unsubscribe();
+      method = observer.error;
+    } catch (e) {
+      err = e;
     }
+
+    if (isEmpty(method)) {
+      err = error;
+    } else {
+      if (isFunction(method)) {
+        try {
+          res = method.call(observer, error);
+        } catch (e) {
+          err = e;
+        }
+      } else {
+        err = new TypeError('Expected observer error to be a function');
+      }
+    }
+
+    try {
+      subscription.unsubscribe();
+    } catch (e) {
+      if (!err) err = e;
+    }
+
+    if (err) throw err;
+    return res;
   }
   public complete(signal: S): void {
     if (this.closed) return;
 
     this[$done] = true;
-    const subscription = this[$subscription];
-    const observer = this[$observer];
 
     let res: any;
     let err: Error | void;
     let method: UnaryFn<S> | void;
+
+    const subscription = this[$subscription];
+    const observer = this[$observer];
 
     try {
       method = observer.complete;
