@@ -4,14 +4,16 @@ export enum Action {
   Start,
   Next,
   Error,
-  Complete
+  Complete,
+  Terminate
 }
 
 const map = {
   [Action.Start]: 'start',
   [Action.Next]: 'next',
   [Action.Error]: 'error',
-  [Action.Complete]: 'complete'
+  [Action.Complete]: 'complete',
+  [Action.Terminate]: 'terminate'
 };
 
 export function invoke(
