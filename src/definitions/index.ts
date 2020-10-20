@@ -1,4 +1,5 @@
+import * as Core from './core';
 import * as Observables from './observables';
 
-export { Observables };
+export { Core, Observables };
 export * from './types';
