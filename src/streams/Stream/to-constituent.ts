@@ -1,6 +1,6 @@
-import { Core } from '../../../definitions';
-import { isEmpty, isFunction, isObject } from '../../../helpers';
-import { Talkback } from '../Talkback';
+import { Core } from '../../definitions';
+import { isEmpty, isFunction, isObject } from '../../helpers';
+import { Talkback } from './Talkback';
 
 /* Convert Counterpart to Constituent */
 export function toConstituent<T, TR, U, UR>(

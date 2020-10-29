@@ -1,6 +1,6 @@
 import { Observables, UnaryFn } from '../definitions';
 import { isFunction, isObject } from '../helpers';
-import { fromIterable, fromObservableLike } from './helpers/from';
+import { fromIterable, fromObservableLike } from './from';
 import { Subscription } from './Subscription';
 import SymbolObservable from 'symbol-observable';
 

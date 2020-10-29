@@ -1,4 +1,4 @@
-import { Observables } from '../../definitions';
+import { Observables } from '../definitions';
 
 export function fromObservableLike<T, R = void>(
   Observable: Observables.Constructor,

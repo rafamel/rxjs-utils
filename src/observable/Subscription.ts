@@ -1,23 +1,23 @@
 import { NoParamFn, Observables } from '../definitions';
-import { isEmpty, isFunction, isObject, invoke, Action } from '../helpers';
+import { isEmpty, isFunction, isObject, arbitrate } from '../helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 
-const $done = Symbol('done');
+const $closed = Symbol('closed');
 const $teardown = Symbol('teardown');
 
 class Subscription<T = any, R = void> implements Observables.Subscription {
-  private [$done]: boolean;
+  private [$closed]: boolean;
   private [$teardown]: NoParamFn | void;
   public constructor(
     observer: Observables.Observer<T, R>,
     subscriber: Observables.Subscriber<T, R>
   ) {
-    this[$done] = false;
+    this[$closed] = false;
 
     try {
-      invoke(observer, Action.Start, this);
+      arbitrate(observer, 'start', this, null);
     } catch (err) {
-      invoke(observer, Action.Error, err);
+      arbitrate(observer, 'error', err, null);
     }
 
     if (this.closed) return;
@@ -49,12 +49,12 @@ class Subscription<T = any, R = void> implements Observables.Subscription {
     else this[$teardown] = teardown;
   }
   public get closed(): boolean {
-    return this[$done];
+    return this[$closed];
   }
   public unsubscribe(): void {
     if (this.closed) return;
 
-    this[$done] = true;
+    this[$closed] = true;
     const teardown = this[$teardown];
     if (teardown) teardown();
   }

@@ -1,36 +1,59 @@
-import { Observables } from '../definitions';
-import { Action } from '../helpers';
-import { prepare } from './helpers/prepare';
+import { Observables, WideRecord } from '../definitions';
 import { Subscription } from './Subscription';
+import { arbitrate, capture, silence } from '../helpers';
 
 const $done = Symbol('done');
-const $transact = Symbol('transact');
+const $observer = Symbol('observer');
 const $subscription = Symbol('subscription');
 
 class SubscriptionObserver<T = any, R = void>
   implements Observables.SubscriptionObserver<T, R> {
-  private [$done]: [boolean];
-  private [$transact]: ReturnType<typeof prepare>;
+  private [$done]: boolean;
+  private [$observer]: WideRecord;
   private [$subscription]: Subscription<T, R>;
   public constructor(
     observer: Observables.Observer<T, R>,
     subscription: Subscription<T, R>
   ) {
-    this[$done] = [false];
-    this[$transact] = prepare(observer, subscription, this[$done]);
+    this[$done] = false;
+    this[$observer] = observer;
     this[$subscription] = subscription;
   }
   public get closed(): boolean {
-    return this[$done][0] || this[$subscription].closed;
+    return this[$done] || this[$subscription].closed;
   }
   public next(value: T): void {
-    return this[$transact](Action.Next, value);
+    if (this.closed) return;
+
+    // Replicate `arbitrate` for next (performance)
+    try {
+      const observer = this[$observer];
+      const method = observer.next;
+      try {
+        return method.call(observer, value);
+      } catch (err) {
+        capture('next', method, err, null);
+      }
+    } catch (err) {
+      silence(() => this[$subscription].unsubscribe());
+      throw err;
+    }
   }
   public error(error: Error): void {
-    return this[$transact](Action.Error, error);
+    if (this.closed) throw error;
+
+    this[$done] = true;
+    return arbitrate(this[$observer], 'error', error, () => {
+      this[$subscription].unsubscribe();
+    });
   }
   public complete(reason: R): void {
-    return this[$transact](Action.Complete, reason);
+    if (this.closed) return;
+
+    this[$done] = true;
+    return arbitrate(this[$observer], 'complete', reason, () => {
+      this[$subscription].unsubscribe();
+    });
   }
 }
 

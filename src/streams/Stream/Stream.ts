@@ -1,5 +1,6 @@
+import { silence } from '../../helpers';
 import { Core } from '../../definitions';
-import { toConstituent } from './helpers/to-constituent';
+import { toConstituent } from './to-constituent';
 import { Talkback } from './Talkback';
 
 const $source = Symbol('source');
@@ -34,9 +35,7 @@ export class Stream<O, R = void, I = void, S = void>
           return otb;
         });
       } catch (err) {
-        try {
-          otb.terminate();
-        } catch (_) {}
+        silence(() => otb.terminate());
         throw err;
       }
     }
@@ -60,9 +59,7 @@ export class Stream<O, R = void, I = void, S = void>
     try {
       provide();
     } catch (err) {
-      try {
-        otb.terminate();
-      } catch (_) {}
+      silence(() => otb.terminate());
       throw err;
     }
 
