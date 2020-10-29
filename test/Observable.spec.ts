@@ -10,9 +10,10 @@ function setup(fn: () => Promise<void>): Promise<void> {
   return fn().finally(() => (console.log = log));
 }
 
-test(`Observables complies w/ ES Observable spec`, async () => {
+test(`Observable complies w/ ES Observable spec`, async () => {
   await setup(async () => {
     const { logger } = await compliance(Observable);
     expect(logger.failed).toBe(0);
+    expect(logger.errored).toBe(0);
   });
 });
