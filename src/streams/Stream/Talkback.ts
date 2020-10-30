@@ -10,6 +10,7 @@ const $beforeOpen = Symbol('beforeOpen');
 export interface TalkbackOptions {
   beforeOpen?: NoParamFn;
   afterTerminate?: NoParamFn;
+  closeOnError?: boolean;
 }
 
 class Talkback<T, R = void> implements Core.Talkback<T, R> {
@@ -49,6 +50,15 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
     if (this.closed) throw error;
 
     invoke(this[$beforeOpen]);
+
+    const options = this[$options];
+    if (options && options.closeOnError) {
+      this[$closed] = true;
+      return arbitrate(this[$hearback], 'error', error, () => {
+        this.terminate();
+      });
+    }
+
     try {
       return this[$hearback].error(error);
     } catch (err) {
