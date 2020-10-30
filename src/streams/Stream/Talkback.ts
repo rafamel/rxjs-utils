@@ -1,5 +1,5 @@
-import { Core, NoParamFn } from '../../definitions';
-import { arbitrate, capture, invoke, silence } from '../../helpers';
+import { Core, NoParamFn, WideRecord } from '../../definitions';
+import { arbitrate, capture, invoke } from '../../helpers';
 
 const $closed = Symbol('closed');
 const $terminated = Symbol('terminated');
@@ -10,7 +10,7 @@ const $afterTerminate = Symbol('afterTerminate');
 export class Talkback<T, R = void> implements Core.Talkback<T, R> {
   private [$closed]: boolean;
   private [$terminated]: boolean;
-  private [$hearback]: Core.Hearback<T, R>;
+  private [$hearback]: WideRecord;
   private [$beforeOpen]: null | NoParamFn;
   private [$afterTerminate]: null | NoParamFn;
   public constructor(
@@ -30,36 +30,24 @@ export class Talkback<T, R = void> implements Core.Talkback<T, R> {
     if (this[$closed]) return;
 
     invoke(this[$beforeOpen]);
-    // Replicate `arbitrate` for next (performance)
     try {
-      const hearback = this[$hearback];
-      const method: any = hearback.next;
-      try {
-        return method.call(hearback, value);
-      } catch (err) {
-        capture('next', method, err, null);
-      }
+      return this[$hearback].next(value);
     } catch (err) {
-      silence(() => this.terminate());
-      throw err;
+      capture(this[$hearback], 'next', err, null, null, () => {
+        this.terminate();
+      });
     }
   }
   public error(error: Error): void {
     if (this[$closed]) throw error;
 
     invoke(this[$beforeOpen]);
-    // Replicate `arbitrate` for error (performance)
     try {
-      const hearback = this[$hearback];
-      const method: any = hearback.error;
-      try {
-        return method.call(hearback, error);
-      } catch (err) {
-        capture('error', method, err, null);
-      }
+      return this[$hearback].error(error);
     } catch (err) {
-      silence(() => this.terminate());
-      throw err;
+      capture(this[$hearback], 'error', err, [error], null, () => {
+        this.terminate();
+      });
     }
   }
   public complete(reason: R): void {

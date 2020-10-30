@@ -1,4 +1,3 @@
-import { silence } from '../../helpers';
 import { Core } from '../../definitions';
 import { toConstituent } from './to-constituent';
 import { Talkback } from './Talkback';
@@ -35,7 +34,9 @@ export class Stream<O, R = void, I = void, S = void>
           return otb;
         });
       } catch (err) {
-        silence(() => otb.terminate());
+        try {
+          otb.terminate();
+        } catch (_) {}
         throw err;
       }
     }
@@ -59,7 +60,9 @@ export class Stream<O, R = void, I = void, S = void>
     try {
       provide();
     } catch (err) {
-      silence(() => otb.terminate());
+      try {
+        otb.terminate();
+      } catch (_) {}
       throw err;
     }
 

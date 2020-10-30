@@ -1,6 +1,6 @@
 import { Observables, WideRecord } from '../definitions';
 import { Subscription } from './Subscription';
-import { arbitrate, capture, silence } from '../helpers';
+import { arbitrate, capture } from '../helpers';
 
 const $done = Symbol('done');
 const $observer = Symbol('observer');
@@ -25,18 +25,12 @@ class SubscriptionObserver<T = any, R = void>
   public next(value: T): void {
     if (this.closed) return;
 
-    // Replicate `arbitrate` for next (performance)
     try {
-      const observer = this[$observer];
-      const method = observer.next;
-      try {
-        return method.call(observer, value);
-      } catch (err) {
-        capture('next', method, err, null);
-      }
+      return this[$observer].next(value);
     } catch (err) {
-      silence(() => this[$subscription].unsubscribe());
-      throw err;
+      capture(this[$observer], 'next', err, null, null, () => {
+        this[$subscription].unsubscribe();
+      });
     }
   }
   public error(error: Error): void {

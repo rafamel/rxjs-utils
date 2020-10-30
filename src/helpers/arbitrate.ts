@@ -1,29 +1,27 @@
 import { NoParamFn, WideRecord } from '../definitions';
 import { capture } from './capture';
-import { silence } from './silence';
 
-export type Action = 'start' | 'next' | 'error' | 'complete' | 'terminate';
+export type ArbitrateAction =
+  | 'start'
+  | 'next'
+  | 'error'
+  | 'complete'
+  | 'terminate';
 
 export function arbitrate(
   record: WideRecord,
-  action: Action,
+  action: ArbitrateAction,
   payload: any,
-  after: null | NoParamFn
+  onDone: NoParamFn | null
 ): any {
-  let res: any;
-
+  let exec = false;
   try {
-    const method = record[action];
-    try {
-      res = method.call(record, payload);
-    } catch (err) {
-      capture(action, method, err, action === 'error' ? [payload] : null);
-    }
+    const res = record[action](payload);
+    exec = true;
+    if (onDone) onDone();
+    return res;
   } catch (err) {
-    if (after) silence(() => after());
-    throw err;
+    const fn = exec ? null : onDone;
+    capture(record, action, err, action === 'error' ? [payload] : null, fn, fn);
   }
-
-  if (after) after();
-  return res;
 }
