@@ -25,10 +25,11 @@ class SubscriptionObserver<T = any, R = void>
   public next(value: T): void {
     if (this.closed) return;
 
+    let method: any;
     try {
-      return this[$observer].next(value);
+      return (method = this[$observer].next).call(this[$observer], value);
     } catch (err) {
-      capture(this[$observer], 'next', err, null, null, () => {
+      capture(method, 'next', err, null, null, () => {
         this[$subscription].unsubscribe();
       });
     }

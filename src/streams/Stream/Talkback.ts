@@ -38,12 +38,12 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
     if (this.closed) return;
 
     invoke(this[$beforeOpen]);
+
+    let method: any;
     try {
-      return this[$hearback].next(value);
+      return (method = this[$hearback].next).call(this[$hearback], value);
     } catch (err) {
-      capture(this[$hearback], 'next', err, null, null, () => {
-        this.terminate();
-      });
+      capture(method, 'next', err, null, null, () => this.terminate());
     }
   }
   public error(error: Error): void {
@@ -54,15 +54,14 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
     const options = this[$options];
     if (options && options.closeOnError) {
       this[$closed] = true;
-      return arbitrate(this[$hearback], 'error', error, () => {
-        this.terminate();
-      });
+      return arbitrate(this[$hearback], 'error', error, () => this.terminate());
     }
 
+    let method: any;
     try {
-      return this[$hearback].error(error);
+      return (method = this[$hearback].error).call(this[$hearback], error);
     } catch (err) {
-      capture(this[$hearback], 'error', err, [error], null, () => {
+      capture(method, 'error', err, [error], null, () => {
         this.terminate();
       });
     }

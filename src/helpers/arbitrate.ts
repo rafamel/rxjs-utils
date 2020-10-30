@@ -15,13 +15,24 @@ export function arbitrate(
   onDone: NoParamFn | null
 ): any {
   let exec = false;
+
+  let res: any;
+  let method: any;
+
   try {
-    const res = record[action](payload);
-    exec = true;
-    if (onDone) onDone();
-    return res;
+    res = (method = record[action]).call(record, payload);
   } catch (err) {
-    const fn = exec ? null : onDone;
-    capture(record, action, err, action === 'error' ? [payload] : null, fn, fn);
+    exec = true;
+    capture(
+      method,
+      action,
+      err,
+      action === 'error' ? [payload] : null,
+      onDone,
+      onDone
+    );
   }
+
+  if (onDone && !exec) onDone();
+  return res;
 }
