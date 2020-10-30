@@ -51,7 +51,7 @@ export class Stream<O, R = void, I = void, S = void>
           complete: (reason) => itb.complete(reason),
           terminate: () => itb.terminate()
         },
-        provide
+        { beforeOpen: provide }
       );
     });
 

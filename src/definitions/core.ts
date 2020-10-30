@@ -36,6 +36,7 @@ export interface Hearback<T, R = void> {
 }
 
 export interface Talkback<T, R = void> extends Hearback<T, R> {
+  closed: boolean;
   next: (value: T) => void;
   error: (error: Error) => void;
   complete: (reason: R) => void;

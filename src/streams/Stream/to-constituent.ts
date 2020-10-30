@@ -16,7 +16,9 @@ export function toConstituent<T, TR, U, UR>(
       }
 
       const tb = exchange(
-        new Talkback(partial || {}, undefined, () => tb.terminate())
+        new Talkback(partial || {}, {
+          afterTerminate: () => tb.terminate()
+        })
       );
       return tb;
     });

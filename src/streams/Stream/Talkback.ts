@@ -4,30 +4,37 @@ import { arbitrate, capture, invoke } from '../../helpers';
 const $closed = Symbol('closed');
 const $terminated = Symbol('terminated');
 const $hearback = Symbol('hearback');
+const $options = Symbol('options');
 const $beforeOpen = Symbol('beforeOpen');
-const $afterTerminate = Symbol('afterTerminate');
 
-export class Talkback<T, R = void> implements Core.Talkback<T, R> {
+export interface TalkbackOptions {
+  beforeOpen?: NoParamFn;
+  afterTerminate?: NoParamFn;
+}
+
+class Talkback<T, R = void> implements Core.Talkback<T, R> {
   private [$closed]: boolean;
   private [$terminated]: boolean;
   private [$hearback]: WideRecord;
+  private [$options]: TalkbackOptions;
   private [$beforeOpen]: null | NoParamFn;
-  private [$afterTerminate]: null | NoParamFn;
-  public constructor(
-    hearback: Core.Hearback<T, R>,
-    beforeOpen?: NoParamFn,
-    afterTerminate?: NoParamFn
-  ) {
+  public constructor(hearback: Core.Hearback<T, R>, options?: TalkbackOptions) {
     this[$closed] = false;
     this[$terminated] = false;
     this[$hearback] = hearback;
+    this[$options] = options || {};
+
+    const beforeOpen =
+      options && options.beforeOpen ? options.beforeOpen.bind(options) : null;
     this[$beforeOpen] = beforeOpen
       ? () => (this[$beforeOpen] = null) || beforeOpen()
       : null;
-    this[$afterTerminate] = afterTerminate || null;
+  }
+  public get closed(): boolean {
+    return this[$closed];
   }
   public next(value: T): void {
-    if (this[$closed]) return;
+    if (this.closed) return;
 
     invoke(this[$beforeOpen]);
     try {
@@ -39,7 +46,7 @@ export class Talkback<T, R = void> implements Core.Talkback<T, R> {
     }
   }
   public error(error: Error): void {
-    if (this[$closed]) throw error;
+    if (this.closed) throw error;
 
     invoke(this[$beforeOpen]);
     try {
@@ -51,7 +58,7 @@ export class Talkback<T, R = void> implements Core.Talkback<T, R> {
     }
   }
   public complete(reason: R): void {
-    if (this[$closed]) return;
+    if (this.closed) return;
 
     this[$closed] = true;
 
@@ -68,8 +75,12 @@ export class Talkback<T, R = void> implements Core.Talkback<T, R> {
 
     invoke(this[$beforeOpen]);
     return arbitrate(this[$hearback], 'terminate', undefined, () => {
-      const afterTerminate = this[$afterTerminate];
-      if (afterTerminate) afterTerminate();
+      const options = this[$options];
+      if (options.afterTerminate) options.afterTerminate();
     });
   }
 }
+
+Talkback.prototype.constructor = Object;
+
+export { Talkback };
