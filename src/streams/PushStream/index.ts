@@ -1,3 +1,2 @@
 export * from './PushStream';
-// TODO
-// export * from './Subscription';
+export * from './Subscription';
