@@ -24,7 +24,7 @@ class Subscription<T = any, R = void> implements Push.Subscription {
 
     stream.source((talkback) => {
       this[$talkback] = talkback;
-      return new Talkback(observer, {
+      return new Talkback(() => observer, {
         closeOnError: true,
         afterTerminate: () => talkback.terminate()
       });

@@ -6,7 +6,6 @@ export function capture(
   name: string,
   error: Error,
   throwOnEmpty: null | [Error],
-  onPass: NoParamFn | null,
   onFail: NoParamFn | null
 ): void {
   try {
@@ -24,11 +23,5 @@ export function capture(
       } catch (_) {}
     }
     throw err;
-  }
-
-  if (onPass) {
-    try {
-      onPass();
-    } catch (_) {}
   }
 }

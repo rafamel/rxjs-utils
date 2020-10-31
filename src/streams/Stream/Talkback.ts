@@ -1,14 +1,13 @@
 import { Core, NoParamFn, WideRecord } from '../../definitions';
-import { arbitrate, capture, invoke } from '../../helpers';
+import { arbitrate, capture } from '../../helpers';
 
 const $closed = Symbol('closed');
 const $terminated = Symbol('terminated');
 const $hearback = Symbol('hearback');
 const $options = Symbol('options');
-const $beforeOpen = Symbol('beforeOpen');
+const $open = Symbol('open');
 
 export interface TalkbackOptions {
-  beforeOpen?: NoParamFn;
   afterTerminate?: NoParamFn;
   closeOnError?: boolean;
 }
@@ -16,20 +15,17 @@ export interface TalkbackOptions {
 class Talkback<T, R = void> implements Core.Talkback<T, R> {
   private [$closed]: boolean;
   private [$terminated]: boolean;
-  private [$hearback]: WideRecord;
+  private [$hearback]: WideRecord | void;
   private [$options]: TalkbackOptions;
-  private [$beforeOpen]: null | NoParamFn;
-  public constructor(hearback: Core.Hearback<T, R>, options?: TalkbackOptions) {
+  private [$open]: NoParamFn<Core.Hearback<T, R>>;
+  public constructor(
+    fn: NoParamFn<Core.Hearback<T, R>>,
+    options?: TalkbackOptions
+  ) {
     this[$closed] = false;
     this[$terminated] = false;
-    this[$hearback] = hearback;
     this[$options] = options || {};
-
-    const beforeOpen =
-      options && options.beforeOpen ? options.beforeOpen.bind(options) : null;
-    this[$beforeOpen] = beforeOpen
-      ? () => (this[$beforeOpen] = null) || beforeOpen()
-      : null;
+    this[$open] = () => (this[$hearback] = fn());
   }
   public get closed(): boolean {
     return this[$closed];
@@ -37,33 +33,31 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
   public next(value: T): void {
     if (this.closed) return;
 
-    invoke(this[$beforeOpen]);
+    const hearback = this[$hearback] || this[$open]();
 
     let method: any;
     try {
-      return (method = this[$hearback].next).call(this[$hearback], value);
+      return (method = hearback.next).call(hearback, value);
     } catch (err) {
-      capture(method, 'next', err, null, null, () => this.terminate());
+      capture(method, 'next', err, null, this.terminate.bind(this));
     }
   }
   public error(error: Error): void {
     if (this.closed) throw error;
 
-    invoke(this[$beforeOpen]);
-
     const options = this[$options];
+    const hearback = this[$hearback] || this[$open]();
+
     if (options && options.closeOnError) {
       this[$closed] = true;
-      return arbitrate(this[$hearback], 'error', error, () => this.terminate());
+      return arbitrate(hearback, 'error', error, this.terminate.bind(this));
     }
 
     let method: any;
     try {
-      return (method = this[$hearback].error).call(this[$hearback], error);
+      return (method = hearback.error).call(hearback, error);
     } catch (err) {
-      capture(method, 'error', err, [error], null, () => {
-        this.terminate();
-      });
+      capture(method, 'error', err, [error], this.terminate.bind(this));
     }
   }
   public complete(reason: R): void {
@@ -71,10 +65,12 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
 
     this[$closed] = true;
 
-    invoke(this[$beforeOpen]);
-    return arbitrate(this[$hearback], 'complete', reason, () => {
-      this.terminate();
-    });
+    return arbitrate(
+      this[$hearback] || this[$open](),
+      'complete',
+      reason,
+      this.terminate.bind(this)
+    );
   }
   public terminate(): void {
     if (this[$terminated]) return;
@@ -82,11 +78,15 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
     this[$closed] = true;
     this[$terminated] = true;
 
-    invoke(this[$beforeOpen]);
-    return arbitrate(this[$hearback], 'terminate', undefined, () => {
-      const options = this[$options];
-      if (options.afterTerminate) options.afterTerminate();
-    });
+    return arbitrate(
+      this[$hearback] || this[$open](),
+      'terminate',
+      undefined,
+      () => {
+        const options = this[$options];
+        if (options.afterTerminate) options.afterTerminate();
+      }
+    );
   }
 }
 

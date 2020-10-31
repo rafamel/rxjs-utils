@@ -29,26 +29,36 @@ class SubscriptionObserver<T = any, R = void>
     try {
       return (method = this[$observer].next).call(this[$observer], value);
     } catch (err) {
-      capture(method, 'next', err, null, null, () => {
-        this[$subscription].unsubscribe();
-      });
+      capture(
+        method,
+        'next',
+        err,
+        null,
+        this[$subscription].unsubscribe.bind(this[$subscription])
+      );
     }
   }
   public error(error: Error): void {
     if (this.closed) throw error;
 
     this[$done] = true;
-    return arbitrate(this[$observer], 'error', error, () => {
-      this[$subscription].unsubscribe();
-    });
+    return arbitrate(
+      this[$observer],
+      'error',
+      error,
+      this[$subscription].unsubscribe.bind(this[$subscription])
+    );
   }
   public complete(reason: R): void {
     if (this.closed) return;
 
     this[$done] = true;
-    return arbitrate(this[$observer], 'complete', reason, () => {
-      this[$subscription].unsubscribe();
-    });
+    return arbitrate(
+      this[$observer],
+      'complete',
+      reason,
+      this[$subscription].unsubscribe.bind(this[$subscription])
+    );
   }
 }
 

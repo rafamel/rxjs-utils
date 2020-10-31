@@ -1,36 +1,49 @@
 import { Core } from '../../definitions';
-import { toConstituent } from './to-constituent';
 import { Talkback } from './Talkback';
+import {
+  toConstituent,
+  validateCounterpart,
+  validateHearback
+} from './helpers';
 
 const $source = Symbol('source');
+const $provider = Symbol('provider');
 
 export class Stream<O, R = void, I = void, S = void>
   implements Core.Stream<O, R, I, S> {
-  private [$source]: Core.Source<O, R, I, S>;
+  private [$provider]: Core.Provider<O, R, I, S>;
+  private [$source]: Core.Source<O, R, I, S> | void;
   public constructor(provider: Core.Provider<O, R, I, S>) {
-    this[$source] = toConstituent(provider);
+    validateCounterpart(provider);
+    this[$provider] = provider;
   }
   public get source(): Core.Source<O, R, I, S> {
-    return this[$source];
+    const source = this[$source];
+    if (source) return source;
+
+    return (this[$source] = toConstituent(this[$provider]));
   }
   public consume(consumer: Core.Consumer<O, R, I, S>): void {
-    const source: Core.Source<O, R, I, S> = this.source;
-    const sink: Core.Sink<O, R, I, S> = toConstituent(consumer);
+    const provider = this[$provider];
+    validateCounterpart(consumer);
 
     let otb: any;
     let itb: any;
-    let isSinkNoop = true;
-    let isSourceNoop = true;
-    let provideCalled = false;
+    let ihb: any;
+    let hasIhb = false;
+    let isConsumerNoop = true;
+    let isProviderNoop = true;
 
-    function provide(): undefined {
-      if (provideCalled) return;
-      provideCalled = true;
+    function getIhb(): null {
+      if (hasIhb) return null;
+      hasIhb = true;
 
       try {
-        source((talkback) => {
-          isSourceNoop = false;
-          itb = talkback;
+        provider((_ihb) => {
+          validateHearback(_ihb);
+          isProviderNoop = false;
+
+          ihb = _ihb;
           return otb;
         });
       } catch (err) {
@@ -39,33 +52,27 @@ export class Stream<O, R = void, I = void, S = void>
         } catch (_) {}
         throw err;
       }
+
+      return null;
     }
 
-    sink((talkback) => {
-      isSinkNoop = false;
-      otb = talkback;
-      return new Talkback(
-        {
-          next: (value) => itb.next(value),
-          error: (error) => itb.error(error),
-          complete: (reason) => itb.complete(reason),
-          terminate: () => itb.terminate()
-        },
-        { beforeOpen: provide }
-      );
+    consumer((ohb) => {
+      validateHearback(ohb);
+      isConsumerNoop = false;
+
+      otb = new Talkback(() => ohb || {}, {
+        afterTerminate: () => itb.terminate()
+      });
+
+      itb = new Talkback(() => getIhb() || ihb, {
+        afterTerminate: () => otb.terminate()
+      });
+
+      return itb;
     });
 
-    if (isSinkNoop) return;
-
-    try {
-      provide();
-    } catch (err) {
-      try {
-        otb.terminate();
-      } catch (_) {}
-      throw err;
-    }
-
-    if (isSourceNoop) otb.terminate();
+    if (isConsumerNoop) return;
+    getIhb();
+    if (isProviderNoop) otb.terminate();
   }
 }
