@@ -1,10 +1,17 @@
 /* eslint-disable no-console */
-import { Observables, Observable } from '../src';
+import { Observables, Observable, PushStream } from '../src';
 import ZenObservable from 'zen-observable';
 import chalk from 'chalk';
 
 console.log(chalk.bold('\nPERFORMANCE'));
 const failures = [
+  performs(
+    ['Multitude PushStream', PushStream],
+    ['Zen Observable', ZenObservable],
+    100,
+    10 ** 5,
+    0.1
+  ),
   performs(
     ['Multitude Observable', Observable],
     ['Zen Observable', ZenObservable],
