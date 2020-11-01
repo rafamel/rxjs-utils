@@ -1,9 +1,14 @@
+/* eslint-disable prefer-const */
 import { NoParamFn, Observables, Push, UnaryFn } from '../../definitions';
 import { isEmpty, isFunction, isObject } from '../../helpers';
 import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
-import { Subscription } from './Subscription';
+import { Subscription, SubscriptionOptions } from './Subscription';
 import SymbolObservable from 'symbol-observable';
+
+export type PushStreamOptions = SubscriptionOptions;
+
+const $options = Symbol('options');
 
 export class PushStream<T = any, R = void> extends Stream<T, R>
   implements Push.Stream<T, R> {
@@ -51,39 +56,36 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
 
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);
   }
-  public constructor(subscriber: Push.Subscriber<T, R>) {
+  private [$options]: PushStreamOptions;
+  public constructor(
+    subscriber: Push.Subscriber<T, R>,
+    ...args: [] | [PushStreamOptions | undefined]
+  ) {
     if (!isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
 
     super((exchange) => {
-      let terminated = false;
       let close: undefined | NoParamFn;
-      let terminateError: undefined | [Error];
+      let finalError: undefined | [Error];
 
       const talkback = exchange({
         terminate(): void {
-          if (terminated) return;
-
-          terminated = true;
-          let err: void | [Error];
-
-          try {
-            if (talkback) talkback.terminate();
-          } catch (e) {
-            err = [e];
-          }
-
-          if (close) {
+          if (!talkback.closed) {
             try {
-              close();
-            } catch (e) {
-              if (!err) err = [e];
+              talkback.terminate();
+            } catch (err) {
+              if (close) {
+                try {
+                  close();
+                } catch (_) {}
+                throw err;
+              } else {
+                finalError = [err];
+              }
             }
-            if (err) throw err[0];
-          } else if (err && !terminateError) {
-            terminateError = err;
           }
+          if (close) close();
         }
       });
       if (talkback.closed) return;
@@ -91,7 +93,6 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
       let tear: undefined | NoParamFn;
       try {
         const teardown = subscriber(talkback);
-
         if (!isEmpty(teardown)) {
           if (isFunction(teardown)) {
             tear = teardown;
@@ -107,20 +108,28 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
           }
         }
       } catch (err) {
-        talkback.error(err);
+        if (!finalError) finalError = [err];
       }
 
+      close = tear;
       if (talkback.closed) {
         try {
-          if (tear) tear();
+          if (close) close();
         } catch (err) {
-          if (!terminateError) terminateError = [err];
+          if (!finalError) finalError = [err];
         }
-        if (terminateError) throw terminateError[0];
-      } else {
-        close = tear;
+      }
+
+      if (finalError) {
+        try {
+          talkback.error(finalError[0]);
+        } catch (_) {
+          talkback.terminate();
+        }
       }
     });
+
+    this[$options] = args[0] || {};
   }
   public [SymbolObservable](): PushStream<T, R> {
     return this;
@@ -147,6 +156,6 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
       throw new TypeError('Expected observer to be an object or function');
     }
 
-    return new Subscription(this, observer);
+    return new Subscription(this, observer, this[$options]);
   }
 }

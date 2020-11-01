@@ -1,4 +1,4 @@
-import { NoParamFn } from '../definitions';
+import { NoParamFn, UnaryFn } from '../definitions';
 import { isEmpty, isFunction } from './is';
 
 export function capture(
@@ -6,7 +6,8 @@ export function capture(
   name: string,
   error: Error,
   throwOnEmpty: null | [Error],
-  onFail: NoParamFn | null
+  onFail: UnaryFn<Error> | null,
+  onFailDone: NoParamFn | null
 ): void {
   try {
     if (isEmpty(method)) {
@@ -19,9 +20,19 @@ export function capture(
   } catch (err) {
     if (onFail) {
       try {
-        onFail();
+        onFail(err);
+      } catch (err) {
+        try {
+          if (onFailDone) onFailDone();
+        } catch (_) {}
+        throw err;
+      }
+      if (onFailDone) onFailDone();
+    } else {
+      try {
+        if (onFailDone) onFailDone();
       } catch (_) {}
+      throw err;
     }
-    throw err;
   }
 }
