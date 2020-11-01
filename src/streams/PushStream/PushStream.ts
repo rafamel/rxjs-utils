@@ -3,12 +3,8 @@ import { NoParamFn, Observables, Push, UnaryFn } from '../../definitions';
 import { isEmpty, isFunction, isObject } from '../../helpers';
 import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
-import { Subscription, SubscriptionOptions } from './Subscription';
+import { Subscription } from './Subscription';
 import SymbolObservable from 'symbol-observable';
-
-export type PushStreamOptions = SubscriptionOptions;
-
-const $options = Symbol('options');
 
 export class PushStream<T = any, R = void> extends Stream<T, R>
   implements Push.Stream<T, R> {
@@ -56,11 +52,7 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
 
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);
   }
-  private [$options]: PushStreamOptions;
-  public constructor(
-    subscriber: Push.Subscriber<T, R>,
-    ...args: [] | [PushStreamOptions | undefined]
-  ) {
+  public constructor(subscriber: Push.Subscriber<T, R>) {
     if (!isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
@@ -128,8 +120,6 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
         }
       }
     });
-
-    this[$options] = args[0] || {};
   }
   public [SymbolObservable](): PushStream<T, R> {
     return this;
@@ -156,6 +146,6 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
       throw new TypeError('Expected observer to be an object or function');
     }
 
-    return new Subscription(this, observer, this[$options]);
+    return new Subscription(this, observer);
   }
 }

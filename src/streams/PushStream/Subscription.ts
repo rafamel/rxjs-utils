@@ -5,25 +5,10 @@ import { Talkback } from '../Stream';
 const $done = Symbol('done');
 const $talkback = Symbol('talkback');
 
-export interface SubscriptionOptions {
-  /**
-   * Safe mode will not immediately throw when calling
-   * Talkback.error from the Subscriber if the
-   * teardown function hasn't been returned by
-   * the Subscriber yet. This is not an Observable Spec
-   * compatible behavior.
-   */
-  safe?: boolean;
-}
-
 class Subscription<T = any, R = void> implements Push.Subscription {
   private [$done]: boolean;
   private [$talkback]: Core.Talkback<void, void> | void;
-  public constructor(
-    stream: Push.Stream<T, R>,
-    observer: Push.Observer<T, R>,
-    options?: SubscriptionOptions
-  ) {
+  public constructor(stream: Push.Stream<T, R>, observer: Push.Observer<T, R>) {
     this[$done] = false;
 
     try {
@@ -45,16 +30,10 @@ class Subscription<T = any, R = void> implements Push.Subscription {
       return new Talkback(() => observer, {
         closeOnError: true,
         afterTerminate: talkback.terminate.bind(talkback),
-        onFail:
-          options && options.safe
-            ? (err) => {
-                if (fail) return talkback.error(err);
-                if (!error) error = [err];
-              }
-            : (err) => {
-                if (fail || talkback.closed) return talkback.error(err);
-                if (!error) error = [err];
-              }
+        onFail(err) {
+          if (fail || talkback.closed) return talkback.error(err);
+          if (!error) error = [err];
+        }
       });
     });
 
