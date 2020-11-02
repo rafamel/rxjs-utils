@@ -3,11 +3,13 @@ import { arbitrate } from '../../helpers';
 import { Talkback } from '../Stream';
 
 const $done = Symbol('done');
-const $talkback = Symbol('talkback');
+const $ptb = Symbol('ptb');
+const $ctb = Symbol('ctb');
 
 class Subscription<T = any, R = void> implements Push.Subscription {
   private [$done]: boolean;
-  private [$talkback]: Core.Talkback<void, void> | void;
+  private [$ptb]: Core.Talkback<void, void> | void;
+  private [$ctb]: Core.Talkback<T, R> | void;
   public constructor(stream: Push.Stream<T, R>, observer: Push.Observer<T, R>) {
     this[$done] = false;
 
@@ -25,39 +27,37 @@ class Subscription<T = any, R = void> implements Push.Subscription {
     let fail = false;
     let error: undefined | [Error];
 
-    stream.source((talkback) => {
-      this[$talkback] = talkback;
-      return new Talkback(() => observer, {
+    stream.source((ptb) => {
+      this[$ptb] = ptb;
+      return (this[$ctb] = new Talkback(() => observer, {
         closeOnError: true,
-        afterTerminate: talkback.terminate.bind(talkback),
+        afterTerminate: ptb.terminate.bind(ptb),
         onFail(err) {
-          if (fail || talkback.closed) return talkback.error(err);
+          if (fail || ptb.closed) return ptb.error(err);
           if (!error) error = [err];
         }
-      });
+      }));
     });
-
     // At this point we've just gotten the Subscriber
     // teardown function @ PushStream
     fail = true;
-    const talkback = this[$talkback];
+    const ptb = this[$ptb];
     if (error) {
-      if (talkback) talkback.error(error[0]);
+      if (ptb) ptb.error(error[0]);
       else throw error[0];
     }
   }
   public get closed(): boolean {
     if (this[$done]) return true;
-
-    const talkback = this[$talkback];
-    return talkback ? talkback.closed : false;
+    const ctb = this[$ctb];
+    return ctb ? ctb.closed : false;
   }
   public unsubscribe(): void {
     if (this.closed) return;
 
     this[$done] = true;
-    const talkback = this[$talkback];
-    if (talkback) talkback.terminate();
+    const ptb = this[$ptb];
+    if (ptb) ptb.terminate();
   }
 }
 
