@@ -2,7 +2,7 @@ import { Core, NoParamFn, UnaryFn, WideRecord } from '../../definitions';
 import { arbitrate, capture } from '../../helpers';
 
 const $closed = Symbol('closed');
-const $terminated = Symbol('terminated');
+const $terminable = Symbol('terminable');
 const $hearback = Symbol('hearback');
 const $options = Symbol('options');
 const $open = Symbol('open');
@@ -16,7 +16,7 @@ export interface TalkbackOptions {
 
 class Talkback<T, R = void> implements Core.Talkback<T, R> {
   private [$closed]: boolean;
-  private [$terminated]: boolean;
+  private [$terminable]: boolean;
   private [$hearback]: WideRecord | void;
   private [$options]: TalkbackOptions;
   private [$open]: NoParamFn<Core.Hearback<T, R>>;
@@ -26,7 +26,7 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
     options?: TalkbackOptions
   ) {
     this[$closed] = false;
-    this[$terminated] = false;
+    this[$terminable] = true;
     this[$options] = options || {};
     this[$open] = () => (this[$hearback] = fn());
     this[$onFail] =
@@ -65,12 +65,14 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
 
     if (options && options.closeOnError) {
       this[$closed] = true;
+      this[$terminable] = false;
+
       return arbitrate(
         hearback,
         'error',
         error,
         this[$onFail],
-        this.terminate.bind(this)
+        () => (this[$terminable] = true) && this.terminate()
       );
     }
 
@@ -92,20 +94,21 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
     if (this.closed) return;
 
     this[$closed] = true;
+    this[$terminable] = false;
 
     return arbitrate(
       this[$hearback] || this[$open](),
       'complete',
       reason,
       this[$onFail],
-      this.terminate.bind(this)
+      () => (this[$terminable] = true) && this.terminate()
     );
   }
   public terminate(): void {
-    if (this[$terminated]) return;
+    if (!this[$terminable]) return;
 
     this[$closed] = true;
-    this[$terminated] = true;
+    this[$terminable] = false;
 
     return arbitrate(
       this[$hearback] || this[$open](),
