@@ -77,6 +77,7 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
               }
             }
           }
+
           if (close) close();
         }
       });
@@ -115,9 +116,13 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
       if (finalError) {
         try {
           talkback.error(finalError[0]);
-        } catch (_) {
-          talkback.terminate();
+        } catch (err) {
+          try {
+            talkback.terminate();
+          } catch (_) {}
+          throw err;
         }
+        talkback.terminate();
       }
     });
   }
