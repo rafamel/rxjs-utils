@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
 import { Observables, PushStream } from '../../src';
-import { Observable as RxJSObservable } from 'rxjs';
+import { Observable as ESObservable } from './module';
 import chalk from 'chalk';
 
 console.log(chalk.bold('\nPERFORMANCE'));
 const failures = [
   performs(
     ['Multitude PushStream', PushStream],
-    ['RxJS Observable', RxJSObservable],
+    ['ES Observable', ESObservable],
     100,
     10 ** 5,
     0.1
