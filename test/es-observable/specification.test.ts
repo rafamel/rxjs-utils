@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
-// @ts-ignore
-import { runTests as compliance } from 'es-observable-tests';
-import { PushStream } from '../src';
+import { runTests } from './module/tests';
+import { PushStream } from '../../src';
 
 function setup(fn: () => Promise<void>): Promise<void> {
   const log = console.log;
@@ -12,8 +11,8 @@ function setup(fn: () => Promise<void>): Promise<void> {
 
 test(`PushStream complies w/ ES Observable spec`, async () => {
   await setup(async () => {
-    const { logger } = await compliance(PushStream);
-    expect(logger.failed).toBe(0);
-    expect(logger.errored).toBe(0);
+    await expect(
+      runTests(PushStream).then(({ logger }) => logger.failed)
+    ).resolves.toBe(0);
   });
 });

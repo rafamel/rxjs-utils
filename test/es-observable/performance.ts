@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Observables, PushStream } from '../src';
+import { Observables, PushStream } from '../../src';
 import { Observable as RxJSObservable } from 'rxjs';
 import chalk from 'chalk';
 
@@ -34,6 +34,7 @@ function performs(
         obs.next();
       }
       obs.complete();
+      return () => undefined;
     }).subscribe(() => undefined);
 
     return Date.now() - start;
