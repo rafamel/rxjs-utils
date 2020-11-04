@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { Observables, PushStream } from '../../src';
 import { Observable as ESObservable } from './module';
+import { Observable as ReferenceObservable } from './reference';
 import chalk from 'chalk';
 
 console.log(chalk.bold('\nPERFORMANCE'));
@@ -10,7 +11,14 @@ const failures = [
     ['ES Observable', ESObservable],
     100,
     10 ** 5,
-    0.1
+    0.15
+  ),
+  performs(
+    ['Multitude PushStream', PushStream],
+    ['Reference Observable', ReferenceObservable],
+    100,
+    10 ** 5,
+    0.15
   )
 ].filter((success) => !success);
 
