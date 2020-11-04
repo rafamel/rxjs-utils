@@ -43,10 +43,9 @@
     "release": "kpo release --",
     "watch": "kpo watch --",
     "watch:test": "kpo watch:test --",
-    "test:jest": "kpo test:jest --",
-    "test:es": "kpo test:es --",
     "test:perf": "kpo test:perf --",
-    "test:spec": "kpo test:spec --"
+    "test:spec": "kpo test:spec --",
+    "test:jest": "kpo test:jest --"
   },
   "license": "MIT",
   "homepage": "https://github.com/rafamel/multitude",

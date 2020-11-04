@@ -8,19 +8,20 @@ console.log(chalk.bold('\nPERFORMANCE'));
 const failures = [
   performs(
     ['Multitude PushStream', PushStream],
-    ['ES Observable', ESObservable],
+    ['Reference Observable', ReferenceObservable],
     100,
     10 ** 5,
-    0.15
+    0.45
   ),
   performs(
     ['Multitude PushStream', PushStream],
-    ['Reference Observable', ReferenceObservable],
+    ['ES Observable', ESObservable],
     100,
     10 ** 5,
     0.15
   )
 ].filter((success) => !success);
+console.log();
 
 if (failures.length) process.exit(1);
 
@@ -52,8 +53,8 @@ function performs(
   let ms = 0;
 
   for (let i = 0; i <= times - 1; i++) {
-    ms += run(Constructor);
     msReference += run(ReferenceConstructor);
+    ms += run(Constructor);
   }
 
   let prefix: string;

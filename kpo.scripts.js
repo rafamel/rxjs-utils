@@ -5,11 +5,10 @@ module.exports.scripts = {
   ...scripts,
   watch: 'onchange ./src --initial --kill -- kpo watch:task',
   'watch:test': 'kpo test -- --watch',
-  test: 'kpo test:jest test:es test:perf --',
-  'test:jest': scripts.test,
-  'test:es': 'babel-node -x .js,.ts ./test/es-observable/es-compliance',
+  test: 'kpo test:perf test:spec test:jest --',
   'test:perf': 'babel-node -x .js,.ts ./test/es-observable/performance',
-  'test:spec': 'kpo test:es test:jest -- ./test/es-observable',
+  'test:spec': 'babel-node -x .js,.ts ./test/es-observable/specification',
+  'test:jest': scripts.test,
 
   /* Private */
   ['$watch:task']: [kpo.log`\x1Bc⚡`, 'kpo lint build']
