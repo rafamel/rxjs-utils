@@ -1,28 +1,34 @@
 import { Core, NoParamFn, Push, UnaryFn } from '../../definitions';
-import { catches, Promiser } from '../../helpers';
+import { IdentityGuard, Handler, ResultManager } from '../../helpers';
 import { Talkback } from '../Stream';
 
 const $fail = Symbol('fail');
 const $closed = Symbol('closed');
-const $promiser = Symbol('promiser');
+const $result = Symbol('result');
+const $promise = Symbol('promise');
 const $ptb = Symbol('ptb');
 const $ctb = Symbol('ctb');
 
-class Subscription<T = any> implements Push.Subscription, Promise<void> {
+class Subscription<T = any> implements Push.Subscription {
   private [$fail]: boolean;
   private [$closed]: boolean;
-  private [$promiser]: Promiser;
+  private [$result]: ResultManager;
+  private [$promise]: void | Promise<void>;
   private [$ptb]: Core.Talkback<void> | void;
   private [$ctb]: Core.Talkback<T> | void;
   public constructor(stream: Push.Stream<T>, observer: Push.Observer<T>) {
     this[$fail] = false;
     this[$closed] = false;
-    const promiser = (this[$promiser] = new Promiser());
+    const result = (this[$result] = new ResultManager());
 
+    let method = Handler.noop;
     try {
-      (observer as any).start(this);
+      (method = (observer as any).start).call(observer, this);
     } catch (err) {
-      promiser.reject(err);
+      if (!IdentityGuard.isEmpty(method)) {
+        result.fail(err);
+        if (this[$fail]) this.unsubscribe();
+      }
     }
 
     if (this.closed) return;
@@ -35,13 +41,13 @@ class Subscription<T = any> implements Push.Subscription, Promise<void> {
           try {
             ptb.terminate();
           } catch (err) {
-            return promiser.reject(err);
+            return result.fail(err);
           }
-          promiser.resolve();
+          result.pass();
         },
         onFail: (err) => {
-          if (this[$fail]) catches(() => ptb.terminate());
-          promiser.reject(err);
+          result.fail(err);
+          if (this[$fail]) Handler.catches(() => ptb.terminate());
         }
       }));
     });
@@ -61,23 +67,30 @@ class Subscription<T = any> implements Push.Subscription, Promise<void> {
 
     this[$closed] = true;
 
+    const result = this[$result];
     try {
       const ptb = this[$ptb];
       if (ptb) ptb.terminate();
     } catch (err) {
-      this[$promiser].reject(err);
+      return result.fail(err);
     }
+    result.pass();
   }
   public async then<T = void, U = never>(
     resolution?: UnaryFn<void, T | PromiseLike<T>> | null,
     rejection?: UnaryFn<Error, U | PromiseLike<U>> | null
   ): Promise<T | U> {
-    const { done, promise } = this[$promiser];
+    const promise = this[$promise];
+    if (promise) return promise.then(resolution, rejection);
 
     this[$fail] = true;
-    if (done) this.unsubscribe();
+    const result = this[$result];
+    if (result.replete) this.unsubscribe();
 
-    return promise.then(resolution, rejection);
+    return (this[$promise] = new Promise((resolve, reject) => {
+      result.onPass(resolve);
+      result.onFail(reject);
+    })).then(resolution, rejection);
   }
   public async catch<T = never>(
     rejection?: UnaryFn<Error, T | PromiseLike<T>> | null

@@ -1,5 +1,5 @@
 import { Core } from '../../definitions';
-import { catches } from '../../helpers';
+import { Handler } from '../../helpers';
 import { Talkback } from './Talkback';
 import {
   toConstituent,
@@ -65,7 +65,7 @@ export class Stream<O, I = void> implements Core.Stream<O, I> {
         onFail(err) {
           if (!itb.closed) return itb.error(err);
 
-          catches(otb.terminate.bind(otb));
+          Handler.catches(otb.terminate.bind(otb));
           throw err;
         }
       });
@@ -75,7 +75,7 @@ export class Stream<O, I = void> implements Core.Stream<O, I> {
         onFail(err) {
           if (!otb.closed) return otb.error(err);
 
-          catches(itb.terminate.bind(itb));
+          Handler.catches(itb.terminate.bind(itb));
           throw err;
         }
       });

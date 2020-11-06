@@ -1,5 +1,5 @@
 import { NoParamFn, Observables } from '../../../src/definitions';
-import { catches, isEmpty, isFunction, isObject } from '../../../src/helpers';
+import { IdentityGuard, Handler } from '../../../src/helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import {
   isSubscriptionClosed,
@@ -18,7 +18,7 @@ class Subscription<T = any> implements Observables.Subscription {
     this[$teardown] = null;
     setSubscriptionObserver(this, observer);
 
-    catches(() => (observer as any).start(this));
+    Handler.catches(() => (observer as any).start(this));
     if (isSubscriptionClosed(this)) return;
 
     const subscriptionObserver = new SubscriptionObserver(this);
@@ -26,12 +26,14 @@ class Subscription<T = any> implements Observables.Subscription {
     let teardown: NoParamFn = () => undefined;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
-      if (!isEmpty(unsubscribe)) {
-        if (isFunction(unsubscribe)) {
+      if (!IdentityGuard.isEmpty(unsubscribe)) {
+        if (IdentityGuard.isFunction(unsubscribe)) {
           teardown = unsubscribe;
         } else if (
-          isObject(unsubscribe) &&
-          isFunction((unsubscribe as Observables.Subscription).unsubscribe)
+          IdentityGuard.isObject(unsubscribe) &&
+          IdentityGuard.isFunction(
+            (unsubscribe as Observables.Subscription).unsubscribe
+          )
         ) {
           teardown = () => unsubscribe.unsubscribe();
         } else {
@@ -60,7 +62,7 @@ class Subscription<T = any> implements Observables.Subscription {
 
     const teardown = this[$teardown];
     if (teardown) {
-      catches(teardown);
+      Handler.catches(teardown);
       this[$teardown] = null;
     }
   }

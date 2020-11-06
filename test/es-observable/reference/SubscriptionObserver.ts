@@ -1,5 +1,5 @@
 import { Observables } from '../../../src/definitions';
-import { catches } from '../../../src/helpers';
+import { Handler } from '../../../src/helpers';
 import { Subscription } from './Subscription';
 import {
   getSubscriptionObserver,
@@ -23,7 +23,7 @@ class SubscriptionObserver<T = any>
     if (isSubscriptionClosed(subscription)) return;
 
     const observer = getSubscriptionObserver(subscription);
-    catches(() => observer.next(value));
+    Handler.catches(() => observer.next(value));
   }
   public error(error: Error): void {
     const subscription = this[$subscription];
@@ -32,8 +32,8 @@ class SubscriptionObserver<T = any>
     const observer = getSubscriptionObserver(subscription);
     setSubscriptionClosed(subscription);
 
-    catches(() => observer.error(error));
-    catches(() => subscription.unsubscribe());
+    Handler.catches(() => observer.error(error));
+    Handler.catches(() => subscription.unsubscribe());
   }
   public complete(): void {
     const subscription = this[$subscription];
@@ -42,8 +42,8 @@ class SubscriptionObserver<T = any>
     const observer = getSubscriptionObserver(subscription);
     setSubscriptionClosed(subscription);
 
-    catches(() => observer.complete());
-    catches(() => subscription.unsubscribe());
+    Handler.catches(() => observer.complete());
+    Handler.catches(() => subscription.unsubscribe());
   }
 }
 

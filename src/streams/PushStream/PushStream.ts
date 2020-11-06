@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import { NoParamFn, Observables, Push, UnaryFn } from '../../definitions';
-import { catches, isEmpty, isFunction, isObject } from '../../helpers';
+import { Handler, IdentityGuard } from '../../helpers';
 import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
 import { Subscription } from './Subscription';
@@ -21,30 +21,30 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
       | Observables.Like<T>
       | Iterable<T>
   ): PushStream<T> {
-    const Constructor = isFunction(this) ? this : PushStream;
+    const Constructor = IdentityGuard.isFunction(this) ? this : PushStream;
 
     // Subscriber
-    if (isFunction(item)) return new Constructor(item);
+    if (IdentityGuard.isFunction(item)) return new Constructor(item);
 
-    if (isObject(item)) {
+    if (IdentityGuard.isObject(item)) {
       const target: any = item;
       // Compatible
       const so = target[SymbolObservable];
-      if (isFunction(so)) {
+      if (IdentityGuard.isFunction(so)) {
         const obs = so();
-        if (!isObject(obs) && !isFunction(obs)) {
+        if (!IdentityGuard.isObject(obs) && !IdentityGuard.isFunction(obs)) {
           throw new TypeError('Invalid Observable compatible object');
         }
         return fromObservableLike(Constructor, obs) as any;
       }
 
       // Like
-      if (isFunction(target.subscribe)) {
+      if (IdentityGuard.isFunction(target.subscribe)) {
         return fromObservableLike(Constructor, target) as any;
       }
 
       // Iterable
-      if (isFunction(target[Symbol.iterator])) {
+      if (IdentityGuard.isFunction(target[Symbol.iterator])) {
         return fromIterable(Constructor, target) as any;
       }
     }
@@ -52,7 +52,7 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);
   }
   public constructor(subscriber: Push.Subscriber<T>) {
-    if (!isFunction(subscriber)) {
+    if (!IdentityGuard.isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
 
@@ -70,12 +70,14 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
       let tear: undefined | NoParamFn;
       try {
         const teardown = subscriber(talkback);
-        if (!isEmpty(teardown)) {
-          if (isFunction(teardown)) {
+        if (!IdentityGuard.isEmpty(teardown)) {
+          if (IdentityGuard.isFunction(teardown)) {
             tear = teardown;
           } else if (
-            isObject(teardown) &&
-            isFunction((teardown as Observables.Subscription).unsubscribe)
+            IdentityGuard.isObject(teardown) &&
+            IdentityGuard.isFunction(
+              (teardown as Observables.Subscription).unsubscribe
+            )
           ) {
             tear = () => teardown.unsubscribe();
           } else {
@@ -99,7 +101,7 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
 
       if (err) {
         const error = err[0];
-        catches(() => talkback.error(error));
+        Handler.catches(() => talkback.error(error));
         talkback.terminate();
       }
     });
@@ -111,6 +113,7 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
     return this;
   }
   public subscribe(observer?: Push.Observer<T>): Subscription<T>;
+  public subscribe(observer?: Observables.Observer<T>): Subscription<T>;
   public subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
@@ -118,14 +121,14 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
     onTerminate?: NoParamFn
   ): Subscription<T>;
   public subscribe(observer: any, ...arr: any[]): Subscription<T> {
-    if (isFunction(observer)) {
+    if (IdentityGuard.isFunction(observer)) {
       observer = {
         next: observer,
         error: arr[0],
         complete: arr[1],
         terminate: arr[2]
       };
-    } else if (!isObject(observer)) {
+    } else if (!IdentityGuard.isObject(observer)) {
       observer = {};
     }
 

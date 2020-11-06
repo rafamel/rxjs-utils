@@ -1,3 +1,4 @@
-export * from './catches';
-export * from './is';
-export * from './promiser';
+export * from './FailureManager';
+export * from './Handler';
+export * from './IdentityGuard';
+export * from './ResultManager';

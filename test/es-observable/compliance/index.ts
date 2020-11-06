@@ -2,7 +2,7 @@
 /* eslint-disable prefer-const */
 import assert from 'assert';
 import { Observables } from '../../../src';
-import { catches } from '../../../src/helpers';
+import { Handler } from '../../../src/helpers';
 import { runTests } from '../module/tests';
 import { engine, Test, test } from './engine';
 
@@ -26,27 +26,27 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     let pass = true;
 
     const Constructor: any = Observable;
-    catches(() => {
+    Handler.catches(() => {
       new Constructor(undefined);
       pass = false;
     });
-    catches(() => {
+    Handler.catches(() => {
       new Constructor(null);
       pass = false;
     });
-    catches(() => {
+    Handler.catches(() => {
       new Constructor(0);
       pass = false;
     });
-    catches(() => {
+    Handler.catches(() => {
       new Constructor(true);
       pass = false;
     });
-    catches(() => {
+    Handler.catches(() => {
       new Constructor('');
       pass = false;
     });
-    catches(() => {
+    Handler.catches(() => {
       new Constructor({});
       pass = false;
     });

@@ -1,5 +1,5 @@
 import { NoParamFn, Observables, UnaryFn } from '../../../src/definitions';
-import { isFunction, isObject } from '../../../src/helpers';
+import { IdentityGuard } from '../../../src/helpers';
 import {
   fromIterable,
   fromObservableLike
@@ -22,30 +22,30 @@ export class Observable<T = any> implements Observables.Observable<T> {
       | Observables.Like<T>
       | Iterable<T>
   ): Observable<T> {
-    const Constructor = isFunction(this) ? this : Observable;
+    const Constructor = IdentityGuard.isFunction(this) ? this : Observable;
 
     // Subscriber
-    if (isFunction(item)) return new Constructor(item);
+    if (IdentityGuard.isFunction(item)) return new Constructor(item);
 
-    if (isObject(item)) {
+    if (IdentityGuard.isObject(item)) {
       const target: any = item;
       // Compatible
       const so = target[SymbolObservable];
-      if (isFunction(so)) {
+      if (IdentityGuard.isFunction(so)) {
         const obs = so();
-        if (!isObject(obs) && !isFunction(obs)) {
+        if (!IdentityGuard.isObject(obs) && !IdentityGuard.isFunction(obs)) {
           throw new TypeError('Invalid Observable compatible object');
         }
         return fromObservableLike(Constructor, obs) as any;
       }
 
       // Like
-      if (isFunction(target.subscribe)) {
+      if (IdentityGuard.isFunction(target.subscribe)) {
         return fromObservableLike(Constructor, target) as any;
       }
 
       // Iterable
-      if (isFunction(target[Symbol.iterator])) {
+      if (IdentityGuard.isFunction(target[Symbol.iterator])) {
         return fromIterable(Constructor, target) as any;
       }
     }
@@ -54,7 +54,7 @@ export class Observable<T = any> implements Observables.Observable<T> {
   }
   private [$subscriber]: Observables.Subscriber<T>;
   public constructor(subscriber: Observables.Subscriber<T>) {
-    if (!isFunction(subscriber)) {
+    if (!IdentityGuard.isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
 
@@ -73,9 +73,9 @@ export class Observable<T = any> implements Observables.Observable<T> {
     onComplete?: NoParamFn
   ): Subscription<T>;
   public subscribe(observer: any, ...arr: any[]): Subscription<T> {
-    if (isFunction(observer)) {
+    if (IdentityGuard.isFunction(observer)) {
       observer = { next: observer, error: arr[0], complete: arr[1] };
-    } else if (!isObject(observer)) {
+    } else if (!IdentityGuard.isObject(observer)) {
       observer = {};
     }
 

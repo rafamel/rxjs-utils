@@ -1,16 +1,16 @@
 import { Core } from '../../../definitions';
-import { isEmpty, isFunction, isObject } from '../../../helpers';
+import { IdentityGuard } from '../../../helpers';
 
 export function validateCounterpart(
   counterpart: Core.Counterpart<any, any>
 ): void {
-  if (!isFunction(counterpart)) {
+  if (!IdentityGuard.isFunction(counterpart)) {
     throw new TypeError(`Expected Provider and Consumer to be functions`);
   }
 }
 
 export function validateHearback(hb?: Core.Hearback<any>): void {
-  if (!isEmpty(hb) && !isObject(hb)) {
+  if (!IdentityGuard.isEmpty(hb) && !IdentityGuard.isObject(hb)) {
     throw new TypeError(`Expected Hearback to be an object`);
   }
 }

@@ -1,5 +1,5 @@
 import { Core, NoParamFn, UnaryFn, WideRecord } from '../../definitions';
-import { isEmpty } from '../../helpers';
+import { FailureManager, IdentityGuard, Handler } from '../../helpers';
 
 export interface TalkbackOptions {
   onFail?: UnaryFn<Error>;
@@ -7,17 +7,11 @@ export interface TalkbackOptions {
   afterTerminate?: NoParamFn;
 }
 
-function noop(): void {
-  return undefined;
-}
-function throws(error: Error): never {
-  throw error;
-}
-
 const $start = Symbol('start');
 const $closed = Symbol('closed');
 const $terminable = Symbol('terminable');
 const $hearback = Symbol('hearback');
+const $failure = Symbol('failure');
 const $options = Symbol('options');
 
 class Talkback<T> implements Core.Talkback<T> {
@@ -25,7 +19,8 @@ class Talkback<T> implements Core.Talkback<T> {
   private [$closed]: boolean;
   private [$terminable]: boolean;
   private [$hearback]: void | WideRecord;
-  private [$options]: Required<TalkbackOptions>;
+  private [$failure]: FailureManager;
+  private [$options]: TalkbackOptions;
   public constructor(
     hearback: NoParamFn<Core.Hearback<T>>,
     options?: TalkbackOptions
@@ -35,11 +30,8 @@ class Talkback<T> implements Core.Talkback<T> {
     this[$start] = () => (this[$hearback] = hearback());
     this[$closed] = false;
     this[$terminable] = true;
-    this[$options] = {
-      onFail: options.onFail || throws,
-      closeOnError: options.closeOnError || false,
-      afterTerminate: options.afterTerminate || noop
-    };
+    this[$failure] = new FailureManager(options.onFail);
+    this[$options] = options;
   }
   public get closed(): boolean {
     return this[$closed];
@@ -47,20 +39,17 @@ class Talkback<T> implements Core.Talkback<T> {
   public next(value: T): void {
     if (this.closed) return;
 
-    let method: any = noop;
+    let method: any = Handler.noop;
     try {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.next).call(hearback, value);
     } catch (err) {
-      if (isEmpty(method)) return;
-      this[$options].onFail(err);
+      if (IdentityGuard.isEmpty(method)) return;
+      this[$failure].fail(err, true);
     }
   }
   public error(error: Error): void {
-    if (this.closed) {
-      this[$options].onFail(error);
-      return;
-    }
+    if (this.closed) return this[$failure].fail(error, true);
 
     const options = this[$options];
     if (options.closeOnError) {
@@ -68,26 +57,22 @@ class Talkback<T> implements Core.Talkback<T> {
       this[$terminable] = false;
     }
 
-    let err: void | [Error];
-    let method: any = noop;
+    const failure = this[$failure];
+    let method: any = Handler.noop;
     try {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.error).call(hearback, error);
-    } catch (e) {
-      if (isEmpty(method)) err = [error];
-      else err = [e];
+    } catch (err) {
+      if (IdentityGuard.isEmpty(method)) failure.fail(error);
+      else failure.fail(err);
     }
 
-    if (err || options.closeOnError) {
+    if (failure.replete || options.closeOnError) {
       this[$terminable] = true;
-      try {
-        this.terminate();
-      } catch (e) {
-        if (!err) err = [e];
-      }
+      this.terminate();
+    } else {
+      failure.raise();
     }
-
-    if (err) options.onFail(err[0]);
   }
   public complete(): void {
     if (this.closed) return;
@@ -95,23 +80,17 @@ class Talkback<T> implements Core.Talkback<T> {
     this[$closed] = true;
     this[$terminable] = false;
 
-    let err: void | [Error];
-    let method: any = noop;
+    const failure = this[$failure];
+    let method: any = Handler.noop;
     try {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.complete).call(hearback);
-    } catch (e) {
-      if (!isEmpty(method)) err = [e];
+    } catch (err) {
+      if (!IdentityGuard.isEmpty(method)) failure.fail(err);
     }
 
     this[$terminable] = true;
-    try {
-      this.terminate();
-    } catch (e) {
-      if (!err) err = [e];
-    }
-
-    if (err) this[$options].onFail(err[0]);
+    this.terminate();
   }
   public terminate(): void {
     if (!this[$terminable]) return;
@@ -119,23 +98,23 @@ class Talkback<T> implements Core.Talkback<T> {
     this[$closed] = true;
     this[$terminable] = false;
 
-    let err: void | [Error];
-    let method: any = noop;
+    let method: any = Handler.noop;
+    const failure = this[$failure];
     try {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.terminate).call(hearback);
-    } catch (e) {
-      if (!isEmpty(method)) err = [e];
+    } catch (err) {
+      if (!IdentityGuard.isEmpty(method)) failure.fail(err);
     }
 
     const options = this[$options];
     try {
-      options.afterTerminate();
-    } catch (e) {
-      err = [e];
+      if (options.afterTerminate) options.afterTerminate();
+    } catch (err) {
+      failure.fail(err);
     }
 
-    if (err) options.onFail(err[0]);
+    failure.raise();
   }
 }
 
