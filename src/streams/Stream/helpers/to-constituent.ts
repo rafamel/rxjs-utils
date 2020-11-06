@@ -3,9 +3,9 @@ import { Talkback } from '../Talkback';
 import { validateCounterpart, validateHearback } from './validate';
 
 /* Convert Counterpart to Constituent */
-export function toConstituent<T, TR, U, UR>(
-  counterpart: Core.Counterpart<T, TR, U, UR>
-): Core.Constituent<T, TR, U, UR> {
+export function toConstituent<T, U>(
+  counterpart: Core.Counterpart<T, U>
+): Core.Constituent<T, U> {
   validateCounterpart(counterpart);
 
   return (exchange) => {
@@ -13,7 +13,7 @@ export function toConstituent<T, TR, U, UR>(
       validateHearback(hb);
 
       const tb = exchange(
-        new Talkback<T, TR>(() => hb || {}, {
+        new Talkback<T>(() => hb || {}, {
           afterTerminate: () => tb.terminate()
         })
       );

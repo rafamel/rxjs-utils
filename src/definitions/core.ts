@@ -1,44 +1,39 @@
 /* Classes */
 export interface Constructor {
-  new <O, R = void, I = void, S = void>(provider: Provider<O, R, I, S>): Stream<
-    O,
-    R,
-    I,
-    S
-  >;
+  new <O, I = void>(provider: Provider<O, I>): Stream<O, I>;
 }
 
-export interface Stream<O, R = void, I = void, S = void> {
-  source: Source<O, R, I, S>;
-  consume(sink: Consumer<O, R, I, S>): void;
+export interface Stream<O, I = void> {
+  source: Source<O, I>;
+  consume(sink: Consumer<O, I>): void;
 }
 
 /* Constituents */
-export type Source<O, R = void, I = void, S = void> = Constituent<I, S, O, R>;
-export type Sink<O, R = void, I = void, S = void> = Constituent<O, R, I, S>;
-export interface Constituent<T, TR, U, UR> {
-  (exchange: (talkback: Talkback<T, TR>) => Talkback<U, UR>): void;
+export type Source<O, I = void> = Constituent<I, O>;
+export type Sink<O, I = void> = Constituent<O, I>;
+export interface Constituent<T, U> {
+  (exchange: (talkback: Talkback<T>) => Talkback<U>): void;
 }
 
 /* Counterparts */
-export type Provider<O, R = void, I = void, S = void> = Counterpart<I, S, O, R>;
-export type Consumer<O, R = void, I = void, S = void> = Counterpart<O, R, I, S>;
-export interface Counterpart<T, TR, U, UR> {
-  (exchange: (hearback?: Hearback<T, TR>) => Talkback<U, UR>): void;
+export type Provider<O, I = void> = Counterpart<I, O>;
+export type Consumer<O, I = void> = Counterpart<O, I>;
+export interface Counterpart<T, U> {
+  (exchange: (hearback?: Hearback<T>) => Talkback<U>): void;
 }
 
 /* Actions */
-export interface Hearback<T, R = void> {
+export interface Hearback<T> {
   next?: (value: T) => void;
   error?: (error: Error) => void;
-  complete?: (reason: R) => void;
+  complete?: () => void;
   terminate?: () => void;
 }
 
-export interface Talkback<T, R = void> extends Hearback<T, R> {
+export interface Talkback<T> extends Hearback<T> {
   closed: boolean;
   next: (value: T) => void;
   error: (error: Error) => void;
-  complete: (reason: R) => void;
+  complete: () => void;
   terminate: () => void;
 }

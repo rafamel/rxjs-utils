@@ -1,4 +1,5 @@
 import { Core } from '../../definitions';
+import { catches } from '../../helpers';
 import { Talkback } from './Talkback';
 import {
   toConstituent,
@@ -9,21 +10,20 @@ import {
 const $source = Symbol('source');
 const $provider = Symbol('provider');
 
-export class Stream<O, R = void, I = void, S = void>
-  implements Core.Stream<O, R, I, S> {
-  private [$provider]: Core.Provider<O, R, I, S>;
-  private [$source]: Core.Source<O, R, I, S> | void;
-  public constructor(provider: Core.Provider<O, R, I, S>) {
+export class Stream<O, I = void> implements Core.Stream<O, I> {
+  private [$provider]: Core.Provider<O, I>;
+  private [$source]: Core.Source<O, I> | void;
+  public constructor(provider: Core.Provider<O, I>) {
     validateCounterpart(provider);
     this[$provider] = provider;
   }
-  public get source(): Core.Source<O, R, I, S> {
+  public get source(): Core.Source<O, I> {
     const source = this[$source];
     if (source) return source;
 
     return (this[$source] = toConstituent(this[$provider]));
   }
-  public consume(consumer: Core.Consumer<O, R, I, S>): void {
+  public consume(consumer: Core.Consumer<O, I>): void {
     const provider = this[$provider];
     validateCounterpart(consumer);
 
@@ -61,11 +61,23 @@ export class Stream<O, R = void, I = void, S = void>
       isConsumerNoop = false;
 
       otb = new Talkback(() => ohb || {}, {
-        afterTerminate: () => itb.terminate()
+        afterTerminate: () => itb.terminate(),
+        onFail(err) {
+          if (!itb.closed) return itb.error(err);
+
+          catches(otb.terminate.bind(otb));
+          throw err;
+        }
       });
 
       itb = new Talkback(() => getIhb() || ihb, {
-        afterTerminate: () => otb.terminate()
+        afterTerminate: () => otb.terminate(),
+        onFail(err) {
+          if (!otb.closed) return otb.error(err);
+
+          catches(itb.terminate.bind(itb));
+          throw err;
+        }
       });
 
       return itb;

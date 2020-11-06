@@ -1,27 +1,26 @@
 /* eslint-disable prefer-const */
 import { NoParamFn, Observables, Push, UnaryFn } from '../../definitions';
-import { isEmpty, isFunction, isObject } from '../../helpers';
+import { catches, isEmpty, isFunction, isObject } from '../../helpers';
 import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
 import { Subscription } from './Subscription';
 import SymbolObservable from 'symbol-observable';
 
-export class PushStream<T = any, R = void> extends Stream<T, R>
-  implements Push.Stream<T, R> {
+export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
   static of<T>(...items: T[]): PushStream<T> {
     const Constructor = typeof this === 'function' ? this : PushStream;
     return fromIterable(Constructor, items) as any;
   }
-  static from<T, R = void>(
+  static from<T>(
     item:
-      | Push.Subscriber<T, R>
-      | Observables.Subscriber<T, R>
-      | Push.Stream<T, R>
-      | Observables.Observable<T, R>
-      | Observables.Compatible<T, R>
+      | Push.Subscriber<T>
+      | Observables.Subscriber<T>
+      | Push.Stream<T>
+      | Observables.Observable<T>
+      | Observables.Compatible<T>
       | Observables.Like<T>
       | Iterable<T>
-  ): PushStream<T, R> {
+  ): PushStream<T> {
     const Constructor = isFunction(this) ? this : PushStream;
 
     // Subscriber
@@ -52,37 +51,22 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
 
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);
   }
-  public constructor(subscriber: Push.Subscriber<T, R>) {
+  public constructor(subscriber: Push.Subscriber<T>) {
     if (!isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
 
     super((exchange) => {
       let close: undefined | NoParamFn;
-      let finalError: undefined | [Error];
 
       const talkback = exchange({
         terminate(): void {
-          if (!talkback.closed) {
-            try {
-              talkback.terminate();
-            } catch (err) {
-              if (close) {
-                try {
-                  close();
-                } catch (_) {}
-                throw err;
-              } else {
-                finalError = [err];
-              }
-            }
-          }
-
           if (close) close();
         }
       });
       if (talkback.closed) return;
 
+      let err: undefined | [Error];
       let tear: undefined | NoParamFn;
       try {
         const teardown = subscriber(talkback);
@@ -100,46 +84,40 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
             );
           }
         }
-      } catch (err) {
-        if (!finalError) finalError = [err];
+      } catch (e) {
+        if (!err) err = [e];
       }
 
       close = tear;
       if (talkback.closed) {
         try {
           if (close) close();
-        } catch (err) {
-          if (!finalError) finalError = [err];
+        } catch (e) {
+          if (!err) err = [e];
         }
       }
 
-      if (finalError) {
-        try {
-          talkback.error(finalError[0]);
-        } catch (err) {
-          try {
-            talkback.terminate();
-          } catch (_) {}
-          throw err;
-        }
+      if (err) {
+        const error = err[0];
+        catches(() => talkback.error(error));
         talkback.terminate();
       }
     });
   }
-  public [SymbolObservable](): PushStream<T, R> {
+  public [SymbolObservable](): PushStream<T> {
     return this;
   }
-  public [Symbol.observable](): PushStream<T, R> {
+  public [Symbol.observable](): PushStream<T> {
     return this;
   }
-  public subscribe(observer: Push.Observer<T, R>): Subscription<T, R>;
+  public subscribe(observer?: Push.Observer<T>): Subscription<T>;
   public subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
-    onComplete?: UnaryFn<R>,
+    onComplete?: NoParamFn,
     onTerminate?: NoParamFn
-  ): Subscription<T, R>;
-  public subscribe(observer: any, ...arr: any[]): Subscription<T, R> {
+  ): Subscription<T>;
+  public subscribe(observer: any, ...arr: any[]): Subscription<T> {
     if (isFunction(observer)) {
       observer = {
         next: observer,
@@ -148,7 +126,7 @@ export class PushStream<T = any, R = void> extends Stream<T, R>
         terminate: arr[2]
       };
     } else if (!isObject(observer)) {
-      throw new TypeError('Expected observer to be an object or function');
+      observer = {};
     }
 
     return new Subscription(this, observer);

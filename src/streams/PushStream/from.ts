@@ -1,9 +1,9 @@
 import { Observables } from '../../definitions';
 
-export function fromObservableLike<T, R = void>(
+export function fromObservableLike<T>(
   Observable: Observables.Constructor,
-  observable: Observables.Observable<T, R> | Observables.Like<T>
-): Observables.Observable<T, R> {
+  observable: Observables.Observable<T> | Observables.Like<T>
+): Observables.Observable<T> {
   return observable.constructor === Observable
     ? observable
     : new Observable((observer) => observable.subscribe(observer as any));

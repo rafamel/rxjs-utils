@@ -1,39 +1,45 @@
 import { Core, NoParamFn, UnaryFn, WideRecord } from '../../definitions';
-import { arbitrate, capture } from '../../helpers';
+import { isEmpty } from '../../helpers';
 
+export interface TalkbackOptions {
+  onFail?: UnaryFn<Error>;
+  closeOnError?: boolean;
+  afterTerminate?: NoParamFn;
+}
+
+function noop(): void {
+  return undefined;
+}
+function throws(error: Error): never {
+  throw error;
+}
+
+const $start = Symbol('start');
 const $closed = Symbol('closed');
 const $terminable = Symbol('terminable');
 const $hearback = Symbol('hearback');
 const $options = Symbol('options');
-const $open = Symbol('open');
-const $onFail = Symbol('onFail');
 
-export interface TalkbackOptions {
-  afterTerminate?: NoParamFn;
-  closeOnError?: boolean;
-  onFail?: UnaryFn<Error>;
-}
-
-class Talkback<T, R = void> implements Core.Talkback<T, R> {
+class Talkback<T> implements Core.Talkback<T> {
+  private [$start]: NoParamFn<WideRecord>;
   private [$closed]: boolean;
   private [$terminable]: boolean;
-  private [$hearback]: WideRecord | void;
-  private [$options]: TalkbackOptions;
-  private [$open]: NoParamFn<Core.Hearback<T, R>>;
-  private [$onFail]: UnaryFn<Error>;
+  private [$hearback]: void | WideRecord;
+  private [$options]: Required<TalkbackOptions>;
   public constructor(
-    fn: NoParamFn<Core.Hearback<T, R>>,
+    hearback: NoParamFn<Core.Hearback<T>>,
     options?: TalkbackOptions
   ) {
+    if (!options) options = {};
+
+    this[$start] = () => (this[$hearback] = hearback());
     this[$closed] = false;
     this[$terminable] = true;
-    this[$options] = options || {};
-    this[$open] = () => (this[$hearback] = fn());
-    this[$onFail] =
-      this[$options].onFail ||
-      ((err) => {
-        throw err;
-      });
+    this[$options] = {
+      onFail: options.onFail || throws,
+      closeOnError: options.closeOnError || false,
+      afterTerminate: options.afterTerminate || noop
+    };
   }
   public get closed(): boolean {
     return this[$closed];
@@ -41,68 +47,71 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
   public next(value: T): void {
     if (this.closed) return;
 
-    const hearback = this[$hearback] || this[$open]();
-
-    let method: any;
+    let method: any = noop;
     try {
-      return (method = hearback.next).call(hearback, value);
+      const hearback = this[$hearback] || this[$start]();
+      (method = hearback.next).call(hearback, value);
     } catch (err) {
-      capture(
-        method,
-        'next',
-        err,
-        null,
-        this[$onFail],
-        this.terminate.bind(this)
-      );
+      if (isEmpty(method)) return;
+      this[$options].onFail(err);
     }
   }
   public error(error: Error): void {
-    if (this.closed) return this[$onFail](error);
+    if (this.closed) {
+      this[$options].onFail(error);
+      return;
+    }
 
     const options = this[$options];
-    const hearback = this[$hearback] || this[$open]();
-
-    if (options && options.closeOnError) {
+    if (options.closeOnError) {
       this[$closed] = true;
       this[$terminable] = false;
-
-      return arbitrate(
-        hearback,
-        'error',
-        error,
-        this[$onFail],
-        () => (this[$terminable] = true) && this.terminate()
-      );
     }
 
-    let method: any;
+    let err: void | [Error];
+    let method: any = noop;
     try {
-      return (method = hearback.error).call(hearback, error);
-    } catch (err) {
-      capture(
-        method,
-        'error',
-        err,
-        [error],
-        this[$onFail],
-        this.terminate.bind(this)
-      );
+      const hearback = this[$hearback] || this[$start]();
+      (method = hearback.error).call(hearback, error);
+    } catch (e) {
+      if (isEmpty(method)) err = [error];
+      else err = [e];
     }
+
+    if (err || options.closeOnError) {
+      this[$terminable] = true;
+      try {
+        this.terminate();
+      } catch (e) {
+        if (!err) err = [e];
+      }
+    }
+
+    if (err) options.onFail(err[0]);
   }
-  public complete(reason: R): void {
+  public complete(): void {
     if (this.closed) return;
 
     this[$closed] = true;
     this[$terminable] = false;
 
-    return arbitrate(
-      this[$hearback] || this[$open](),
-      'complete',
-      reason,
-      this[$onFail],
-      () => (this[$terminable] = true) && this.terminate()
-    );
+    let err: void | [Error];
+    let method: any = noop;
+    try {
+      const hearback = this[$hearback] || this[$start]();
+      (method = hearback.complete).call(hearback);
+    } catch (e) {
+      if (!isEmpty(method)) err = [e];
+    }
+
+    this[$terminable] = true;
+    try {
+      this.terminate();
+    } catch (e) {
+      if (!err) err = [e];
+    }
+
+    if (err) this[$options].onFail(err[0]);
   }
   public terminate(): void {
     if (!this[$terminable]) return;
@@ -110,16 +119,23 @@ class Talkback<T, R = void> implements Core.Talkback<T, R> {
     this[$closed] = true;
     this[$terminable] = false;
 
-    return arbitrate(
-      this[$hearback] || this[$open](),
-      'terminate',
-      undefined,
-      this[$onFail],
-      () => {
-        const options = this[$options];
-        if (options.afterTerminate) options.afterTerminate();
-      }
-    );
+    let err: void | [Error];
+    let method: any = noop;
+    try {
+      const hearback = this[$hearback] || this[$start]();
+      (method = hearback.terminate).call(hearback);
+    } catch (e) {
+      if (!isEmpty(method)) err = [e];
+    }
+
+    const options = this[$options];
+    try {
+      options.afterTerminate();
+    } catch (e) {
+      err = [e];
+    }
+
+    if (err) options.onFail(err[0]);
   }
 }
 
