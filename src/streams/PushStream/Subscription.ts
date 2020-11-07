@@ -33,6 +33,8 @@ class Subscription<T = any> implements Push.Subscription {
 
     if (this.closed) return;
 
+    let pass = false;
+    let suspend = true;
     stream.source((ptb) => {
       this[$ptb] = ptb;
       return (this[$ctb] = new Talkback(() => observer, {
@@ -43,16 +45,19 @@ class Subscription<T = any> implements Push.Subscription {
           } catch (err) {
             return result.fail(err);
           }
-          result.pass();
+          if (suspend) pass = true;
+          else result.pass();
         },
         onFail: (err) => {
           result.fail(err);
-          if (this[$fail]) Handler.catches(() => ptb.terminate());
+          if (this[$fail]) ptb.terminate();
         }
       }));
     });
     // At this point we've just gotten the Subscriber
     // teardown function @ PushStream
+    suspend = false;
+    if (pass) result.pass();
   }
   get [Symbol.toStringTag](): string {
     return 'Subscription';
