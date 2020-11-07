@@ -91,12 +91,21 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
   }),
+  test('Observable.subscribe: returns subscription', () => {
+    const subscription = new Observable(() => undefined).subscribe({});
+
+    assert(
+      subscription &&
+        typeof subscription.closed === 'boolean' &&
+        typeof subscription.unsubscribe === 'function'
+    );
+  }),
   test('Observable.subscribe: passes Subscriber exceptions to Observer.error', () => {
     let pass = true;
     const times = [0, 0, 0, 0];
     const err = Error('foo');
 
-    new Observable(() => {
+    const subscription = new Observable(() => {
       throw err;
     }).subscribe({
       start: () => times[0]++,
@@ -108,7 +117,8 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       complete: () => times[3]++
     });
 
-    assert(pass, 'received different Error instance');
+    assert(pass);
+    assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
   }),
   test('Observable.subscribe: silences Subscriber exceptions when no Observer.error exists', () => {
@@ -118,28 +128,21 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       throw Error();
     });
 
+    let subscription: any;
     try {
-      instance.subscribe({});
+      subscription = instance.subscribe({});
     } catch (_) {
       pass = false;
     }
 
     assert(pass);
-  }),
-  test('Observable.subscribe: returns subscription', () => {
-    const subscription = new Observable(() => undefined).subscribe({});
-
-    assert(
-      subscription &&
-        typeof subscription.closed === 'boolean' &&
-        typeof subscription.unsubscribe === 'function'
-    );
+    assert(subscription.closed, 'Subscription open');
   }),
   test('Observer.start: succeeds', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let subs: any;
 
-    const subscription = new Observable(() => undefined).subscribe({
+    const subscription = new Observable(() => () => times[4]++).subscribe({
       start(x) {
         subs = x;
         times[0]++;
@@ -150,15 +153,16 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     });
 
     assert(subscription === subs, 'received different Subscription instance');
-    assert.deepStrictEqual(times, [1, 0, 0, 0], 'unexpected calls');
+    assert(!subscription.closed, 'Subscription closed');
+    assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
   }),
   test('Observer.start: errors are catched', () => {
     let pass = true;
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
 
     let subscription: any;
     try {
-      subscription = new Observable(() => undefined).subscribe({
+      subscription = new Observable(() => () => times[4]++).subscribe({
         start() {
           times[0]++;
           throw Error();
@@ -173,15 +177,15 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass, 'throws');
     assert(subscription && !subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 0, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
   }),
   test('Observer.start: errors in getter are catched', () => {
     let pass = true;
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
 
     let subscription: any;
     try {
-      subscription = new Observable(() => undefined).subscribe({
+      subscription = new Observable(() => () => times[4]++).subscribe({
         get start(): any {
           times[0]++;
           throw Error();
@@ -196,7 +200,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass, 'throws');
     assert(subscription && !subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 0, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
   }),
   test(`Observer.start: is not obtained more than once per call`, () => {
     const times = [0, 0];
@@ -218,10 +222,12 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert.deepStrictEqual(times, [1, 1], 'unexpected get calls');
   }),
   test(`Observer.start: unsubscribing suceeds`, () => {
+    const times = [0, 0];
     let pass = true;
 
     new Observable(() => {
-      pass = false;
+      times[0]++;
+      return () => times[1]++;
     }).subscribe({
       start(subscription) {
         subscription.unsubscribe();
@@ -229,10 +235,11 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       }
     });
 
-    assert(pass);
+    assert(pass, 'Subscription open');
+    assert.deepStrictEqual(times, [0, 0], 'unexpected calls');
   }),
   test('Observer.next: calls succeed (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     const values: string[] = [];
     let pass = true;
 
@@ -242,6 +249,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       if (times[1] !== 1) pass = false;
       if (obs.next('bar') !== undefined) pass = false;
       if (times[1] !== 2) pass = false;
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next(value) {
@@ -254,15 +262,12 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     });
 
     assert(pass);
-    assert(
-      values.length === 2 && values[0] === 'foo' && values[1] === 'bar',
-      'unexpected values'
-    );
     assert(!subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 2, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(values, ['foo', 'bar'], 'unexpected values');
+    assert.deepStrictEqual(times, [1, 2, 0, 0, 0], 'unexpected calls');
   }),
   test('Observer.next: calls succeed (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     const values: string[] = [];
     let pass = true;
 
@@ -274,6 +279,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
         if (obs.next('bar') !== undefined) pass = false;
         if (times[1] !== 2) pass = false;
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next(value) {
@@ -292,16 +298,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       'unexpected values'
     );
     assert(!subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 2, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 2, 0, 0, 0], 'unexpected calls');
   }),
   test('Observer.next: errors are catched (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
     try {
       subscription = new Observable<void>((obs) => {
         obs.next();
+        return () => times[4]++;
       }).subscribe({
         start: () => times[0]++,
         next() {
@@ -317,10 +324,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription && !subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 1, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
   test('Observer.next: errors are catched (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
@@ -332,6 +339,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
           pass = false;
         }
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next() {
@@ -345,16 +353,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription && !subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 1, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
   test('Observer.next: errors in getter are catched (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
     try {
       subscription = new Observable<void>((obs) => {
         obs.next();
+        return () => times[4]++;
       }).subscribe({
         start: () => times[0]++,
         get next(): any {
@@ -370,10 +379,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription && !subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 1, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
   test('Observer.next: errors in getter are catched (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
@@ -385,6 +394,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
           pass = false;
         }
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       get next(): any {
@@ -398,7 +408,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription && !subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 1, 0, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
   test(`Observer.next: is not obtained more than once per call`, () => {
     const times = [0, 0];
@@ -420,7 +430,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert.deepStrictEqual(times, [1, 1]);
   }),
   test('Observer.error: calls succeed (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     const errors: Error[] = [];
     let pass = true;
 
@@ -431,6 +441,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       if (obs.error(Error('bar')) !== undefined) pass = false;
       obs.next();
       obs.complete();
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -448,10 +459,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       errors.length === 1 && errors[0] && errors[0].message === 'foo',
       'unexpected errors'
     );
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test('Observer.error: calls succeed (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     const errors: Error[] = [];
     let pass = true;
 
@@ -464,6 +475,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
         obs.next();
         obs.complete();
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -482,16 +494,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       errors.length === 1 && errors[0] && errors[0].message === 'foo',
       'unexpected errors'
     );
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test('Observer.error: errors are catched (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
     try {
       subscription = new Observable((obs) => {
         obs.error(Error());
+        return () => times[4]++;
       }).subscribe({
         start: () => times[0]++,
         next: () => times[1]++,
@@ -507,10 +520,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test('Observer.error: errors are catched (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
@@ -522,6 +535,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
           pass = false;
         }
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -535,16 +549,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test('Observer.error: errors in getter are catched (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
     try {
       subscription = new Observable((obs) => {
         obs.error(Error());
+        return () => times[4]++;
       }).subscribe({
         start: () => times[0]++,
         next: () => times[1]++,
@@ -560,10 +575,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test('Observer.error: errors in getter are catched (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
@@ -575,6 +590,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
           pass = false;
         }
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -588,7 +604,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test(`Observer.error: is not obtained more than once per call`, () => {
     const times = [0, 0];
@@ -610,7 +626,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert.deepStrictEqual(times, [1, 1]);
   }),
   test('Observer.error: closes Subscription before call (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
 
     let obs: any;
@@ -618,6 +634,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     new Observable((_) => {
       obs = _;
       obs.error(Error('foo'));
+      return () => times[4]++;
     }).subscribe({
       start(_) {
         subscription = _;
@@ -640,16 +657,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test('Observer.error: closes Subscription before call (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
 
     let obs: any;
     const subscription = new Observable((_) => {
       obs = _;
       Promise.resolve().then(() => obs.error(Error('foo')));
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -670,7 +688,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
   test('Observer.error: does not throw when non existent', () => {
     let pass = true;
@@ -791,7 +809,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
   }),
   test('Observer.complete: calls succeed (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
 
     const subscription = new Observable((obs: any) => {
@@ -801,6 +819,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
       if (obs.complete('bar') !== undefined) pass = false;
       obs.error(Error());
       obs.complete();
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -814,10 +833,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test('Observer.complete: calls succeed (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
 
     const subscription = new Observable((obs: any) => {
@@ -829,6 +848,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
         obs.error(Error());
         obs.complete();
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -843,16 +863,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test('Observer.complete: errors are catched (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
     try {
       subscription = new Observable((obs) => {
         obs.complete();
+        return () => times[4]++;
       }).subscribe({
         start: () => times[0]++,
         next: () => times[1]++,
@@ -868,10 +889,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test('Observer.complete: errors are catched (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
@@ -883,6 +904,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
           pass = false;
         }
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -896,16 +918,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test('Observer.complete: errors in getter are catched (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
     try {
       subscription = new Observable((obs) => {
         obs.complete();
+        return () => times[4]++;
       }).subscribe({
         start: () => times[0]++,
         next: () => times[1]++,
@@ -921,10 +944,10 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test('Observer.complete: errors in getter are catched (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
 
@@ -936,6 +959,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
           pass = false;
         }
       });
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -949,7 +973,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test(`Observer.complete: is not obtained more than once per call`, () => {
     const times = [0, 0];
@@ -971,7 +995,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert.deepStrictEqual(times, [1, 1]);
   }),
   test('Observer.complete: closes Subscription before call (sync)', () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
 
     let obs: any;
@@ -979,6 +1003,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     new Observable((_) => {
       obs = _;
       obs.complete();
+      return () => times[4]++;
     }).subscribe({
       start(_) {
         subscription = _;
@@ -1001,16 +1026,17 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
     assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test('Observer.complete: closes Subscription before call (async)', async () => {
-    const times = [0, 0, 0, 0];
+    const times = [0, 0, 0, 0, 0];
     let pass = true;
 
     let obs: any;
     const subscription = new Observable((_) => {
       obs = _;
       Promise.resolve().then(() => obs.complete());
+      return () => times[4]++;
     }).subscribe({
       start: () => times[0]++,
       next: () => times[1]++,
@@ -1031,7 +1057,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     await Promise.resolve();
     assert(pass);
     assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 1], 'unexpected calls');
+    assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
   test('Observer.complete: teardown is called after (sync)', () => {
     let completeCalled = false;
