@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import { NoParamFn, Observables, Push, UnaryFn } from '../../definitions';
-import { Handler, IdentityGuard } from '../../helpers';
+import { IdentityGuard } from '../../helpers';
 import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
 import { Subscription } from './Subscription';
@@ -99,10 +99,23 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
         }
       }
 
+      // We can't assumed it's being subscribed to,
+      // it could be consumed as any other stream,
+      // meaning the talkback methods could error.
       if (err) {
         const error = err[0];
-        Handler.catches(() => talkback.error(error));
-        talkback.terminate();
+        err = undefined;
+        try {
+          talkback.error(error);
+        } catch (e) {
+          err = [e];
+        }
+        try {
+          talkback.terminate();
+        } catch (e) {
+          if (!err) err = [e];
+        }
+        if (err) throw err;
       }
     });
   }
