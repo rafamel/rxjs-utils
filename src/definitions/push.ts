@@ -19,6 +19,7 @@ export interface Constructor extends Observables.Constructor {
 export interface Stream<T = any>
   extends Core.Stream<T>,
     Observables.Observable<T> {
+  subscribe(observer: Observables.Observer<T>): Subscription;
   subscribe(observer: Observer<T>): Subscription;
   subscribe(
     onNext: UnaryFn<T>,
@@ -28,9 +29,13 @@ export interface Stream<T = any>
   ): Subscription;
 }
 
-export type Subscription = Observables.Subscription;
+export type Subscription = Observables.Subscription & Promise<void>;
 
-export interface Observer<T = any> extends Observables.Observer<T> {
+export interface Observer<T = any> {
+  start?: (subscription: Subscription) => void;
+  next?: (value: T) => void;
+  error?: (error: Error) => void;
+  complete?: () => void;
   terminate?: () => void;
 }
 
