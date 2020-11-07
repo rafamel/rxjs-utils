@@ -30,7 +30,7 @@ class Talkback<T> implements Core.Talkback<T> {
     this[$start] = () => (this[$hearback] = hearback());
     this[$closed] = false;
     this[$terminable] = true;
-    this[$failure] = new FailureManager(options.onFail);
+    this[$failure] = new FailureManager(options.onFail || Handler.throws);
     this[$options] = options;
   }
   public get closed(): boolean {
