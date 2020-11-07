@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import { NoParamFn, Observables, Push, UnaryFn } from '../../definitions';
-import { IdentityGuard } from '../../helpers';
+import { TypeGuard } from '../../helpers';
 import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
 import { Subscription } from './Subscription';
@@ -21,30 +21,30 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
       | Observables.Like<T>
       | Iterable<T>
   ): PushStream<T> {
-    const Constructor = IdentityGuard.isFunction(this) ? this : PushStream;
+    const Constructor = TypeGuard.isFunction(this) ? this : PushStream;
 
     // Subscriber
-    if (IdentityGuard.isFunction(item)) return new Constructor(item);
+    if (TypeGuard.isFunction(item)) return new Constructor(item);
 
-    if (IdentityGuard.isObject(item)) {
+    if (TypeGuard.isObject(item)) {
       const target: any = item;
       // Compatible
       const so = target[SymbolObservable];
-      if (IdentityGuard.isFunction(so)) {
+      if (TypeGuard.isFunction(so)) {
         const obs = so();
-        if (!IdentityGuard.isObject(obs) && !IdentityGuard.isFunction(obs)) {
+        if (!TypeGuard.isObject(obs) && !TypeGuard.isFunction(obs)) {
           throw new TypeError('Invalid Observable compatible object');
         }
         return fromObservableLike(Constructor, obs) as any;
       }
 
       // Like
-      if (IdentityGuard.isFunction(target.subscribe)) {
+      if (TypeGuard.isFunction(target.subscribe)) {
         return fromObservableLike(Constructor, target) as any;
       }
 
       // Iterable
-      if (IdentityGuard.isFunction(target[Symbol.iterator])) {
+      if (TypeGuard.isFunction(target[Symbol.iterator])) {
         return fromIterable(Constructor, target) as any;
       }
     }
@@ -52,7 +52,7 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);
   }
   public constructor(subscriber: Push.Subscriber<T>) {
-    if (!IdentityGuard.isFunction(subscriber)) {
+    if (!TypeGuard.isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
 
@@ -70,12 +70,12 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
       let tear: undefined | NoParamFn;
       try {
         const teardown = subscriber(talkback);
-        if (!IdentityGuard.isEmpty(teardown)) {
-          if (IdentityGuard.isFunction(teardown)) {
+        if (!TypeGuard.isEmpty(teardown)) {
+          if (TypeGuard.isFunction(teardown)) {
             tear = teardown;
           } else if (
-            IdentityGuard.isObject(teardown) &&
-            IdentityGuard.isFunction(
+            TypeGuard.isObject(teardown) &&
+            TypeGuard.isFunction(
               (teardown as Observables.Subscription).unsubscribe
             )
           ) {
@@ -134,14 +134,14 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
     onTerminate?: NoParamFn
   ): Subscription<T>;
   public subscribe(observer: any, ...arr: any[]): Subscription<T> {
-    if (IdentityGuard.isFunction(observer)) {
+    if (TypeGuard.isFunction(observer)) {
       observer = {
         next: observer,
         error: arr[0],
         complete: arr[1],
         terminate: arr[2]
       };
-    } else if (!IdentityGuard.isObject(observer)) {
+    } else if (!TypeGuard.isObject(observer)) {
       observer = {};
     }
 

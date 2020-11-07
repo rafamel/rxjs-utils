@@ -1,5 +1,5 @@
 import { Core, NoParamFn, UnaryFn, WideRecord } from '../../definitions';
-import { FailureManager, IdentityGuard, Handler } from '../../helpers';
+import { FailureManager, TypeGuard, Handler } from '../../helpers';
 
 export interface TalkbackOptions {
   onFail?: UnaryFn<Error>;
@@ -44,7 +44,7 @@ class Talkback<T> implements Core.Talkback<T> {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.next).call(hearback, value);
     } catch (err) {
-      if (IdentityGuard.isEmpty(method)) return;
+      if (TypeGuard.isEmpty(method)) return;
       this[$failure].fail(err, true);
     }
   }
@@ -63,7 +63,7 @@ class Talkback<T> implements Core.Talkback<T> {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.error).call(hearback, error);
     } catch (err) {
-      if (IdentityGuard.isEmpty(method)) failure.fail(error);
+      if (TypeGuard.isEmpty(method)) failure.fail(error);
       else failure.fail(err);
     }
 
@@ -86,7 +86,7 @@ class Talkback<T> implements Core.Talkback<T> {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.complete).call(hearback);
     } catch (err) {
-      if (!IdentityGuard.isEmpty(method)) failure.fail(err);
+      if (!TypeGuard.isEmpty(method)) failure.fail(err);
     }
 
     this[$terminable] = true;
@@ -104,7 +104,7 @@ class Talkback<T> implements Core.Talkback<T> {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.terminate).call(hearback);
     } catch (err) {
-      if (!IdentityGuard.isEmpty(method)) failure.fail(err);
+      if (!TypeGuard.isEmpty(method)) failure.fail(err);
     }
 
     const options = this[$options];

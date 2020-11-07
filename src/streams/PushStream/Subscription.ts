@@ -1,5 +1,5 @@
 import { Core, NoParamFn, Push, UnaryFn } from '../../definitions';
-import { IdentityGuard, Handler, ResultManager } from '../../helpers';
+import { TypeGuard, Handler, ResultManager } from '../../helpers';
 import { Talkback } from '../Stream';
 
 const $fail = Symbol('fail');
@@ -25,7 +25,7 @@ class Subscription<T = any> implements Push.Subscription {
     try {
       (method = (observer as any).start).call(observer, this);
     } catch (err) {
-      if (!IdentityGuard.isEmpty(method)) {
+      if (!TypeGuard.isEmpty(method)) {
         result.fail(err);
         if (this[$fail]) this.unsubscribe();
       }

@@ -1,5 +1,5 @@
 import { NoParamFn, Observables } from '../../../src/definitions';
-import { IdentityGuard, Handler } from '../../../src/helpers';
+import { TypeGuard, Handler } from '../../../src/helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import {
   isSubscriptionClosed,
@@ -26,12 +26,12 @@ class Subscription<T = any> implements Observables.Subscription {
     let teardown: NoParamFn = () => undefined;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
-      if (!IdentityGuard.isEmpty(unsubscribe)) {
-        if (IdentityGuard.isFunction(unsubscribe)) {
+      if (!TypeGuard.isEmpty(unsubscribe)) {
+        if (TypeGuard.isFunction(unsubscribe)) {
           teardown = unsubscribe;
         } else if (
-          IdentityGuard.isObject(unsubscribe) &&
-          IdentityGuard.isFunction(
+          TypeGuard.isObject(unsubscribe) &&
+          TypeGuard.isFunction(
             (unsubscribe as Observables.Subscription).unsubscribe
           )
         ) {

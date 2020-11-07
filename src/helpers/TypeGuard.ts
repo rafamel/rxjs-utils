@@ -1,6 +1,6 @@
 import { Empty } from '../definitions';
 
-export class IdentityGuard {
+export class TypeGuard {
   public static isFunction(item: any): item is Function {
     return typeof item === 'function';
   }

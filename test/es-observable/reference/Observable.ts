@@ -1,5 +1,5 @@
 import { NoParamFn, Observables, UnaryFn } from '../../../src/definitions';
-import { IdentityGuard } from '../../../src/helpers';
+import { TypeGuard } from '../../../src/helpers';
 import {
   fromIterable,
   fromObservableLike
@@ -22,30 +22,30 @@ export class Observable<T = any> implements Observables.Observable<T> {
       | Observables.Like<T>
       | Iterable<T>
   ): Observable<T> {
-    const Constructor = IdentityGuard.isFunction(this) ? this : Observable;
+    const Constructor = TypeGuard.isFunction(this) ? this : Observable;
 
     // Subscriber
-    if (IdentityGuard.isFunction(item)) return new Constructor(item);
+    if (TypeGuard.isFunction(item)) return new Constructor(item);
 
-    if (IdentityGuard.isObject(item)) {
+    if (TypeGuard.isObject(item)) {
       const target: any = item;
       // Compatible
       const so = target[SymbolObservable];
-      if (IdentityGuard.isFunction(so)) {
+      if (TypeGuard.isFunction(so)) {
         const obs = so();
-        if (!IdentityGuard.isObject(obs) && !IdentityGuard.isFunction(obs)) {
+        if (!TypeGuard.isObject(obs) && !TypeGuard.isFunction(obs)) {
           throw new TypeError('Invalid Observable compatible object');
         }
         return fromObservableLike(Constructor, obs) as any;
       }
 
       // Like
-      if (IdentityGuard.isFunction(target.subscribe)) {
+      if (TypeGuard.isFunction(target.subscribe)) {
         return fromObservableLike(Constructor, target) as any;
       }
 
       // Iterable
-      if (IdentityGuard.isFunction(target[Symbol.iterator])) {
+      if (TypeGuard.isFunction(target[Symbol.iterator])) {
         return fromIterable(Constructor, target) as any;
       }
     }
@@ -54,7 +54,7 @@ export class Observable<T = any> implements Observables.Observable<T> {
   }
   private [$subscriber]: Observables.Subscriber<T>;
   public constructor(subscriber: Observables.Subscriber<T>) {
-    if (!IdentityGuard.isFunction(subscriber)) {
+    if (!TypeGuard.isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
 
@@ -73,9 +73,9 @@ export class Observable<T = any> implements Observables.Observable<T> {
     onComplete?: NoParamFn
   ): Subscription<T>;
   public subscribe(observer: any, ...arr: any[]): Subscription<T> {
-    if (IdentityGuard.isFunction(observer)) {
+    if (TypeGuard.isFunction(observer)) {
       observer = { next: observer, error: arr[0], complete: arr[1] };
-    } else if (!IdentityGuard.isObject(observer)) {
+    } else if (!TypeGuard.isObject(observer)) {
       observer = {};
     }
 
