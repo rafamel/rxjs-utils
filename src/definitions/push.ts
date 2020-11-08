@@ -19,8 +19,8 @@ export interface Constructor extends Observables.Constructor {
 export interface Stream<T = any>
   extends Core.Stream<T>,
     Observables.Observable<T> {
-  subscribe(observer: Observables.Observer<T>): Subscription;
   subscribe(observer: Observer<T>): Subscription;
+  subscribe(observer: Observables.Observer<T>): Subscription;
   subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
