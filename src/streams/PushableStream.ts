@@ -1,29 +1,26 @@
 import { Push } from '../definitions';
 import { PushStream } from './PushStream';
 
-const $talkback = Symbol('talkback');
+const $observer = Symbol('observer');
 
 export class PushableStream<T = any> extends PushStream<T>
-  implements Push.Stream<T>, Push.Talkback<T> {
-  private [$talkback]: Push.Talkback<T>;
+  implements Push.Stream<T>, Push.ObserverTalkback<T> {
+  private [$observer]: Push.ObserverTalkback<T>;
   public constructor() {
     super((tb) => {
-      this[$talkback] = tb;
+      this[$observer] = tb;
     });
   }
   public get closed(): boolean {
-    return this[$talkback].closed;
+    return this[$observer].closed;
   }
   public next(value: T): void {
-    this[$talkback].next(value);
+    this[$observer].next(value);
   }
   public error(error: Error): void {
-    this[$talkback].error(error);
+    this[$observer].error(error);
   }
   public complete(): void {
-    this[$talkback].complete();
-  }
-  public terminate(): void {
-    this[$talkback].terminate();
+    this[$observer].complete();
   }
 }

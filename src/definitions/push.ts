@@ -39,9 +39,8 @@ export interface Observer<T = any> {
   terminate?: () => void;
 }
 
-export type Talkback<T = any> = Core.Talkback<T> &
-  Observables.SubscriptionObserver<T>;
+export type ObserverTalkback<T = any> = Observables.SubscriptionObserver<T>;
 
-export type Subscriber<T = any> = (observer: Talkback<T>) => Teardown;
+export type Subscriber<T = any> = (observer: ObserverTalkback<T>) => Teardown;
 
 export type Teardown = Observables.Teardown;

@@ -2,15 +2,25 @@ import assert from 'assert';
 import { PushStream, Stream } from '../../src';
 import compliance from '../es-observable/compliance';
 
+// TODO: test static functions
 // TODO: test consumption as a regular stream
 describe(`Primary`, () => {
   test(`Complies with Observable spec`, async () => {
     const response = await compliance('PushStream', PushStream, 'silent');
     assert(response.result[1].length === 0);
   });
-  test(`Constructor: PushStream is Stream`, () => {
+  test(`PushStream is Stream`, () => {
     const instance = new PushStream(() => undefined);
     assert(instance instanceof Stream);
+  });
+  test(`ObserverTalkback can't be manually started/terminated`, () => {
+    let obs: any;
+    new PushStream((_) => {
+      obs = _;
+    }).subscribe();
+
+    assert(!obs.start);
+    assert(!obs.terminate);
   });
 });
 describe(`PushStream.subscribe: handles Subscriber exceptions`, () => {
@@ -287,51 +297,6 @@ describe(`Observer.start: handles getter exceptions`, () => {
   });
 });
 describe(`Observer.next: succeeds`, () => {
-  test(`sync: can preemptively terminate`, () => {
-    let pass = true;
-    const times = [0, 0, 0];
-
-    let obs: any;
-    new PushStream<void>((_) => {
-      obs = _;
-      obs.next();
-      return () => times[2]++;
-    }).subscribe({
-      next() {
-        times[0]++;
-        obs.terminate();
-        pass = times[1] === 1 && times[2] === 0;
-      },
-      terminate: () => times[1]++
-    });
-
-    assert(pass);
-    assert.deepStrictEqual(times, [1, 1, 1]);
-  });
-  test(`async: can preemptively terminate`, async () => {
-    let pass = true;
-    const times = [0, 0, 0];
-
-    let obs: any;
-    new PushStream<void>((_) => {
-      obs = _;
-      Promise.resolve().then(() => obs.next());
-      return () => times[2]++;
-    }).subscribe({
-      next() {
-        times[0]++;
-        obs.terminate();
-        pass = times[1] === 1 && times[2] === 1;
-      },
-      terminate: () => times[1]++
-    });
-
-    assert.deepStrictEqual(times, [0, 0, 0]);
-
-    await Promise.resolve();
-    assert(pass);
-    assert.deepStrictEqual(times, [1, 1, 1]);
-  });
   test(`pre safe: does not unsubscribe/resolve/reject`, async () => {
     const times = [0, 0, 0, 0, 0, 0];
     const result: any[] = [false, false];
@@ -678,51 +643,6 @@ describe(`Observer.next: handles getter exceptions`, () => {
   });
 });
 describe(`Observer.error: succeeds`, () => {
-  test(`sync: cannot preemptively terminate`, () => {
-    let pass = true;
-    const times = [0, 0, 0];
-
-    let obs: any;
-    new PushStream<void>((_) => {
-      obs = _;
-      obs.error(Error());
-      return () => times[2]++;
-    }).subscribe({
-      error() {
-        times[0]++;
-        obs.terminate();
-        pass = times[1] === 0 && times[2] === 0;
-      },
-      terminate: () => times[1]++
-    });
-
-    assert(pass);
-    assert.deepStrictEqual(times, [1, 1, 1]);
-  });
-  test(`async: cannot preemptively terminate`, async () => {
-    let pass = true;
-    const times = [0, 0, 0];
-
-    let obs: any;
-    new PushStream<void>((_) => {
-      obs = _;
-      Promise.resolve().then(() => obs.error(Error()));
-      return () => times[2]++;
-    }).subscribe({
-      error() {
-        times[0]++;
-        obs.terminate();
-        pass = times[1] === 0 && times[2] === 0;
-      },
-      terminate: () => times[1]++
-    });
-
-    assert.deepStrictEqual(times, [0, 0, 0]);
-
-    await Promise.resolve();
-    assert(pass);
-    assert.deepStrictEqual(times, [1, 1, 1]);
-  });
   test(`pre safe: resolves when present in safe mode`, async () => {
     const times = [0, 0, 0, 0, 0, 0];
     const result: any[] = [false, false];
@@ -1467,51 +1387,6 @@ describe(`Observer.complete: succeeds`, () => {
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1, 1]);
   });
-  test(`sync: cannot preemptively terminate`, () => {
-    let pass = true;
-    const times = [0, 0, 0];
-
-    let obs: any;
-    new PushStream<void>((_) => {
-      obs = _;
-      obs.complete();
-      return () => times[2]++;
-    }).subscribe({
-      complete() {
-        times[0]++;
-        obs.terminate();
-        pass = times[1] === 0 && times[2] === 0;
-      },
-      terminate: () => times[1]++
-    });
-
-    assert(pass);
-    assert.deepStrictEqual(times, [1, 1, 1]);
-  });
-  test(`async: cannot preemptively terminate`, async () => {
-    let pass = true;
-    const times = [0, 0, 0];
-
-    let obs: any;
-    new PushStream<void>((_) => {
-      obs = _;
-      Promise.resolve().then(() => obs.complete());
-      return () => times[2]++;
-    }).subscribe({
-      complete() {
-        times[0]++;
-        obs.terminate();
-        pass = times[1] === 0 && times[2] === 0;
-      },
-      terminate: () => times[1]++
-    });
-
-    assert.deepStrictEqual(times, [0, 0, 0]);
-
-    await Promise.resolve();
-    assert(pass);
-    assert.deepStrictEqual(times, [1, 1, 1]);
-  });
   test(`pre safe: resolves`, async () => {
     const times = [0, 0, 0, 0, 0, 0];
     const result: any[] = [false, false];
@@ -2009,329 +1884,6 @@ describe(`Observer.complete: handles terminate exceptions`, () => {
       (error) => (result[1] = error)
     );
 
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [false, err]);
-  });
-});
-describe(`Observer.terminate: succeeds`, () => {
-  test(`unsubscribes`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-
-    const subscription = new PushStream<void>((obs) => {
-      obs.terminate();
-      obs.next();
-      obs.complete();
-      obs.terminate();
-      return () => times[5]++;
-    }).subscribe({
-      start: () => times[0]++,
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      terminate: () => times[4]++
-    });
-
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-  });
-  test(`pre safe: resolves`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const subscription = new PushStream<void>((obs) => {
-      obs.terminate();
-      obs.next();
-      obs.complete();
-      obs.terminate();
-      return () => times[5]++;
-    }).subscribe({
-      start(subscription) {
-        times[0]++;
-        subscription.then(
-          () => (result[0] = true),
-          (error) => (result[1] = error)
-        );
-      },
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      terminate: () => times[4]++
-    });
-
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [true, false]);
-  });
-  test(`post safe: resolves`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const subscription = new PushStream<void>((obs) => {
-      obs.terminate();
-      obs.next();
-      obs.complete();
-      obs.terminate();
-      return () => times[5]++;
-    }).subscribe({
-      start: () => times[0]++,
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      terminate: () => times[4]++
-    });
-
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-
-    subscription.then(
-      () => (result[0] = true),
-      (error) => (result[1] = error)
-    );
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [true, false]);
-  });
-  test(`safe, async: resolves`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const subscription = new PushStream<void>((obs) => {
-      Promise.resolve().then(() => {
-        obs.terminate();
-        obs.next();
-        obs.complete();
-        obs.terminate();
-      });
-      return () => times[5]++;
-    }).subscribe({
-      start: () => times[0]++,
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      terminate: () => times[4]++
-    });
-
-    assert(!subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 0, 0]);
-
-    await Promise.resolve();
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-
-    subscription.then(
-      () => (result[0] = true),
-      (error) => (result[1] = error)
-    );
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [true, false]);
-  });
-});
-describe(`Observer.terminate: handles exceptions`, () => {
-  test(`pre safe: rejects`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const err = Error('foo');
-    const subscription = new PushStream<void>((obs) => {
-      obs.terminate();
-      obs.next();
-      obs.complete();
-      obs.terminate();
-      return () => times[5]++;
-    }).subscribe({
-      start(subscription) {
-        times[0]++;
-        subscription.then(
-          () => (result[0] = true),
-          (error) => (result[1] = error)
-        );
-      },
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      terminate() {
-        times[4]++;
-        throw err;
-      }
-    });
-
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [false, err]);
-  });
-  test(`post safe: rejects`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const err = Error('foo');
-    const subscription = new PushStream<void>((obs) => {
-      obs.terminate();
-      obs.next();
-      obs.complete();
-      obs.terminate();
-      return () => times[5]++;
-    }).subscribe({
-      start: () => times[0]++,
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      terminate() {
-        times[4]++;
-        throw err;
-      }
-    });
-
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-
-    subscription.then(
-      () => (result[0] = true),
-      (error) => (result[1] = error)
-    );
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [false, err]);
-  });
-  test(`safe, async: rejects`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const err = Error('foo');
-    const subscription = new PushStream<void>((obs) => {
-      Promise.resolve().then(() => {
-        obs.terminate();
-        obs.next();
-        obs.complete();
-        obs.terminate();
-      });
-      return () => times[5]++;
-    }).subscribe({
-      start: () => times[0]++,
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      terminate() {
-        times[4]++;
-        throw err;
-      }
-    });
-
-    assert(!subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 0, 0]);
-
-    await Promise.resolve();
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-
-    subscription.then(
-      () => (result[0] = true),
-      (error) => (result[1] = error)
-    );
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [false, err]);
-  });
-});
-describe(`Observer.terminate: handles getter exceptions`, () => {
-  test(`pre safe: rejects`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const err = Error('foo');
-    const subscription = new PushStream<void>((obs) => {
-      obs.terminate();
-      obs.next();
-      obs.complete();
-      obs.terminate();
-      return () => times[5]++;
-    }).subscribe({
-      start(subscription) {
-        times[0]++;
-        subscription.then(
-          () => (result[0] = true),
-          (error) => (result[1] = error)
-        );
-      },
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      get terminate(): () => void {
-        times[4]++;
-        throw err;
-      }
-    });
-
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [false, err]);
-  });
-  test(`post safe: rejects`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const err = Error('foo');
-    const subscription = new PushStream<void>((obs) => {
-      obs.terminate();
-      obs.next();
-      obs.complete();
-      obs.terminate();
-      return () => times[5]++;
-    }).subscribe({
-      start: () => times[0]++,
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      get terminate(): any {
-        times[4]++;
-        throw err;
-      }
-    });
-
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-
-    subscription.then(
-      () => (result[0] = true),
-      (error) => (result[1] = error)
-    );
-    await Promise.resolve();
-    assert.deepStrictEqual(result, [false, err]);
-  });
-  test(`safe, async: rejects`, async () => {
-    const times = [0, 0, 0, 0, 0, 0];
-    const result: any[] = [false, false];
-
-    const err = Error('foo');
-    const subscription = new PushStream<void>((obs) => {
-      Promise.resolve().then(() => {
-        obs.terminate();
-        obs.next();
-        obs.complete();
-        obs.terminate();
-      });
-      return () => times[5]++;
-    }).subscribe({
-      start: () => times[0]++,
-      next: () => times[1]++,
-      error: () => times[2]++,
-      complete: () => times[3]++,
-      get terminate(): any {
-        times[4]++;
-        throw err;
-      }
-    });
-
-    assert(!subscription.closed, 'Subscription closed');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 0, 0]);
-
-    await Promise.resolve();
-    assert(subscription.closed, 'Subscription open');
-    assert.deepStrictEqual(times, [1, 0, 0, 0, 1, 1]);
-
-    subscription.then(
-      () => (result[0] = true),
-      (error) => (result[1] = error)
-    );
     await Promise.resolve();
     assert.deepStrictEqual(result, [false, err]);
   });

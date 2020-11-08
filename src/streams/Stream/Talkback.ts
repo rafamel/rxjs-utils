@@ -14,7 +14,7 @@ const $hearback = Symbol('hearback');
 const $failure = Symbol('failure');
 const $options = Symbol('options');
 
-class Talkback<T> implements Core.Talkback<T> {
+export class Talkback<T> implements Core.Talkback<T> {
   private [$start]: NoParamFn<WideRecord>;
   private [$closed]: boolean;
   private [$terminable]: boolean;
@@ -117,7 +117,3 @@ class Talkback<T> implements Core.Talkback<T> {
     failure.raise();
   }
 }
-
-Talkback.prototype.constructor = Object;
-
-export { Talkback };

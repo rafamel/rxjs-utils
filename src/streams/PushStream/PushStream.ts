@@ -5,6 +5,7 @@ import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
 import { Subscription } from './Subscription';
 import SymbolObservable from 'symbol-observable';
+import { ObserverTalkback } from './ObserverTalkback';
 
 export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
   static of<T>(...items: T[]): PushStream<T> {
@@ -69,7 +70,7 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
       let err: undefined | [Error];
       let tear: undefined | NoParamFn;
       try {
-        const teardown = subscriber(talkback);
+        const teardown = subscriber(new ObserverTalkback(talkback));
         if (!TypeGuard.isEmpty(teardown)) {
           if (TypeGuard.isFunction(teardown)) {
             tear = teardown;
