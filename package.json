@@ -2,12 +2,15 @@
   "name": "multitude",
   "version": "0.0.0",
   "author": "Rafa Mel",
-  "description": "A collection of Observable operators and utilities",
+  "description": "Comprehensive streams for push and pull",
   "keywords": [
-    "observable",
     "stream",
-    "utils",
-    "operators"
+    "pull",
+    "push",
+    "observable",
+    "callbag",
+    "iterator",
+    "operator"
   ],
   "engines": {
     "node": ">=12"

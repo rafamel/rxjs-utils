@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/github/license/rafamel/multitude.svg)](https://github.com/rafamel/multitude/blob/master/LICENSE)
 [![Types](https://img.shields.io/npm/types/multitude.svg)](https://www.npmjs.com/package/multitude)
 
-> A collection of Observable operators and utilities.
+> Comprehensive streams for push and pull
 
 ## Install
 
