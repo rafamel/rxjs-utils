@@ -11,14 +11,14 @@ const failures = [
     ['Reference Observable', ReferenceObservable],
     100,
     10 ** 5,
-    0.45
+    1.5
   ),
   performs(
     ['Multitude PushStream', PushStream],
     ['ES Observable', ESObservable],
     100,
     10 ** 5,
-    0.15
+    1.25
   )
 ].filter((success) => !success);
 console.log();
@@ -30,7 +30,7 @@ function performs(
   reference: [string, any],
   times: number,
   count: number,
-  alpha: number
+  threshold: number
 ): boolean {
   const [name, Constructor] = local;
   const [referenceName, ReferenceConstructor] = reference;
@@ -63,7 +63,7 @@ function performs(
   if (ms <= msReference) {
     prefix = chalk.bgGreen.black(' PASS ');
     msg = `${name} [${ms} ms] <= ${referenceName} [${msReference} ms]`;
-  } else if (ms <= msReference * (1 + alpha)) {
+  } else if (ms <= msReference * threshold) {
     prefix = chalk.bgBlue.black(' PASS ');
     msg = `${name} [${ms} ms] ~= ${referenceName} [${msReference} ms]`;
   } else {
@@ -73,5 +73,5 @@ function performs(
 
   console.log(prefix + ' ' + chalk.bold(msg));
 
-  return ms <= msReference * (1 + alpha);
+  return ms <= msReference * threshold;
 }
