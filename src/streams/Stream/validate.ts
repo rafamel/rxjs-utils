@@ -1,5 +1,5 @@
-import { Core } from '../../../definitions';
-import { TypeGuard } from '../../../helpers';
+import { Core } from '../../definitions';
+import { TypeGuard } from '../../helpers';
 
 export function validateCounterpart(
   counterpart: Core.Counterpart<any, any>

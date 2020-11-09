@@ -1,4 +1,4 @@
-import { Core, NoParamFn, UnaryFn, WideRecord } from '../../definitions';
+import { Core, Empty, NoParamFn, UnaryFn, WideRecord } from '../../definitions';
 import { FailureManager, TypeGuard, Handler } from '../../helpers';
 
 export interface TalkbackOptions {
@@ -9,6 +9,7 @@ export interface TalkbackOptions {
 
 const $start = Symbol('start');
 const $closed = Symbol('closed');
+const $terminated = Symbol('terminated');
 const $terminable = Symbol('terminable');
 const $hearback = Symbol('hearback');
 const $failure = Symbol('failure');
@@ -17,18 +18,20 @@ const $options = Symbol('options');
 export class Talkback<T> implements Core.Talkback<T> {
   private [$start]: NoParamFn<WideRecord>;
   private [$closed]: boolean;
+  private [$terminated]: boolean;
   private [$terminable]: boolean;
   private [$hearback]: void | WideRecord;
   private [$failure]: FailureManager;
   private [$options]: TalkbackOptions;
   public constructor(
-    hearback: NoParamFn<Core.Hearback<T>>,
+    hearback: NoParamFn<Core.Hearback<T> | Empty>,
     options?: TalkbackOptions
   ) {
     if (!options) options = {};
 
-    this[$start] = () => (this[$hearback] = hearback());
+    this[$start] = () => (this[$hearback] = hearback() || {});
     this[$closed] = false;
+    this[$terminated] = false;
     this[$terminable] = true;
     this[$failure] = new FailureManager(options.onFail || Handler.throws);
     this[$options] = options;
@@ -63,6 +66,7 @@ export class Talkback<T> implements Core.Talkback<T> {
       const hearback = this[$hearback] || this[$start]();
       (method = hearback.error).call(hearback, error);
     } catch (err) {
+      this[$closed] = true;
       if (TypeGuard.isEmpty(method)) failure.fail(error);
       else failure.fail(err);
     }
@@ -70,9 +74,8 @@ export class Talkback<T> implements Core.Talkback<T> {
     if (failure.replete || options.closeOnError) {
       this[$terminable] = true;
       this.terminate();
-    } else {
-      failure.raise();
     }
+    failure.raise();
   }
   public complete(): void {
     if (this.closed) return;
@@ -93,10 +96,10 @@ export class Talkback<T> implements Core.Talkback<T> {
     this.terminate();
   }
   public terminate(): void {
-    if (!this[$terminable]) return;
+    if (this[$terminated] || !this[$terminable]) return;
 
     this[$closed] = true;
-    this[$terminable] = false;
+    this[$terminated] = true;
 
     let method: any = Handler.noop;
     const failure = this[$failure];
