@@ -1,7 +1,7 @@
 import { Empty, UnaryFn } from '../definitions';
 
 export class FailureManager {
-  private fn: UnaryFn<Error> | Empty;
+  private fn: UnaryFn<Error>;
   private error: [Error] | Empty;
   public constructor(onFail: UnaryFn<Error>) {
     this.fn = onFail;
@@ -10,18 +10,17 @@ export class FailureManager {
     return Boolean(this.error);
   }
   public fail(error: Error, raise?: boolean): void {
-    if (!this.fn) return raise ? this.raise() : undefined;
-
-    try {
+    if (this.replete) {
+      if (!raise) return;
       this.fn(error);
-    } catch (err) {
-      this.error = [err];
-      if (raise) {
-        this.fn = null;
-        throw err;
+    } else {
+      try {
+        this.fn(error);
+      } catch (err) {
+        this.error = [err];
+        if (raise) throw err;
       }
     }
-    this.fn = null;
   }
   public raise(): void {
     if (!this.error) return;
