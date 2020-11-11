@@ -5,7 +5,7 @@ import {
   fromObservableLike
 } from '../../../src/streams/PushStream/from';
 import { Subscription } from './Subscription';
-import SymbolObservable from 'symbol-observable';
+import 'symbol-observable';
 
 const $subscriber = Symbol('subscriber');
 
@@ -30,7 +30,7 @@ export class Observable<T = any> implements Observables.Observable<T> {
     if (TypeGuard.isObject(item)) {
       const target: any = item;
       // Compatible
-      const so = target[SymbolObservable];
+      const so = target[Symbol.observable];
       if (TypeGuard.isFunction(so)) {
         const obs = so();
         if (!TypeGuard.isObject(obs) && !TypeGuard.isFunction(obs)) {
@@ -59,9 +59,6 @@ export class Observable<T = any> implements Observables.Observable<T> {
     }
 
     this[$subscriber] = subscriber;
-  }
-  public [SymbolObservable](): Observable<T> {
-    return this;
   }
   public [Symbol.observable](): Observable<T> {
     return this;

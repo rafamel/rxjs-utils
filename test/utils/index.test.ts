@@ -4,7 +4,7 @@ import {
   isStream,
   isObservableCompatible
 } from '../../src';
-import SymbolObservable from 'symbol-observable';
+import 'symbol-observable';
 
 const noop = (): void => undefined;
 
@@ -57,7 +57,7 @@ test(`isObservableCompatible`, () => {
   expect(isObservableCompatible('')).toBe(false);
   expect(isObservableCompatible(noop)).toBe(false);
   expect(isObservableCompatible({})).toBe(false);
-  expect(isObservableCompatible({ [SymbolObservable]: {} })).toBe(false);
+  expect(isObservableCompatible({ [Symbol.observable]: {} })).toBe(false);
 
-  expect(isObservableCompatible({ [SymbolObservable]: noop })).toBe(true);
+  expect(isObservableCompatible({ [Symbol.observable]: noop })).toBe(true);
 });

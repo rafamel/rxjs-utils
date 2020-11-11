@@ -1,6 +1,6 @@
 import { Core, Observables } from '../definitions';
 import { TypeGuard } from '../helpers';
-import SymbolObservable from 'symbol-observable';
+import 'symbol-observable';
 
 export function isStream(item: any): item is Core.Stream<unknown, unknown> {
   return (
@@ -24,6 +24,6 @@ export function isObservableCompatible(
   item: any
 ): item is Observables.Compatible<unknown> {
   return (
-    TypeGuard.isObject(item) && TypeGuard.isFunction(item[SymbolObservable])
+    TypeGuard.isObject(item) && TypeGuard.isFunction(item[Symbol.observable])
   );
 }

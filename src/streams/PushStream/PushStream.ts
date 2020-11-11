@@ -4,8 +4,8 @@ import { TypeGuard } from '../../helpers';
 import { Stream } from '../Stream';
 import { fromIterable, fromObservableLike } from './from';
 import { Subscription } from './Subscription';
-import SymbolObservable from 'symbol-observable';
 import { ObserverTalkback } from './ObserverTalkback';
+import 'symbol-observable';
 
 export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
   static of<T>(...items: T[]): PushStream<T> {
@@ -30,7 +30,7 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
     if (TypeGuard.isObject(item)) {
       const target: any = item;
       // Compatible
-      const so = target[SymbolObservable];
+      const so = target[Symbol.observable];
       if (TypeGuard.isFunction(so)) {
         const obs = so();
         if (!TypeGuard.isObject(obs) && !TypeGuard.isFunction(obs)) {
@@ -119,9 +119,6 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
         if (err) throw err;
       }
     });
-  }
-  public [SymbolObservable](): PushStream<T> {
-    return this;
   }
   public [Symbol.observable](): PushStream<T> {
     return this;
