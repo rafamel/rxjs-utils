@@ -14,8 +14,6 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
   }
   static from<T>(
     item:
-      | Push.Subscriber<T>
-      | Observables.Subscriber<T>
       | Push.Stream<T>
       | Observables.Observable<T>
       | Observables.Compatible<T>
@@ -23,9 +21,6 @@ export class PushStream<T = any> extends Stream<T> implements Push.Stream<T> {
       | Iterable<T>
   ): PushStream<T> {
     const Constructor = TypeGuard.isFunction(this) ? this : PushStream;
-
-    // Subscriber
-    if (TypeGuard.isFunction(item)) return new Constructor(item);
 
     if (TypeGuard.isObject(item)) {
       const target: any = item;

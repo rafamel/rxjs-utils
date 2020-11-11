@@ -15,17 +15,9 @@ export class Observable<T = any> implements Observables.Observable<T> {
     return fromIterable(Constructor, items) as any;
   }
   static from<T>(
-    item:
-      | Observables.Subscriber<T>
-      | Observables.Observable<T>
-      | Observables.Compatible<T>
-      | Observables.Like<T>
-      | Iterable<T>
+    item: Observables.Observable<T> | Observables.Compatible<T> | Iterable<T>
   ): Observable<T> {
     const Constructor = TypeGuard.isFunction(this) ? this : Observable;
-
-    // Subscriber
-    if (TypeGuard.isFunction(item)) return new Constructor(item);
 
     if (TypeGuard.isObject(item)) {
       const target: any = item;
@@ -37,11 +29,6 @@ export class Observable<T = any> implements Observables.Observable<T> {
           throw new TypeError('Invalid Observable compatible object');
         }
         return fromObservableLike(Constructor, obs) as any;
-      }
-
-      // Like
-      if (TypeGuard.isFunction(target.subscribe)) {
-        return fromObservableLike(Constructor, target) as any;
       }
 
       // Iterable

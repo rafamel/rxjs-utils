@@ -4,9 +4,7 @@ import 'symbol-observable';
 export interface Constructor {
   new <T = any>(subscriber: Subscriber<T>): Observable<T>;
   of<T>(...items: T[]): Observable<T>;
-  from<T>(
-    item: Subscriber<T> | Observable<T> | Compatible<T> | Like<T> | Iterable<T>
-  ): Observable<T>;
+  from<T>(item: Observable<T> | Compatible<T> | Iterable<T>): Observable<T>;
   prototype: Observable;
 }
 

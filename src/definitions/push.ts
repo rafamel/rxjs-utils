@@ -7,7 +7,6 @@ export interface Constructor extends Observables.Constructor {
   of<T>(...items: T[]): Stream<T>;
   from<T>(
     item:
-      | Observables.Subscriber<T>
       | Observables.Observable<T>
       | Observables.Compatible<T>
       | Observables.Like<T>
