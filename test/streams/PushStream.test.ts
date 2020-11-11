@@ -2,7 +2,6 @@ import assert from 'assert';
 import { PushStream, Stream } from '../../src';
 import compliance from '../es-observable/compliance';
 
-// TODO: test consumption as a regular stream
 describe(`Primary`, () => {
   test(`Complies with Observable spec`, async () => {
     const response = await compliance('PushStream', PushStream, 'silent');
@@ -31,6 +30,62 @@ describe(`PushStream.from`, () => {
     PushStream.from(obs).subscribe((value) => (response = value));
 
     assert(response === 'foo');
+  });
+});
+describe(`PushStream.prototype.subscribe: Subscription is a promise`, () => {
+  test(`has then, catch, finally, methods`, () => {
+    const subscription = new PushStream(() => undefined).subscribe();
+
+    assert(typeof subscription.then === 'function');
+    assert(typeof subscription.catch === 'function');
+    assert(typeof subscription.finally === 'function');
+    assert(subscription.then.length === 2);
+    assert(subscription.catch.length === 1);
+    assert(subscription.finally.length === 1);
+  });
+  test(`has Symbol.toStringTag property`, () => {
+    const subscription = new PushStream(() => undefined).subscribe();
+    assert(typeof subscription[Symbol.toStringTag] === 'string');
+  });
+  test(`catch calls then`, async () => {
+    const subscription = new PushStream(() => undefined).subscribe();
+
+    const values: any[] = [];
+    subscription.then = (a, b): any => {
+      values.push(a, b);
+      return 'bar';
+    };
+
+    const res = await subscription.catch('foo' as any);
+
+    assert(res === ('bar' as any));
+    assert.deepStrictEqual(values, [undefined, 'foo']);
+  });
+  test(`finally calls then, calls finalization function`, async () => {
+    const values: any[] = [];
+    const subscription: any = new PushStream(() => undefined).subscribe();
+
+    subscription.then = (a: any, b: any) => Promise.resolve('foo').then(a, b);
+
+    const a = await subscription.finally();
+    assert(a === 'foo');
+
+    const b = await subscription.finally((value: any) => {
+      values.push(value);
+    });
+    assert(b === 'foo');
+    assert.deepStrictEqual(values, [undefined]);
+
+    // eslint-disable-next-line
+    subscription.then = (a: any, b: any) => Promise.reject('bar').then(a, b);
+
+    const c = await subscription
+      .finally((value: any) => {
+        values.push(value);
+      })
+      .catch((value: any) => value + 'baz');
+    assert(c === 'barbaz');
+    assert.deepStrictEqual(values, [undefined, undefined]);
   });
 });
 describe(`PushStream.prototype.subscribe: handles Subscriber exceptions`, () => {
