@@ -2,7 +2,6 @@ import assert from 'assert';
 import { PushStream, Stream } from '../../src';
 import compliance from '../es-observable/compliance';
 
-// TODO: test static functions
 // TODO: test consumption as a regular stream
 describe(`Primary`, () => {
   test(`Complies with Observable spec`, async () => {
@@ -23,7 +22,18 @@ describe(`Primary`, () => {
     assert(!obs.terminate);
   });
 });
-describe(`PushStream.subscribe: handles Subscriber exceptions`, () => {
+describe(`PushStream.from`, () => {
+  test(`creates from Like`, () => {
+    const instance = new PushStream((obs) => obs.next('foo'));
+    const obs = { subscribe: instance.subscribe.bind(instance) };
+
+    let response: any;
+    PushStream.from(obs).subscribe((value) => (response = value));
+
+    assert(response === 'foo');
+  });
+});
+describe(`PushStream.prototype.subscribe: handles Subscriber exceptions`, () => {
   test(`terminate executes after error`, () => {
     let pass = true;
     const times = [0, 0];

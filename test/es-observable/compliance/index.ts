@@ -5,6 +5,7 @@ import { Observables } from '../../../src';
 import { Handler } from '../../../src/helpers';
 import { runTests } from '../module/tests';
 import { engine, Test, test } from './engine';
+import 'symbol-observable';
 
 export default engine((Observable: Observables.Constructor): Test[] => [
   test('ES Observable Test Runner', async () => {
@@ -61,12 +62,67 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
   }),
-  test('Observable[Symbol.observable]: is self', () => {
+  test(`Observable.of: succeeds`, () => {
+    const values: any[] = [];
+    Observable.of(1, 2, 3, 4, 5).subscribe((value) => values.push(value));
+
+    assert.deepStrictEqual(values, [1, 2, 3, 4, 5]);
+  }),
+  test(`Observable.from: throws for unexpected arguments`, () => {
+    let pass = true;
+
+    const Constructor: any = Observable;
+    Handler.catches(() => {
+      Constructor.from(undefined);
+      pass = false;
+    });
+    Handler.catches(() => {
+      Constructor.from(null);
+      pass = false;
+    });
+    Handler.catches(() => {
+      Constructor.from(1);
+      pass = false;
+    });
+    Handler.catches(() => {
+      Constructor.from(true);
+      pass = false;
+    });
+    Handler.catches(() => {
+      Constructor.from({});
+      pass = false;
+    });
+    Handler.catches(() => {
+      Constructor.from(() => undefined);
+      pass = false;
+    });
+
+    assert(pass);
+  }),
+  test(`Observable.from: creates from Compatible`, () => {
+    const obs = new Observable(() => undefined);
+    const a: any = {
+      [Symbol.observable]: () => ({})
+    };
+    const b: any = {
+      [Symbol.observable]: () => obs
+    };
+
+    assert(Observable.from(a) instanceof Observable);
+    assert(Observable.from(b) === obs);
+  }),
+  test(`Observable.from: creates from Iterable`, () => {
+    const values: any[] = [];
+    Observable.from([1, 2, 3, 4, 5]).subscribe((value) => values.push(value));
+
+    assert.deepStrictEqual(values, [1, 2, 3, 4, 5]);
+  }),
+  test('Observable.prototype[Symbol.observable]: is self', () => {
     const instance = new Observable(() => undefined);
     const res = instance[Symbol.observable]();
     assert(res === instance);
   }),
-  test('Observable.subscribe: does not throw', () => {
+  test('Observable.prototype.subscribe: does not throw', () => {
     let pass = true;
 
     const Constructor: any = Observable;
@@ -91,7 +147,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(pass);
   }),
-  test('Observable.subscribe: returns subscription', () => {
+  test('Observable.prototype.subscribe: returns subscription', () => {
     const subscription = new Observable(() => undefined).subscribe({});
 
     assert(
@@ -100,7 +156,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
         typeof subscription.unsubscribe === 'function'
     );
   }),
-  test('Observable.subscribe: passes Subscriber exceptions to Observer.error', () => {
+  test('Observable.prototype.subscribe: passes Subscriber exceptions to Observer.error', () => {
     let pass = true;
     const times = [0, 0, 0, 0];
     const err = Error('foo');
@@ -121,7 +177,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0], 'unexpected calls');
   }),
-  test('Observable.subscribe: silences Subscriber exceptions when no Observer.error exists', () => {
+  test('Observable.prototype.subscribe: silences Subscriber exceptions when no Observer.error exists', () => {
     let pass = true;
 
     const instance = new Observable(() => {
@@ -138,7 +194,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(pass);
     assert(subscription.closed, 'Subscription open');
   }),
-  test('Observer.start: succeeds', () => {
+  test('Observer.prototype.start: succeeds', () => {
     const times = [0, 0, 0, 0, 0];
     let subs: any;
 
@@ -156,7 +212,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(!subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
   }),
-  test('Observer.start: errors are catched', () => {
+  test('Observer.prototype.start: errors are catched', () => {
     let pass = true;
     const times = [0, 0, 0, 0, 0];
 
@@ -179,7 +235,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && !subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
   }),
-  test('Observer.start: errors in getter are catched', () => {
+  test('Observer.prototype.start: errors in getter are catched', () => {
     let pass = true;
     const times = [0, 0, 0, 0, 0];
 
@@ -202,7 +258,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && !subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
   }),
-  test(`Observer.start: is not obtained more than once per call`, () => {
+  test(`Observer.prototype.start: is not obtained more than once per call`, () => {
     const times = [0, 0];
     new Observable(() => undefined).subscribe({
       get start() {
@@ -221,7 +277,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert.deepStrictEqual(times, [1, 1], 'unexpected get calls');
   }),
-  test(`Observer.start: unsubscribing suceeds`, () => {
+  test(`Observer.prototype.start: unsubscribing suceeds`, () => {
     const times = [0, 0];
     let pass = true;
 
@@ -238,7 +294,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(pass, 'Subscription open');
     assert.deepStrictEqual(times, [0, 0], 'unexpected calls');
   }),
-  test('Observer.next: calls succeed (sync)', () => {
+  test('Observer.prototype.next: calls succeed (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     const values: string[] = [];
     let pass = true;
@@ -266,7 +322,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert.deepStrictEqual(values, ['foo', 'bar'], 'unexpected values');
     assert.deepStrictEqual(times, [1, 2, 0, 0, 0], 'unexpected calls');
   }),
-  test('Observer.next: calls succeed (async)', async () => {
+  test('Observer.prototype.next: calls succeed (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     const values: string[] = [];
     let pass = true;
@@ -300,7 +356,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(!subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 2, 0, 0, 0], 'unexpected calls');
   }),
-  test('Observer.next: errors are catched (sync)', () => {
+  test('Observer.prototype.next: errors are catched (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -326,7 +382,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && !subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
-  test('Observer.next: errors are catched (async)', async () => {
+  test('Observer.prototype.next: errors are catched (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -355,7 +411,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && !subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
-  test('Observer.next: errors in getter are catched (sync)', () => {
+  test('Observer.prototype.next: errors in getter are catched (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -381,7 +437,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && !subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
-  test('Observer.next: errors in getter are catched (async)', async () => {
+  test('Observer.prototype.next: errors in getter are catched (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -410,7 +466,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && !subscription.closed, 'Subscription closed');
     assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
   }),
-  test(`Observer.next: is not obtained more than once per call`, () => {
+  test(`Observer.prototype.next: is not obtained more than once per call`, () => {
     const times = [0, 0];
     new Observable<void>((obs) => obs.next()).subscribe({
       get next() {
@@ -429,7 +485,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert.deepStrictEqual(times, [1, 1]);
   }),
-  test('Observer.error: calls succeed (sync)', () => {
+  test('Observer.prototype.error: calls succeed (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     const errors: Error[] = [];
     let pass = true;
@@ -461,7 +517,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     );
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test('Observer.error: calls succeed (async)', async () => {
+  test('Observer.prototype.error: calls succeed (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     const errors: Error[] = [];
     let pass = true;
@@ -496,7 +552,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     );
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test('Observer.error: errors are catched (sync)', () => {
+  test('Observer.prototype.error: errors are catched (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -522,7 +578,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test('Observer.error: errors are catched (async)', async () => {
+  test('Observer.prototype.error: errors are catched (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -551,7 +607,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test('Observer.error: errors in getter are catched (sync)', () => {
+  test('Observer.prototype.error: errors in getter are catched (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -577,7 +633,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test('Observer.error: errors in getter are catched (async)', async () => {
+  test('Observer.prototype.error: errors in getter are catched (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -606,7 +662,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test(`Observer.error: is not obtained more than once per call`, () => {
+  test(`Observer.prototype.error: is not obtained more than once per call`, () => {
     const times = [0, 0];
     new Observable((obs) => obs.error(Error())).subscribe({
       get error() {
@@ -625,7 +681,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert.deepStrictEqual(times, [1, 1]);
   }),
-  test('Observer.error: closes Subscription before call (sync)', () => {
+  test('Observer.prototype.error: closes Subscription before call (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
 
@@ -659,7 +715,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test('Observer.error: closes Subscription before call (async)', async () => {
+  test('Observer.prototype.error: closes Subscription before call (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
 
@@ -690,7 +746,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 1, 0, 1], 'unexpected calls');
   }),
-  test('Observer.error: does not throw when non existent', () => {
+  test('Observer.prototype.error: does not throw when non existent', () => {
     let pass = true;
 
     let subscription: any;
@@ -705,7 +761,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
   }),
-  test('Observer.error: does not throw when existent', () => {
+  test('Observer.prototype.error: does not throw when existent', () => {
     let pass = true;
 
     let subscription: any;
@@ -722,7 +778,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(pass);
     assert(subscription && subscription.closed, 'Subscription open');
   }),
-  test('Observer.error: teardown is called after (sync)', () => {
+  test('Observer.prototype.error: teardown is called after (sync)', () => {
     let errorCalled = false;
     let teardownCalled = false;
     let teardownCalledBefore = false;
@@ -740,7 +796,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(errorCalled, 'not called');
     assert(!teardownCalledBefore, 'teardown called before');
   }),
-  test('Observer.error: teardown is called after (async)', async () => {
+  test('Observer.prototype.error: teardown is called after (async)', async () => {
     let errorCalled = false;
     let teardownCalled = false;
     let teardownCalledBefore = false;
@@ -759,7 +815,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(errorCalled, 'not called');
     assert(!teardownCalledBefore, 'teardown called before');
   }),
-  test(`Observer.error: catches teardown errors (sync)`, () => {
+  test(`Observer.prototype.error: catches teardown errors (sync)`, () => {
     let pass = true;
     let teardownCalled = false;
 
@@ -780,7 +836,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(teardownCalled, 'teardown not called');
     assert(subscription && subscription.closed, 'Subscription open');
   }),
-  test(`Observer.error: catches teardown errors (async)`, async () => {
+  test(`Observer.prototype.error: catches teardown errors (async)`, async () => {
     let pass = true;
     let teardownCalled = false;
 
@@ -808,7 +864,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(teardownCalled, 'teardown not called');
     assert(subscription && subscription.closed, 'Subscription open');
   }),
-  test('Observer.complete: calls succeed (sync)', () => {
+  test('Observer.prototype.complete: calls succeed (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
 
@@ -835,7 +891,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test('Observer.complete: calls succeed (async)', async () => {
+  test('Observer.prototype.complete: calls succeed (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
 
@@ -865,7 +921,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test('Observer.complete: errors are catched (sync)', () => {
+  test('Observer.prototype.complete: errors are catched (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -891,7 +947,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test('Observer.complete: errors are catched (async)', async () => {
+  test('Observer.prototype.complete: errors are catched (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -920,7 +976,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test('Observer.complete: errors in getter are catched (sync)', () => {
+  test('Observer.prototype.complete: errors in getter are catched (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -946,7 +1002,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test('Observer.complete: errors in getter are catched (async)', async () => {
+  test('Observer.prototype.complete: errors in getter are catched (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
     let subscription: any;
@@ -975,7 +1031,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription && subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test(`Observer.complete: is not obtained more than once per call`, () => {
+  test(`Observer.prototype.complete: is not obtained more than once per call`, () => {
     const times = [0, 0];
     new Observable((obs) => obs.complete()).subscribe({
       get complete() {
@@ -994,7 +1050,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert.deepStrictEqual(times, [1, 1]);
   }),
-  test('Observer.complete: closes Subscription before call (sync)', () => {
+  test('Observer.prototype.complete: closes Subscription before call (sync)', () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
 
@@ -1028,7 +1084,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test('Observer.complete: closes Subscription before call (async)', async () => {
+  test('Observer.prototype.complete: closes Subscription before call (async)', async () => {
     const times = [0, 0, 0, 0, 0];
     let pass = true;
 
@@ -1059,7 +1115,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(subscription.closed, 'Subscription open');
     assert.deepStrictEqual(times, [1, 0, 0, 1, 1], 'unexpected calls');
   }),
-  test('Observer.complete: teardown is called after (sync)', () => {
+  test('Observer.prototype.complete: teardown is called after (sync)', () => {
     let completeCalled = false;
     let teardownCalled = false;
     let teardownCalledBefore = false;
@@ -1077,7 +1133,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(completeCalled, 'complete not called');
     assert(!teardownCalledBefore, 'teardown called before');
   }),
-  test('Observer.complete: teardown is called after (async)', async () => {
+  test('Observer.prototype.complete: teardown is called after (async)', async () => {
     let completeCalled = false;
     let teardownCalled = false;
     let teardownCalledBefore = false;
@@ -1097,7 +1153,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(completeCalled, 'complete not called');
     assert(!teardownCalledBefore, 'teardown called before');
   }),
-  test(`Observer.complete: catches teardown errors (sync)`, () => {
+  test(`Observer.prototype.complete: catches teardown errors (sync)`, () => {
     let pass = true;
     let teardownCalled = false;
 
@@ -1118,7 +1174,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(teardownCalled, 'teardown not called');
     assert(subscription && subscription.closed, 'Subscription open');
   }),
-  test(`Observer.complete: catches teardown errors (async)`, async () => {
+  test(`Observer.prototype.complete: catches teardown errors (async)`, async () => {
     let pass = true;
     let teardownCalled = false;
 
@@ -1146,7 +1202,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(teardownCalled, 'teardown not called');
     assert(subscription && subscription.closed, 'Subscription open');
   }),
-  test(`Subscription.unsubscribe: immediately silences Observer calls (sync)`, () => {
+  test(`Subscription.prototype.unsubscribe: immediately silences Observer calls (sync)`, () => {
     let called = false;
     const fn = (): void => (called = true) && undefined;
 
@@ -1174,7 +1230,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(subscription.closed && !called);
   }),
-  test(`Subscription.unsubscribe: immediately silences Observer calls (async)`, async () => {
+  test(`Subscription.prototype.unsubscribe: immediately silences Observer calls (async)`, async () => {
     let called = false;
     const fn = (): void => (called = true) && undefined;
 
@@ -1203,7 +1259,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
 
     assert(subscription.closed && !called);
   }),
-  test(`Subscription.unsubscribe: catches teardown errors (sync)`, () => {
+  test(`Subscription.prototype.unsubscribe: catches teardown errors (sync)`, () => {
     let pass = true;
     let teardownCalled = false;
 
@@ -1224,7 +1280,7 @@ export default engine((Observable: Observables.Constructor): Test[] => [
     assert(teardownCalled, 'teardown not called');
     assert(subscription && subscription.closed, 'Subscription open');
   }),
-  test(`Subscription.unsubscribe: catches teardown errors (async)`, async () => {
+  test(`Subscription.prototype.unsubscribe: catches teardown errors (async)`, async () => {
     let pass = true;
     let teardownCalled = false;
 
