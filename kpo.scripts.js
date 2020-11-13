@@ -18,7 +18,13 @@ module.exports.scripts = {
     scripts.build,
     kpo.json('./pkg/package.json', ({ json }) => ({
       ...json,
-      files: [...json.files, 'definitions/', 'observables/', 'utils/']
+      files: [
+        ...json.files,
+        'definitions/',
+        'iterables/',
+        'observables/',
+        'utils/'
+      ]
     })),
     kpo.json('./pkg/definitions/package.json', () => ({
       sideEffects: false,
@@ -26,6 +32,13 @@ module.exports.scripts = {
       main: '../dist/definitions/index.js',
       types: '../dist/definitions/index.d.ts',
       esnext: '../dist-src/definitions/index.js'
+    })),
+    kpo.json('./pkg/iterables/package.json', () => ({
+      sideEffects: false,
+      name: 'multitude/iterables',
+      main: '../dist/iterables/index.js',
+      types: '../dist/iterables/index.d.ts',
+      esnext: '../dist-src/iterables/index.js'
     })),
     kpo.json('./pkg/observables/package.json', () => ({
       sideEffects: false,
