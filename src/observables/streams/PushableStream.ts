@@ -1,11 +1,11 @@
-import { Push } from '../definitions';
+import { Observables } from '@definitions';
 import { PushStream } from './PushStream';
 
 const $observer = Symbol('observer');
 
 export class PushableStream<T = any> extends PushStream<T>
-  implements Push.Stream<T>, Push.ObserverTalkback<T> {
-  private [$observer]: Push.ObserverTalkback<T>;
+  implements Observables.Observable<T>, Observables.SubscriptionObserver<T> {
+  private [$observer]: Observables.SubscriptionObserver<T>;
   public constructor() {
     super((tb) => {
       this[$observer] = tb;

@@ -1,11 +1,21 @@
 import { Empty, NoParamFn, UnaryFn } from './types';
 import 'symbol-observable';
 
-export interface Constructor {
+export interface ObservableConstructor {
   new <T = any>(subscriber: Subscriber<T>): Observable<T>;
   of<T>(...items: T[]): Observable<T>;
   from<T>(item: Observable<T> | Compatible<T> | Iterable<T>): Observable<T>;
   prototype: Observable;
+}
+
+export interface PushStreamConstructor extends ObservableConstructor {
+  new <T = any>(subscriber: Subscriber<T>): PushStream<T>;
+  of<T>(...items: T[]): PushStream<T>;
+  from<T>(
+    item: Observable<T> | Compatible<T> | Like<T> | Iterable<T>
+  ): PushStream<T>;
+  raise: boolean;
+  prototype: PushStream;
 }
 
 export interface Like<T = any> {
@@ -18,6 +28,15 @@ export type Compatible<T = any> = {
 
 export interface Observable<T = any> extends Compatible<T>, Like<T> {
   subscribe(observer?: Observer<T>): Subscription;
+  subscribe(
+    onNext: UnaryFn<T>,
+    onError?: UnaryFn<Error>,
+    onComplete?: NoParamFn
+  ): Subscription;
+}
+
+export interface PushStream<T = any> extends Observable<T> {
+  subscribe(observer?: Empty | Observer<T>): Subscription;
   subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,

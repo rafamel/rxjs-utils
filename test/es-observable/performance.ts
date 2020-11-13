@@ -1,29 +1,18 @@
 /* eslint-disable no-console */
 import { Observables, PushStream } from '../../src';
 import { Observable as ESObservable } from './module';
-import { Observable as ReferenceObservable } from './reference';
 import chalk from 'chalk';
 
 console.log(chalk.bold('\nPERFORMANCE'));
-const failures = [
-  performs(
-    ['Multitude PushStream', PushStream],
-    ['Reference Observable', ReferenceObservable],
-    100,
-    10 ** 5,
-    1.5
-  ),
-  performs(
-    ['Multitude PushStream', PushStream],
-    ['ES Observable', ESObservable],
-    100,
-    10 ** 5,
-    1.25
-  )
-].filter((success) => !success);
-console.log();
-
-if (failures.length) process.exit(1);
+const success = performs(
+  ['Multitude PushStream', PushStream],
+  ['ES Observable', ESObservable],
+  100,
+  10 ** 5,
+  1.25
+);
+console.log('');
+if (!success) process.exit(1);
 
 function performs(
   local: [string, any],

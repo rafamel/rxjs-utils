@@ -23,7 +23,9 @@ module.exports = create({
     // Source code aliases
     alias: {
       '@definitions': './src/definitions',
-      '@implementation': './src/implementation'
+      '@observables': './src/observables',
+      '@utils': './src/utils',
+      '@helpers': './src/helpers'
     }
   },
   extend: {

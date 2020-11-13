@@ -11,5 +11,35 @@ module.exports.scripts = {
   'test:jest': scripts.test,
 
   /* Private */
-  ['$watch:task']: [kpo.log`\x1Bc⚡`, 'kpo lint build']
+  ['$watch:task']: [kpo.log`\x1Bc⚡`, 'kpo lint build'],
+
+  /* Build */
+  build: [
+    scripts.build,
+    kpo.json('./pkg/package.json', ({ json }) => ({
+      ...json,
+      files: [...json.files, 'definitions/', 'observables/', 'utils/']
+    })),
+    kpo.json('./pkg/definitions/package.json', () => ({
+      sideEffects: false,
+      name: 'multitude/definitions',
+      main: '../dist/definitions/index.js',
+      types: '../dist/definitions/index.d.ts',
+      esnext: '../dist-src/definitions/index.js'
+    })),
+    kpo.json('./pkg/observables/package.json', () => ({
+      sideEffects: false,
+      name: 'multitude/observables',
+      main: '../dist/observables/index.js',
+      types: '../dist/observables/index.d.ts',
+      esnext: '../dist-src/observables/index.js'
+    })),
+    kpo.json('./pkg/utils/package.json', () => ({
+      sideEffects: false,
+      name: 'multitude/utils',
+      main: '../dist/utils/index.js',
+      types: '../dist/utils/index.d.ts',
+      esnext: '../dist-src/utils/index.js'
+    }))
+  ]
 };

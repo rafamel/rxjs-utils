@@ -7,7 +7,9 @@ import { runTests } from '../module/tests';
 import { engine, Test, test } from './engine';
 import 'symbol-observable';
 
-export default engine((Observable: Observables.Constructor): Test[] => [
+type ObservableConstructor = Observables.ObservableConstructor;
+
+export default engine((Observable: ObservableConstructor): Test[] => [
   test('ES Observable Test Runner', async () => {
     const { logger } = await runTests(Observable);
     assert(logger.failed === 0);

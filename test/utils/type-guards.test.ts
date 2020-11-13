@@ -1,27 +1,11 @@
 import {
   isObservableLike,
   isIterable,
-  isStream,
   isObservableCompatible
 } from '../../src';
 import 'symbol-observable';
 
 const noop = (): void => undefined;
-
-test(`isStream`, () => {
-  expect(isStream(undefined)).toBe(false);
-  expect(isStream(null)).toBe(false);
-  expect(isStream(0)).toBe(false);
-  expect(isStream(true)).toBe(false);
-  expect(isStream('')).toBe(false);
-  expect(isStream(noop)).toBe(false);
-  expect(isStream({})).toBe(false);
-  expect(isStream({ source: {}, consume: {} })).toBe(false);
-  expect(isStream({ source: noop, consume: {} })).toBe(false);
-  expect(isStream({ source: {}, consume: noop })).toBe(false);
-
-  expect(isStream({ source: noop, consume: noop })).toBe(true);
-});
 
 test(`isIterable`, () => {
   expect(isIterable(undefined)).toBe(false);

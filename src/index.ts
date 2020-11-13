@@ -1,3 +1,3 @@
 export * from './definitions';
-export * from './streams';
+export * from './observables';
 export * from './utils';

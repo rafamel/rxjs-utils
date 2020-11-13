@@ -7,7 +7,9 @@
     "baseUrl": "./",
     "paths": {
       "@definitions": ["src/definitions"],
-      "@implementation": ["src/implementation"]
+      "@observables": ["src/observables"],
+      "@utils": ["src/utils"],
+      "@helpers": ["src/helpers"]
     },
     "plugins": [
       {

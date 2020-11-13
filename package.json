@@ -8,7 +8,7 @@
     "pull",
     "push",
     "observable",
-    "callbag",
+    "iterable",
     "iterator",
     "operator"
   ],
@@ -75,7 +75,6 @@
     "es-observable": "https://github.com/tc39/proposal-observable/tarball/d3404f06bc70c7c578a5047dfb3dc813730e3319",
     "husky": "^4.2.5",
     "kpo": "^0.11.1",
-    "node-plantuml": "^0.9.0",
     "onchange": "^7.0.2",
     "typescript": "^3.6.4"
   },
