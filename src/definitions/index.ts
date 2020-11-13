@@ -1,4 +1,5 @@
+import * as Iterables from './iterables';
 import * as Observables from './observables';
 
-export { Observables };
+export { Iterables, Observables };
 export * from './types';
