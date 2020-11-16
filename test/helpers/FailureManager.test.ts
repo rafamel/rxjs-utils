@@ -1,5 +1,5 @@
+import { FailureManager, Handler } from '@helpers';
 import assert from 'assert';
-import { FailureManager, Handler } from '../../src/helpers';
 
 test(`prototype.replete: is not initially replete`, () => {
   const instance = new FailureManager(() => undefined);

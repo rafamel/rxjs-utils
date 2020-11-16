@@ -1,13 +1,13 @@
 /* eslint-disable no-new */
 /* eslint-disable prefer-const */
 import assert from 'assert';
-import { Observables } from '../../../src';
-import { Handler } from '../../../src/helpers';
+import { Push } from '@definitions';
+import { Handler } from '@helpers';
 import { runTests } from '../module/tests';
 import { engine, Test, test } from './engine';
 import 'symbol-observable';
 
-type ObservableConstructor = Observables.ObservableConstructor;
+type ObservableConstructor = Push.ObservableConstructor;
 
 export default engine((Observable: ObservableConstructor): Test[] => [
   test('ES Observable Test Runner', async () => {

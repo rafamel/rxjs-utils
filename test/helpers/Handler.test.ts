@@ -1,5 +1,5 @@
+import { Handler } from '@helpers';
 import assert from 'assert';
-import { Handler } from '../../src/helpers';
 
 test(`Handler.noop`, () => {
   assert(Handler.noop() === undefined);

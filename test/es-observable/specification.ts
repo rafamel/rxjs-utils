@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
+import { PushStream } from '@push';
 import { Observable as ESObservable } from './module';
-import { PushStream } from '../../src';
-import chalk from 'chalk';
 import compliance from './compliance';
+import chalk from 'chalk';
 
 console.log(chalk.bold('\nCOMPLIANCE'));
 let pass = true;

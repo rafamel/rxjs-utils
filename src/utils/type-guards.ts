@@ -1,4 +1,4 @@
-import { Observables } from '@definitions';
+import { Push } from '@definitions';
 import { TypeGuard } from '@helpers';
 import 'symbol-observable';
 
@@ -8,13 +8,13 @@ export function isIterable(item: any): item is Iterable<unknown> {
   );
 }
 
-export function isObservableLike(item: any): item is Observables.Like<unknown> {
+export function isObservableLike(item: any): item is Push.Like<unknown> {
   return TypeGuard.isObject(item) && TypeGuard.isFunction(item.subscribe);
 }
 
 export function isObservableCompatible(
   item: any
-): item is Observables.Compatible<unknown> {
+): item is Push.Compatible<unknown> {
   return (
     TypeGuard.isObject(item) && TypeGuard.isFunction(item[Symbol.observable])
   );

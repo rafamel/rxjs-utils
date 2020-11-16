@@ -1,8 +1,4 @@
-import {
-  isObservableLike,
-  isIterable,
-  isObservableCompatible
-} from '../../src';
+import { isObservableLike, isIterable, isObservableCompatible } from '@utils';
 import 'symbol-observable';
 
 const noop = (): void => undefined;

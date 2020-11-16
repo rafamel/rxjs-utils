@@ -1,4 +1,4 @@
-import { Empty, NoParamFn, Observables, UnaryFn } from '@definitions';
+import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
 import { ObservableFrom } from './helpers';
 import { Subscription } from './Subscription';
@@ -6,18 +6,14 @@ import 'symbol-observable';
 
 const $subscriber = Symbol('subscriber');
 
-export class PushStream<T = any> implements Observables.PushStream<T> {
+export class PushStream<T = any> implements Push.PushStream<T> {
   public static raise: boolean = false;
   public static of<T>(...items: T[]): PushStream<T> {
     const Constructor = typeof this === 'function' ? this : PushStream;
     return ObservableFrom.iterable(Constructor, items) as any;
   }
   public static from<T>(
-    item:
-      | Observables.Observable<T>
-      | Observables.Compatible<T>
-      | Observables.Like<T>
-      | Iterable<T>
+    item: Push.Observable<T> | Push.Compatible<T> | Push.Like<T> | Iterable<T>
   ): PushStream<T> {
     const Constructor = TypeGuard.isFunction(this) ? this : PushStream;
 
@@ -46,8 +42,8 @@ export class PushStream<T = any> implements Observables.PushStream<T> {
 
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);
   }
-  private [$subscriber]: Observables.Subscriber<T>;
-  public constructor(subscriber: Observables.Subscriber<T>) {
+  private [$subscriber]: Push.Subscriber<T>;
+  public constructor(subscriber: Push.Subscriber<T>) {
     if (!TypeGuard.isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
@@ -57,7 +53,7 @@ export class PushStream<T = any> implements Observables.PushStream<T> {
   public [Symbol.observable](): PushStream<T> {
     return this;
   }
-  public subscribe(observer?: Empty | Observables.Observer<T>): Subscription<T>;
+  public subscribe(observer?: Empty | Push.Observer<T>): Subscription<T>;
   public subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,

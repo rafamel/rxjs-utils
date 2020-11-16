@@ -1,5 +1,5 @@
+import { TypeGuard } from '@helpers';
 import assert from 'assert';
-import { TypeGuard } from '../../src/helpers';
 
 test(`TypeGuard.isFunction`, () => {
   assert(!TypeGuard.isFunction(undefined));

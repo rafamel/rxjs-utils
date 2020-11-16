@@ -1,3 +1,3 @@
-import { Observables } from '../../../src';
+import { Push } from '@definitions';
 
-export declare const Observable: Observables.Constructor;
+export declare const Observable: Push.ObservableConstructor;

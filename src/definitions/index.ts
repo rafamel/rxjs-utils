@@ -1,5 +1,5 @@
-import * as Iterables from './iterables';
-import * as Observables from './observables';
+import * as Pull from './pull';
+import * as Push from './push';
 
-export { Iterables, Observables };
+export { Pull, Push };
 export * from './types';

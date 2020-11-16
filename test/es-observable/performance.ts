@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
-import { Observables, PushStream } from '../../src';
+import { Push } from '@definitions';
+import { PushStream } from '@push';
 import { Observable as ESObservable } from './module';
 import chalk from 'chalk';
 
@@ -27,7 +28,7 @@ function performs(
   function run(Observable: any): number {
     const start = Date.now();
 
-    new Observable((obs: Observables.SubscriptionObserver<void>) => {
+    new Observable((obs: Push.SubscriptionObserver<void>) => {
       for (let i = 0; i < count; i++) {
         obs.next();
       }

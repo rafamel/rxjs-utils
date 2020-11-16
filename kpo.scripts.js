@@ -18,13 +18,7 @@ module.exports.scripts = {
     scripts.build,
     kpo.json('./pkg/package.json', ({ json }) => ({
       ...json,
-      files: [
-        ...json.files,
-        'definitions/',
-        'iterables/',
-        'observables/',
-        'utils/'
-      ]
+      files: [...json.files, 'definitions/', 'pull/', 'push/', 'utils/']
     })),
     kpo.json('./pkg/definitions/package.json', () => ({
       sideEffects: false,
@@ -33,19 +27,19 @@ module.exports.scripts = {
       types: '../dist/definitions/index.d.ts',
       esnext: '../dist-src/definitions/index.js'
     })),
-    kpo.json('./pkg/iterables/package.json', () => ({
+    kpo.json('./pkg/pull/package.json', () => ({
       sideEffects: false,
-      name: 'multitude/iterables',
-      main: '../dist/iterables/index.js',
-      types: '../dist/iterables/index.d.ts',
-      esnext: '../dist-src/iterables/index.js'
+      name: 'multitude/pull',
+      main: '../dist/pull/index.js',
+      types: '../dist/pull/index.d.ts',
+      esnext: '../dist-src/pull/index.js'
     })),
-    kpo.json('./pkg/observables/package.json', () => ({
+    kpo.json('./pkg/push/package.json', () => ({
       sideEffects: false,
-      name: 'multitude/observables',
-      main: '../dist/observables/index.js',
-      types: '../dist/observables/index.d.ts',
-      esnext: '../dist-src/observables/index.js'
+      name: 'multitude/push',
+      main: '../dist/push/index.js',
+      types: '../dist/push/index.d.ts',
+      esnext: '../dist-src/push/index.js'
     })),
     kpo.json('./pkg/utils/package.json', () => ({
       sideEffects: false,

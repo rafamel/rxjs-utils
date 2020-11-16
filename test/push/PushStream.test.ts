@@ -1,4 +1,4 @@
-import { PushStream } from '@observables';
+import { PushStream } from '@push';
 import { Handler } from '@helpers';
 import { isObservableCompatible, isObservableLike } from '@utils';
 import compliance from '../es-observable/compliance';

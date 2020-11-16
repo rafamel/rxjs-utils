@@ -1,20 +1,20 @@
-import { Iterables, WideRecord } from '@definitions';
+import { Pull, WideRecord } from '@definitions';
 import { Handler, TypeGuard, Resolver } from '@helpers';
 import { Validate } from './helpers';
 
 const $closed = Symbol('closed');
 const $iterator = Symbol('iterator');
 
-export class StreamIterator<O, I> implements Iterables.StreamIterator<O, I> {
+export class StreamIterator<O, I> implements Pull.StreamIterator<O, I> {
   private [$closed]: boolean;
   private [$iterator]: WideRecord;
-  public constructor(iterator: Iterables.CounterIterator<O, I>) {
+  public constructor(iterator: Pull.CounterIterator<O, I>) {
     Validate.counter(iterator);
 
     this[$closed] = false;
     this[$iterator] = iterator;
   }
-  public next(value: I): Iterables.Response<O> {
+  public next(value: I): Pull.Response<O> {
     if (this[$closed]) return { complete: true };
 
     const iterator = this[$iterator];
@@ -32,7 +32,7 @@ export class StreamIterator<O, I> implements Iterables.StreamIterator<O, I> {
       }
     );
   }
-  public error(error: Error): Iterables.Response<O> {
+  public error(error: Error): Pull.Response<O> {
     if (this[$closed]) return { complete: true };
 
     const iterator = this[$iterator];

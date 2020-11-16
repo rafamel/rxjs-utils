@@ -1,12 +1,11 @@
-import { Observables } from '@definitions';
+import { Push } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
 import { Subscription } from './Subscription';
 import { ManageSubscription } from './helpers';
 
 const $subscription = Symbol('subscription');
 
-class SubscriptionObserver<T = any>
-  implements Observables.SubscriptionObserver<T> {
+class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
   private [$subscription]: any;
   public constructor(subscription: Subscription<T>) {
     this[$subscription] = subscription;

@@ -23,8 +23,8 @@ module.exports = create({
     // Source code aliases
     alias: {
       '@definitions': './src/definitions',
-      '@iterables': './src/iterables',
-      '@observables': './src/observables',
+      '@pull': './src/pull',
+      '@push': './src/push',
       '@utils': './src/utils',
       '@helpers': './src/helpers'
     }

@@ -1,15 +1,15 @@
-import { Empty, NoParamFn, Observables, UnaryFn } from '@definitions';
+import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { TypeGuard, Handler, FailureManager } from '@helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import { ManageSubscription } from './helpers';
 
 const $teardown = Symbol('teardown');
 
-class Subscription<T = any> implements Observables.Subscription {
+class Subscription<T = any> implements Push.Subscription {
   private [$teardown]: NoParamFn | null;
   public constructor(
-    observer: Observables.Observer<T>,
-    subscriber: Observables.Subscriber<T>,
+    observer: Push.Observer<T>,
+    subscriber: Push.Subscriber<T>,
     ...reporter: [] | [Empty | UnaryFn<Error>]
   ) {
     const failure = new FailureManager(reporter[0] || Handler.noop);
@@ -37,9 +37,7 @@ class Subscription<T = any> implements Observables.Subscription {
           teardown = unsubscribe;
         } else if (
           TypeGuard.isObject(unsubscribe) &&
-          TypeGuard.isFunction(
-            (unsubscribe as Observables.Subscription).unsubscribe
-          )
+          TypeGuard.isFunction((unsubscribe as Push.Subscription).unsubscribe)
         ) {
           teardown = () => unsubscribe.unsubscribe();
         } else {

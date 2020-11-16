@@ -1,4 +1,4 @@
-import { Observables } from '@definitions';
+import { Push } from '@definitions';
 import { FailureManager } from '@helpers';
 import { Subscription } from './Subscription';
 
@@ -19,7 +19,7 @@ export class ManageSubscription {
   }
   public static setSubscriptionObserver<T>(
     subscription: Subscription<T>,
-    observer: Observables.Observer<T>
+    observer: Push.Observer<T>
   ): void {
     (subscription as any)[$observer] = observer;
   }
@@ -40,17 +40,17 @@ export class ManageSubscription {
 
 export class ObservableFrom {
   public static like<T>(
-    Observable: Observables.ObservableConstructor,
-    observable: Observables.Observable<T> | Observables.Like<T>
-  ): Observables.Observable<T> {
+    Observable: Push.ObservableConstructor,
+    observable: Push.Observable<T> | Push.Like<T>
+  ): Push.Observable<T> {
     return observable.constructor === Observable
       ? observable
       : new Observable((observer) => observable.subscribe(observer as any));
   }
   public static iterable<T>(
-    Observable: Observables.ObservableConstructor,
+    Observable: Push.ObservableConstructor,
     iterable: Iterable<T>
-  ): Observables.Observable<T> {
+  ): Push.Observable<T> {
     return new Observable<T>((observer) => {
       for (const item of iterable) {
         observer.next(item);

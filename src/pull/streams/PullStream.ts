@@ -1,17 +1,16 @@
-import { Iterables } from '@definitions';
+import { Pull } from '@definitions';
 import { Consume, Validate } from './helpers';
 import { StreamIterator } from './StreamIterator';
 
 const $source = Symbol('source');
 
-export class PullStream<O = any, I = void>
-  implements Iterables.PullStream<O, I> {
-  private [$source]: Iterables.Source<O, I>;
-  public constructor(provider: Iterables.Provider<O, I>) {
+export class PullStream<O = any, I = void> implements Pull.PullStream<O, I> {
+  private [$source]: Pull.Source<O, I>;
+  public constructor(provider: Pull.Provider<O, I>) {
     Validate.provider(provider);
     this[$source] = () => new StreamIterator(provider());
   }
-  public [Symbol.asyncIterator](): Iterables.Iterator<O, I> {
+  public [Symbol.asyncIterator](): Pull.Iterator<O, I> {
     const source = this.source();
     return {
       async next(value: I): Promise<IteratorResult<O, void>> {
@@ -34,10 +33,10 @@ export class PullStream<O = any, I = void>
       }
     };
   }
-  public get source(): Iterables.Source<O, I> {
+  public get source(): Pull.Source<O, I> {
     return this[$source];
   }
-  public consume(consumer: Iterables.Consumer<O, I>): void {
+  public consume(consumer: Pull.Consumer<O, I>): void {
     Validate.consumer(consumer);
 
     const sink = new StreamIterator(consumer());
