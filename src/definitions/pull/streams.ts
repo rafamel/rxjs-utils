@@ -1,38 +1,41 @@
-export interface PullStreamConstructor {
+import { Iterable } from './iterables';
+
+/* Constructor */
+export interface StreamConstructor {
   new <O, I = void>(provider: Provider<O, I>): PullStream<O, I>;
 }
 
-export interface Iterable<O, I = void> {
-  [Symbol.asyncIterator](): Iterator<O, I>;
-}
-
-export type Iterator<O, I> = AsyncIterator<O, void, I>;
-
+/* Stream */
 export interface PullStream<O, I = void> extends Iterable<O, I> {
   source: Source<O, I>;
   consume(consumer: Consumer<O, I>): void;
 }
 
-export type Provider<O, I> = () => CounterIterator<O, I | void>;
-export type Consumer<O, I> = () => CounterIterator<I, O>;
+/* Components */
+export type Provider<O, I> = () => PureIterator<O, I | void>;
+export type Consumer<O, I> = () => PureIterator<I, O>;
 
 export type Source<O, I> = () => StreamIterator<O, I | void>;
 export type Sink<O, I> = () => StreamIterator<I, O>;
 
-export interface CounterIterator<O, I> {
+/* Iterators */
+// TODO: add "finally" to iterators
+export interface PureIterator<O, I> {
   next?: (value: I) => Response<O>;
   error?: (error: Error) => Response<O>;
   complete?: () => void | Promise<void>;
 }
 
-export interface StreamIterator<O, I> extends CounterIterator<O, I> {
+export interface StreamIterator<O, I> extends PureIterator<O, I> {
   next: (value: I) => Response<O>;
   error: (error: Error) => Response<O>;
   complete: () => void | Promise<void>;
 }
 
+/* Response */
 export type Response<T> = Result<T> | Promise<Result<T>>;
 
+/* Result */
 export type Result<T> =
   | { complete: true; value?: void }
   | { complete?: false; value: T }

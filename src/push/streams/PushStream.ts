@@ -6,7 +6,7 @@ import 'symbol-observable';
 
 const $subscriber = Symbol('subscriber');
 
-export class PushStream<T = any> implements Push.PushStream<T> {
+export class PushStream<T = any> implements Push.Stream<T> {
   public static raise: boolean = false;
   public static of<T>(...items: T[]): PushStream<T> {
     const Constructor = typeof this === 'function' ? this : PushStream;

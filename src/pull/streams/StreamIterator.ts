@@ -8,7 +8,7 @@ const $iterator = Symbol('iterator');
 export class StreamIterator<O, I> implements Pull.StreamIterator<O, I> {
   private [$closed]: boolean;
   private [$iterator]: WideRecord;
-  public constructor(iterator: Pull.CounterIterator<O, I>) {
+  public constructor(iterator: Pull.PureIterator<O, I>) {
     Validate.counter(iterator);
 
     this[$closed] = false;

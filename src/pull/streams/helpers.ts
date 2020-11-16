@@ -12,7 +12,7 @@ export class Validate {
       throw new TypeError(`Expected Consumer to be a function`);
     }
   }
-  public static counter(iterator: Pull.CounterIterator<any, any>): void {
+  public static counter(iterator: Pull.PureIterator<any, any>): void {
     if (!TypeGuard.isObject(iterator)) {
       throw new TypeError('Expected Iterator to be an object');
     }
