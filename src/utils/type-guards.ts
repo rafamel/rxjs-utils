@@ -3,9 +3,7 @@ import { TypeGuard } from '@helpers';
 import 'symbol-observable';
 
 export function isIterable(item: any): item is Iterable<unknown> {
-  return (
-    TypeGuard.isObject(item) && TypeGuard.isFunction(item[Symbol.iterator])
-  );
+  return TypeGuard.isIterable(item);
 }
 
 export function isObservableLike(item: any): item is Push.Like<unknown> {
@@ -17,5 +15,25 @@ export function isObservableCompatible(
 ): item is Push.Compatible<unknown> {
   return (
     TypeGuard.isObject(item) && TypeGuard.isFunction(item[Symbol.observable])
+  );
+}
+
+export function isObservable(item: any): item is Push.Observable<unknown> {
+  return (
+    TypeGuard.isObject(item) &&
+    TypeGuard.isFunction(item[Symbol.observable]) &&
+    TypeGuard.isFunction(item.subscribe)
+  );
+}
+
+export function isSubscriptionLike(item: any): item is Push.SubscriptionLike {
+  return TypeGuard.isObject(item) && TypeGuard.isFunction(item.unsubscribe);
+}
+
+export function isSubscription(item: any): item is Push.Subscription {
+  return (
+    TypeGuard.isObject(item) &&
+    TypeGuard.isBoolean(item.closed) &&
+    TypeGuard.isFunction(item.unsubscribe)
   );
 }
