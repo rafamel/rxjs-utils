@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { PushStream } from '@push';
+import { Observable } from '@push';
 import { Observable as ESObservable } from './module';
 import compliance from './compliance';
 import chalk from 'chalk';
@@ -8,7 +8,7 @@ console.log(chalk.bold('\nCOMPLIANCE'));
 let pass = true;
 [
   () => compliance('ES Observable', ESObservable, 'final'),
-  () => compliance('Multitude PushStream', PushStream, 'each')
+  () => compliance('Observable', Observable, 'each')
 ]
   .reduce((acc, item) => {
     return acc.then(item).then((result) => {

@@ -4,11 +4,6 @@ import assert from 'assert';
 test(`Handler.noop`, () => {
   assert(Handler.noop() === undefined);
 });
-test(`Handler.catches`, () => {
-  Handler.catches(() => {
-    throw Error();
-  });
-});
 test(`Handler.throws`, () => {
   const err = Error('foo');
   let res: any;

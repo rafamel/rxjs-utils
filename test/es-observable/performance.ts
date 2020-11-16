@@ -1,19 +1,32 @@
 /* eslint-disable no-console */
 import { Push } from '@definitions';
-import { PushStream } from '@push';
+import { Observable, PushStream } from '@push';
 import { Observable as ESObservable } from './module';
 import chalk from 'chalk';
 
 console.log(chalk.bold('\nPERFORMANCE'));
-const success = performs(
-  ['Multitude PushStream', PushStream],
-  ['ES Observable', ESObservable],
-  100,
-  10 ** 5,
-  1.25
-);
+
+const successes = [
+  performs(
+    ['Observable', Observable],
+    ['ES Observable', ESObservable],
+    100,
+    10 ** 5,
+    1.25
+  ),
+  performs(
+    ['PushStream', PushStream],
+    ['ES Observable', ESObservable],
+    100,
+    10 ** 5,
+    1.25
+  )
+];
+
 console.log('');
-if (!success) process.exit(1);
+for (const success of successes) {
+  if (!success) process.exit(1);
+}
 
 function performs(
   local: [string, any],

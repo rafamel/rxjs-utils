@@ -29,27 +29,27 @@ export default engine((Observable: ObservableConstructor): Test[] => [
     let pass = true;
 
     const Constructor: any = Observable;
-    Handler.catches(() => {
+    Handler.tries(() => {
       new Constructor(undefined);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       new Constructor(null);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       new Constructor(0);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       new Constructor(true);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       new Constructor('');
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       new Constructor({});
       pass = false;
     });
@@ -74,27 +74,27 @@ export default engine((Observable: ObservableConstructor): Test[] => [
     let pass = true;
 
     const Constructor: any = Observable;
-    Handler.catches(() => {
+    Handler.tries(() => {
       Constructor.from(undefined);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       Constructor.from(null);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       Constructor.from(1);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       Constructor.from(true);
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       Constructor.from({});
       pass = false;
     });
-    Handler.catches(() => {
+    Handler.tries(() => {
       Constructor.from(() => undefined);
       pass = false;
     });
