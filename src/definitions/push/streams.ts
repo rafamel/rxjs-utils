@@ -28,15 +28,19 @@ export interface Stream<T = any> extends Observable<T> {
 }
 
 /* Hearback */
+// TODO: implement finally
 export type Hearback<T = any> = Observer<T>;
 
 /* Broker */
-export type Broker = Subscription;
+export type Broker = Subscription & Promise<void>;
 
 /* Producer */
 export type Producer<T = any> = (talkback: Talkback<T>) => Terminate;
 
-export type Terminate = Teardown;
+export type Terminate =
+  | Teardown
+  | NoParamFn<void | Promise<void>>
+  | Array<Teardown | NoParamFn<void | Promise<void>>>;
 
 /* Talkback */
 export type Talkback<T = any> = SubscriptionObserver<T>;

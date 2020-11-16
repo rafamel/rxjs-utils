@@ -34,11 +34,10 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
     );
   }
   public error(error: Error): void {
-    const report = this[$report];
     const subscription = this[$subscription];
+    if (ManageObserver.isClosed(subscription)) return;
 
-    if (ManageObserver.isClosed(subscription)) return report(error);
-
+    const report = this[$report];
     const observer = ManageObserver.get(subscription);
 
     ManageObserver.close(subscription);

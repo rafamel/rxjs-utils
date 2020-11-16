@@ -1,9 +1,10 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { isObservableCompatible, isObservableLike } from '@utils';
-import { TypeGuard } from '@helpers';
+import { Handler, TypeGuard } from '@helpers';
 import { Observable } from '../Observable';
 import { Broker } from './Broker';
 import 'symbol-observable';
+import { terminateToAsyncFunction } from './helpers';
 
 const $producer = Symbol('producer');
 const $observable = Symbol('observable');
@@ -40,7 +41,13 @@ export class PushStream<T = any> implements Push.Stream<T> {
     if (observable) return observable;
 
     const producer = this[$producer];
-    observable = new Observable(producer);
+    observable = new Observable((obs) => {
+      const terminate = producer(obs);
+      const fn = terminateToAsyncFunction(terminate);
+      return () => {
+        fn().catch(Handler.noop);
+      };
+    });
     return (this[$observable] = observable);
   }
   public subscribe(hearback?: Empty | Push.Hearback<T>): Push.Broker;
@@ -51,6 +58,8 @@ export class PushStream<T = any> implements Push.Stream<T> {
     onFinally?: NoParamFn
   ): Push.Broker;
   public subscribe(hearback: any, ...arr: any[]): Push.Broker {
+    let producer = this[$producer];
+
     if (TypeGuard.isFunction(hearback)) {
       hearback = {
         next: hearback,
@@ -58,12 +67,17 @@ export class PushStream<T = any> implements Push.Stream<T> {
         complete: arr[1],
         terminate: arr[2]
       };
-    } else if (TypeGuard.isEmpty(hearback)) {
-      hearback = {};
     } else if (!TypeGuard.isObject(hearback)) {
-      throw new TypeError(`Expected hearback to be an object or a function`);
+      if (!TypeGuard.isEmpty(hearback)) {
+        producer = () => {
+          throw new TypeError(
+            `Expected hearback to be an object or a function`
+          );
+        };
+      }
+      hearback = {};
     }
 
-    return new Broker(hearback, this[$producer]);
+    return new Broker(hearback, producer);
   }
 }
