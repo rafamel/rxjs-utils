@@ -64,23 +64,12 @@ class Broker<T = any> extends Subscription<T> implements Push.Broker {
   public catch<U = never>(
     onReject?: Empty | UnaryFn<Error, U | PromiseLike<U>>
   ): Promise<void | U> {
-    return this.then(null, onReject);
+    return this[$promise].catch(onReject || null);
   }
   public finally(
     onFinally?: Empty | NoParamFn<void | Promise<void>>
   ): Promise<void> {
-    if (!onFinally) return this.then();
-
-    return this.then(
-      async (value) => {
-        await onFinally();
-        return value;
-      },
-      async (err) => {
-        await onFinally();
-        throw err;
-      }
-    );
+    return this[$promise].finally(onFinally || null);
   }
 }
 
