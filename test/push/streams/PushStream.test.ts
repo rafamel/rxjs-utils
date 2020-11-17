@@ -52,7 +52,7 @@ test(`Subscribe: Doesn't reject when Observer is empty, a function or an object`
 
   await Promise.all(subscriptions);
 });
-test(`Subscription.unsubscribe: rejects when it fails`, async () => {
+test(`Subscription.unsubscribe: rejects when subscriber fails`, async () => {
   const instance = new PushStream(() => {
     return () => {
       throw Error();
@@ -62,12 +62,28 @@ test(`Subscription.unsubscribe: rejects when it fails`, async () => {
   const subscription = instance.subscribe();
   subscription.unsubscribe();
 
-  let pass = true;
-  await subscription.then(() => (pass = false), Handler.noop);
+  let pass = false;
+  await subscription.catch(() => (pass = true));
 
   assert(pass);
 });
-test(`Subscription.unsubscribe: doesn't reject when it succeeds`, async () => {
+test(`Subscription.unsubscribe: rejects when subscriber succeeds and terminate fails`, async () => {
+  const instance = new PushStream(() => {
+    return () => undefined;
+  });
+  const subscription = instance.subscribe({
+    terminate: () => {
+      throw Error();
+    }
+  });
+  subscription.unsubscribe();
+
+  let pass = false;
+  await subscription.catch(() => (pass = true));
+
+  assert(pass);
+});
+test(`Subscription.unsubscribe: doesn't reject when subscriber and terminate succeeds`, async () => {
   const instance = new PushStream(() => () => undefined);
 
   const subscription = instance.subscribe();
@@ -79,7 +95,7 @@ test(`Subscription.unsubscribe: doesn't reject when it succeeds`, async () => {
   assert(pass);
 });
 test(`Observer.start: rejects when it fails`, async () => {
-  const times = [0, 0];
+  const times = [0, 0, 0];
 
   const instance = new PushStream(() => {
     times[0]++;
@@ -92,10 +108,14 @@ test(`Observer.start: rejects when it fails`, async () => {
     start: () => {
       times[1]++;
       throw error;
+    },
+    terminate: () => {
+      times[2]++;
+      throw Error();
     }
   });
 
-  assert.deepStrictEqual(times, [0, 1]);
+  assert.deepStrictEqual(times, [0, 1, 1]);
   await subscription.catch((err) => (res = err));
   assert(res === error);
 });
@@ -114,12 +134,15 @@ test(`Observer.start: doesn't reject when it succeeds`, async () => {
   await subscription;
 });
 test(`Observer.next: rejects when it fails (sync)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const instance = new PushStream<void>((obs) => {
     times[0]++;
     obs.next();
-    return () => times[1]++;
+    return () => {
+      times[1]++;
+      throw Error();
+    };
   });
 
   const error = Error('foo');
@@ -133,16 +156,20 @@ test(`Observer.next: rejects when it fails (sync)`, async () => {
         throw error;
       },
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => {
+        times[6]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
-  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0, 1]);
   await promise;
   assert(res === error);
 });
 test(`Observer.next: rejects when it fails (async)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const error = Error('foo');
   let res: any;
@@ -152,7 +179,7 @@ test(`Observer.next: rejects when it fails (async)`, async () => {
     times[0]++;
     return () => {
       times[1]++;
-      throw Error('bar');
+      throw Error();
     };
   })
     .subscribe({
@@ -162,18 +189,22 @@ test(`Observer.next: rejects when it fails (async)`, async () => {
         throw error;
       },
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => {
+        times[6]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
-  assert.deepStrictEqual(times, [1, 0, 1, 0, 0, 0]);
+  assert.deepStrictEqual(times, [1, 0, 1, 0, 0, 0, 0]);
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0, 1]);
   await promise;
   assert(res === error);
 });
 test(`Observer.next: doesn't reject when it succeeds (sync)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const subscription = new PushStream<void>((obs) => {
     times[0]++;
@@ -183,18 +214,19 @@ test(`Observer.next: doesn't reject when it succeeds (sync)`, async () => {
     start: () => times[2]++,
     next: () => times[3]++,
     error: () => times[4]++,
-    complete: () => times[5]++
+    complete: () => times[5]++,
+    terminate: () => times[6]++
   });
 
-  assert.deepStrictEqual(times, [1, 0, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 0, 1, 1, 0, 0, 0]);
 
   subscription.unsubscribe();
   await subscription;
 
-  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0, 1]);
 });
 test(`Observer.next: doesn't reject when it succeeds (async)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const subscription = new PushStream<void>((obs) => {
     Promise.resolve().then(() => obs.next());
@@ -204,19 +236,20 @@ test(`Observer.next: doesn't reject when it succeeds (async)`, async () => {
     start: () => times[2]++,
     next: () => times[3]++,
     error: () => times[4]++,
-    complete: () => times[5]++
+    complete: () => times[5]++,
+    terminate: () => times[6]++
   });
 
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 0, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 0, 1, 1, 0, 0, 0]);
 
   subscription.unsubscribe();
   await subscription;
 
-  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0, 1]);
 });
 test(`Observer.error: rejects when it fails (sync)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const instance = new PushStream((obs) => {
     times[0]++;
@@ -238,17 +271,21 @@ test(`Observer.error: rejects when it fails (sync)`, async () => {
         times[4]++;
         throw error;
       },
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => {
+        times[6]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0, 1]);
 
   await promise;
   assert(res === error);
 });
 test(`Observer.error: rejects when it fails (async)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const error = Error('foo');
   let res: any;
@@ -268,19 +305,23 @@ test(`Observer.error: rejects when it fails (async)`, async () => {
         times[4]++;
         throw error;
       },
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => {
+        times[6]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0, 1]);
 
   await promise;
   assert(res === error);
 });
 test(`Observer.error: doesn't reject after it's closed (sync)`, async () => {
   let pass = true;
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const instance = new PushStream((obs) => {
     times[0]++;
@@ -295,17 +336,18 @@ test(`Observer.error: doesn't reject after it's closed (sync)`, async () => {
       start: () => times[2]++,
       next: () => times[3]++,
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => times[6]++
     })
     .catch(() => (pass = false));
 
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0, 1]);
   await promise;
   assert(pass);
 });
 test(`Observer.error: doesn't reject after it's closed (async)`, async () => {
   let pass = true;
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const promise = new PushStream((obs) => {
     Promise.resolve().then(() => obs.error(Error()));
@@ -317,17 +359,18 @@ test(`Observer.error: doesn't reject after it's closed (async)`, async () => {
       start: () => times[2]++,
       next: () => times[3]++,
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => times[6]++
     })
     .catch(() => (pass = false));
 
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0, 1]);
   await promise;
   assert(pass);
 });
 test(`Observer.error: rejects when there's no listener (sync)`, async () => {
-  const times = [0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0];
 
   const error = Error('foo');
   let res: any;
@@ -335,23 +378,30 @@ test(`Observer.error: rejects when there's no listener (sync)`, async () => {
   const instance = new PushStream((obs) => {
     times[0]++;
     obs.error(error);
-    return () => times[1]++;
+    return () => {
+      times[1]++;
+      throw Error();
+    };
   });
 
   const promise = instance
     .subscribe({
       start: () => times[2]++,
       next: () => times[3]++,
-      complete: () => times[4]++
+      complete: () => times[4]++,
+      terminate: () => {
+        times[5]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1]);
   await promise;
   assert(res === error);
 });
 test(`Observer.error: rejects when there's no listener (async)`, async () => {
-  const times = [0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0];
 
   const error = Error('foo');
   let res: any;
@@ -359,22 +409,29 @@ test(`Observer.error: rejects when there's no listener (async)`, async () => {
   const promise = new PushStream((obs) => {
     Promise.resolve().then(() => obs.error(error));
     times[0]++;
-    return () => times[1]++;
+    return () => {
+      times[1]++;
+      throw Error();
+    };
   })
     .subscribe({
       start: () => times[2]++,
       next: () => times[3]++,
-      complete: () => times[4]++
+      complete: () => times[4]++,
+      terminate: () => {
+        times[5]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1]);
   await promise;
   assert(res === error);
 });
 test(`Observer.error: doesn't reject when it succeeds and there's a listener (sync)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
   let pass = true;
 
   const instance = new PushStream((obs) => {
@@ -388,16 +445,17 @@ test(`Observer.error: doesn't reject when it succeeds and there's a listener (sy
       start: () => times[2]++,
       next: () => times[3]++,
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => times[6]++
     })
     .catch(() => (pass = false));
 
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0, 1]);
   await promise;
   assert(pass);
 });
 test(`Observer.error: doesn't reject when it succeeds and there's a listener (async)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
   let pass = true;
 
   const promise = new PushStream((obs) => {
@@ -409,17 +467,18 @@ test(`Observer.error: doesn't reject when it succeeds and there's a listener (as
       start: () => times[2]++,
       next: () => times[3]++,
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => times[6]++
     })
     .catch(() => (pass = false));
 
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 1, 0, 1]);
   await promise;
   assert(pass);
 });
 test(`Observer.error: catches Subscriber errors`, async () => {
-  const times = [0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0];
 
   let pass = true;
   const error = Error('foo');
@@ -436,17 +495,18 @@ test(`Observer.error: catches Subscriber errors`, async () => {
         times[3]++;
         res = err;
       },
-      complete: () => times[4]++
+      complete: () => times[4]++,
+      terminate: () => times[5]++
     })
     .catch(() => (pass = false));
 
   assert(res === error);
-  assert.deepStrictEqual(times, [1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 0, 1, 0, 1]);
   await promise;
   assert(pass);
 });
 test(`Observer.error: catches Subscriber errors and rejects on failure`, async () => {
-  const times = [0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0];
 
   const error = Error('foo');
   let res: any;
@@ -464,16 +524,20 @@ test(`Observer.error: catches Subscriber errors and rejects on failure`, async (
         times[3]++;
         throw err;
       },
-      complete: () => times[4]++
+      complete: () => times[4]++,
+      terminate: () => {
+        times[5]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
-  assert.deepStrictEqual(times, [1, 1, 0, 1, 0]);
+  assert.deepStrictEqual(times, [1, 1, 0, 1, 0, 1]);
   await promise;
   assert(res === error);
 });
 test(`Observer.error: catches Subscriber errors and rejects when lacking listener`, async () => {
-  const times = [0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0];
 
   const error = Error('foo');
   let res: any;
@@ -487,16 +551,20 @@ test(`Observer.error: catches Subscriber errors and rejects when lacking listene
     .subscribe({
       start: () => times[1]++,
       next: () => times[2]++,
-      complete: () => times[3]++
+      complete: () => times[3]++,
+      terminate: () => {
+        times[4]++;
+        throw Error();
+      }
     })
     .catch((err) => (res = err));
 
-  assert.deepStrictEqual(times, [1, 1, 0, 0]);
+  assert.deepStrictEqual(times, [1, 1, 0, 0, 1]);
   await promise;
   assert(res === error);
 });
 test(`Observer.complete: rejects when it fails (sync)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const instance = new PushStream((obs) => {
     times[0]++;
@@ -518,16 +586,20 @@ test(`Observer.complete: rejects when it fails (sync)`, async () => {
       complete: () => {
         times[5]++;
         throw error;
+      },
+      terminate: () => {
+        times[6]++;
+        throw Error();
       }
     })
     .catch((err) => (res = err));
 
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1, 1]);
   await promise;
   assert(res === error);
 });
-test(`Observer.complete: throws when it fails (async)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+test(`Observer.complete: rejects when it fails (async)`, async () => {
+  const times = [0, 0, 0, 0, 0, 0, 0];
 
   const error = Error('foo');
   let res: any;
@@ -547,17 +619,80 @@ test(`Observer.complete: throws when it fails (async)`, async () => {
       complete: () => {
         times[5]++;
         throw error;
+      },
+      terminate: () => {
+        times[6]++;
+        throw Error();
       }
     })
     .catch((err) => (res = err));
 
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1, 1]);
   await promise;
   assert(res === error);
 });
-test(`Observer.complete: doesn't throw when it succeeds (sync)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+test(`Observer.complete: rejects when it succeeds and terminate fails (sync)`, async () => {
+  const times = [0, 0, 0, 0, 0, 0, 0];
+
+  const instance = new PushStream((obs) => {
+    times[0]++;
+    obs.complete();
+    return () => times[1]++;
+  });
+
+  const error = Error('foo');
+  let res: any;
+
+  const promise = instance
+    .subscribe({
+      start: () => times[2]++,
+      next: () => times[3]++,
+      error: () => times[4]++,
+      complete: () => times[5]++,
+      terminate: () => {
+        times[6]++;
+        throw error;
+      }
+    })
+    .catch((err) => (res = err));
+
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1, 1]);
+  await promise;
+  assert(res === error);
+});
+test(`Observer.complete: rejects when it succeeds and terminate fails (async)`, async () => {
+  const times = [0, 0, 0, 0, 0, 0, 0];
+
+  const instance = new PushStream((obs) => {
+    Promise.resolve().then(() => obs.complete());
+    times[0]++;
+    return () => times[1]++;
+  });
+
+  const error = Error('foo');
+  let res: any;
+
+  const promise = instance
+    .subscribe({
+      start: () => times[2]++,
+      next: () => times[3]++,
+      error: () => times[4]++,
+      complete: () => times[5]++,
+      terminate: () => {
+        times[6]++;
+        throw error;
+      }
+    })
+    .catch((err) => (res = err));
+
+  await Promise.resolve();
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1, 1]);
+  await promise;
+  assert(res === error);
+});
+test(`Observer.complete: doesn't reject when it succeeds (sync)`, async () => {
+  const times = [0, 0, 0, 0, 0, 0, 0];
   let pass = true;
 
   const instance = new PushStream((obs) => {
@@ -572,16 +707,17 @@ test(`Observer.complete: doesn't throw when it succeeds (sync)`, async () => {
       start: () => times[2]++,
       next: () => times[3]++,
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => times[6]++
     })
     .catch(() => (pass = false));
 
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1, 1]);
   await promise;
   assert(pass);
 });
-test(`Observer.complete: doesn't throw when it succeeds (async)`, async () => {
-  const times = [0, 0, 0, 0, 0, 0];
+test(`Observer.complete: doesn't reject when it succeeds (async)`, async () => {
+  const times = [0, 0, 0, 0, 0, 0, 0];
   let pass = true;
 
   const promise = new PushStream((obs) => {
@@ -596,12 +732,13 @@ test(`Observer.complete: doesn't throw when it succeeds (async)`, async () => {
       start: () => times[2]++,
       next: () => times[3]++,
       error: () => times[4]++,
-      complete: () => times[5]++
+      complete: () => times[5]++,
+      terminate: () => times[6]++
     })
     .catch(() => (pass = false));
 
   await Promise.resolve();
-  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1]);
+  assert.deepStrictEqual(times, [1, 1, 1, 0, 0, 1, 1]);
   await promise;
   assert(pass);
 });
