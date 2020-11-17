@@ -4,13 +4,15 @@ import { Handler } from '@helpers';
 import { Subscription } from '../Observable';
 import { terminateToAsyncFunction } from './helpers';
 
+const $resolve = Symbol('resolve');
 const $promise = Symbol('promise');
 
 class Broker<T = any> extends Subscription<T> implements Push.Broker {
+  private [$resolve]: NoParamFn | void;
   private [$promise]: Promise<void>;
   public constructor(hearback: Push.Hearback<T>, producer: Push.Producer<T>) {
     let ready = false;
-    let unsubscribePending = false;
+    let earlyFail = false;
 
     let resolve: any;
     let reject: any;
@@ -22,7 +24,7 @@ class Broker<T = any> extends Subscription<T> implements Push.Broker {
     super(
       hearback,
       (obs) => {
-        if (unsubscribePending) return;
+        if (earlyFail) return;
 
         const fn = terminateToAsyncFunction(producer(obs));
         return () => {
@@ -34,22 +36,24 @@ class Broker<T = any> extends Subscription<T> implements Push.Broker {
       (err: Error) => {
         reject(err);
         if (ready) Handler.tries(this.unsubscribe.bind(this));
-        else unsubscribePending = true;
-      },
-      () => resolve()
+        else earlyFail = true;
+      }
     );
 
     this[$promise] = promise;
+    this[$resolve] = () => resolve();
 
+    if (earlyFail || this.closed) this.unsubscribe();
     ready = true;
-    if (unsubscribePending) this.unsubscribe();
   }
   public get [Symbol.toStringTag](): string {
     return 'Broker';
   }
   public unsubscribe(): void {
-    // TODO: resolve here instead of @ Subscriber
-    return super.unsubscribe();
+    super.unsubscribe();
+
+    const resolve = this[$resolve];
+    if (resolve) resolve();
   }
   public then<U = void, V = never>(
     onResolve?: Empty | UnaryFn<void, U | PromiseLike<U>>,

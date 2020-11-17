@@ -5,38 +5,31 @@ import { ManageObserver, teardownToFunction } from './helpers';
 
 const $empty = Symbol('empty');
 const $report = Symbol('report');
-const $callback = Symbol('callback');
 const $teardown = Symbol('teardown');
 
 class Subscription<T = any> implements Push.Subscription {
   private [$report]: UnaryFn<Error>;
-  private [$callback]: NoParamFn;
   private [$teardown]: NoParamFn | null;
   public constructor(
     observer: Push.Observer<T>,
     subscriber: Push.Subscriber<T>,
-    ...arr: [] | [UnaryFn<Error>] | [UnaryFn<Error>, NoParamFn]
+    ...report: [] | [UnaryFn<Error>]
   ) {
-    this[$report] = arr[0] ? arr[0] : Handler.noop;
-    this[$callback] = arr[1] ? arr[1] : Handler.noop;
+    this[$report] = report[0] ? report[0] : Handler.noop;
     this[$teardown] = null;
     ManageObserver.set(this, observer);
 
-    const report = this[$report];
-    const callback = this[$callback];
+    const reports = this[$report];
 
     let method = $empty;
     Handler.tries(
       () => (method = (observer as any).start).call(observer, this),
-      (err) => TypeGuard.isEmpty(method) || report(err)
+      (err) => TypeGuard.isEmpty(method) || reports(err)
     );
 
-    if (ManageObserver.isClosed(this)) {
-      callback();
-      return;
-    }
+    if (ManageObserver.isClosed(this)) return;
 
-    const subscriptionObserver = new SubscriptionObserver(this, report);
+    const subscriptionObserver = new SubscriptionObserver(this, reports);
 
     let teardown: NoParamFn = Handler.noop;
     try {
@@ -45,11 +38,8 @@ class Subscription<T = any> implements Push.Subscription {
     } catch (err) {
       subscriptionObserver.error(err);
     } finally {
-      if (ManageObserver.isClosed(this)) {
-        Handler.tries(teardown, report, callback);
-      } else {
-        this[$teardown] = teardown;
-      }
+      if (ManageObserver.isClosed(this)) Handler.tries(teardown, reports);
+      else this[$teardown] = teardown;
     }
   }
   public get closed(): boolean {
@@ -62,10 +52,7 @@ class Subscription<T = any> implements Push.Subscription {
     if (!teardown) return;
 
     this[$teardown] = null;
-
-    const report = this[$report];
-    const callback = this[$callback];
-    Handler.tries(teardown, report, callback);
+    Handler.tries(teardown, this[$report]);
   }
 }
 
