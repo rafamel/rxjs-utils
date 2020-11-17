@@ -53,9 +53,10 @@ export interface Subscription extends SubscriptionLike {
 /* Subscriber */
 export type Subscriber<T = any> = (
   observer: SubscriptionObserver<T>
-) => Teardown;
+) => Cleanup;
 
-export type Teardown = Empty | NoParamFn | SubscriptionLike;
+/* Cleanup */
+export type Cleanup = Empty | NoParamFn | SubscriptionLike;
 
 /* SubscriptionObserver */
 export interface SubscriptionObserver<T = any> {

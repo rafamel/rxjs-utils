@@ -55,7 +55,7 @@ export class PushStream<T = any> implements Push.Stream<T> {
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
     onComplete?: NoParamFn,
-    onFinally?: NoParamFn
+    onTerminate?: NoParamFn
   ): Push.Broker;
   public subscribe(hearback: any, ...arr: any[]): Push.Broker {
     let producer = this[$producer];

@@ -1,15 +1,19 @@
 /* eslint-disable promise/param-names */
-import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
-import { Handler } from '@helpers';
+import { Empty, NoParamFn, Push, UnaryFn, WideRecord } from '@definitions';
+import { Handler, TypeGuard } from '@helpers';
 import { Subscription } from '../Observable';
 import { terminateToAsyncFunction } from './helpers';
 
-const $resolve = Symbol('resolve');
+const $hearback = Symbol('terminate');
 const $promise = Symbol('promise');
+const $resolve = Symbol('resolve');
+const $reject = Symbol('reject');
 
 class Broker<T = any> extends Subscription<T> implements Push.Broker {
-  private [$resolve]: NoParamFn | void;
+  private [$hearback]: Empty | WideRecord;
   private [$promise]: Promise<void>;
+  private [$resolve]: NoParamFn;
+  private [$reject]: UnaryFn<Error>;
   public constructor(hearback: Push.Hearback<T>, producer: Push.Producer<T>) {
     let ready = false;
     let earlyFail = false;
@@ -40,8 +44,10 @@ class Broker<T = any> extends Subscription<T> implements Push.Broker {
       }
     );
 
+    this[$hearback] = hearback;
     this[$promise] = promise;
     this[$resolve] = () => resolve();
+    this[$reject] = reject;
 
     if (earlyFail || this.closed) this.unsubscribe();
     ready = true;
@@ -52,8 +58,18 @@ class Broker<T = any> extends Subscription<T> implements Push.Broker {
   public unsubscribe(): void {
     super.unsubscribe();
 
-    const resolve = this[$resolve];
-    if (resolve) resolve();
+    const hearback = this[$hearback];
+    if (!hearback) return;
+
+    this[$hearback] = null;
+    Handler.tries(
+      () => {
+        const method = hearback.terminate;
+        if (!TypeGuard.isEmpty(method)) method.call(hearback);
+      },
+      this[$reject],
+      this[$resolve]
+    );
   }
   public then<U = void, V = never>(
     onResolve?: Empty | UnaryFn<void, U | PromiseLike<U>>,

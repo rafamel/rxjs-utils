@@ -3,7 +3,7 @@ import { Handler, TypeGuard } from '@helpers';
 import { isSubscriptionLike } from '../../utils';
 import { Subscription } from './Subscription';
 
-export function teardownToFunction(teardown: Push.Teardown): NoParamFn {
+export function teardownToFunction(teardown: Push.Cleanup): NoParamFn {
   if (TypeGuard.isFunction(teardown)) return teardown;
   if (TypeGuard.isEmpty(teardown)) return Handler.noop;
   if (isSubscriptionLike(teardown)) return () => teardown.unsubscribe();

@@ -5,7 +5,7 @@ import {
   Observer,
   Subscription,
   SubscriptionObserver,
-  Teardown
+  Cleanup
 } from './observables';
 
 /* Constructor */
@@ -19,28 +19,30 @@ export interface StreamConstructor {
 /* Stream */
 export interface Stream<T = any> extends Observable<T> {
   subscribe(hearback?: Empty | Hearback<T>): Broker;
-  // TODO: implement finally
   subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
-    onComplete?: NoParamFn
+    onComplete?: NoParamFn,
+    onTerminate?: NoParamFn
   ): Broker;
 }
 
 /* Hearback */
-// TODO: implement finally
-export type Hearback<T = any> = Observer<T>;
+export interface Hearback<T = any> extends Observer<T> {
+  terminate?: NoParamFn;
+}
 
 /* Broker */
 export type Broker = Subscription & Promise<void>;
 
 /* Producer */
-export type Producer<T = any> = (talkback: Talkback<T>) => Terminate;
+export type Producer<T = any> = (talkback: Talkback<T>) => Teardown;
 
-export type Terminate =
-  | Teardown
+/* Teardown */
+export type Teardown =
+  | Cleanup
   | NoParamFn<void | Promise<void>>
-  | Array<Teardown | NoParamFn<void | Promise<void>>>;
+  | Array<Cleanup | NoParamFn<void | Promise<void>>>;
 
 /* Talkback */
 export type Talkback<T = any> = SubscriptionObserver<T>;

@@ -25,11 +25,13 @@ export function forward(
   const next = hearback.next;
   const error = hearback.error;
   const complete = hearback.complete;
+  const terminate = hearback.terminate;
 
   return stream.subscribe({
     start: start ? start.bind(hearback) : undefined,
     next: next ? next.bind(hearback) : to.next.bind(to),
     error: error ? error.bind(hearback) : to.error.bind(to),
-    complete: complete ? complete.bind(hearback) : to.complete.bind(to)
+    complete: complete ? complete.bind(hearback) : to.complete.bind(to),
+    terminate: terminate ? terminate.bind(hearback) : undefined
   });
 }

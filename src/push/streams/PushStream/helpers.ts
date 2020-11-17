@@ -6,11 +6,9 @@ const empty = Promise.resolve();
 const noop = (): Promise<void> => empty;
 
 export function terminateToAsyncFunction(
-  terminate: Push.Terminate
+  terminate: Push.Teardown
 ): NoParamFn<Promise<void>> {
-  function each(
-    item: Exclude<Push.Terminate, any[]>
-  ): NoParamFn<Promise<void>> {
+  function each(item: Exclude<Push.Teardown, any[]>): NoParamFn<Promise<void>> {
     if (TypeGuard.isEmpty(item)) return noop;
     if (TypeGuard.isFunction(item)) {
       return () => {
