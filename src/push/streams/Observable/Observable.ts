@@ -1,6 +1,6 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
-import { isIterable, isObservableCompatible } from '@utils';
 import { TypeGuard } from '@helpers';
+import { isObservableCompatible } from '../../utils';
 import { Subscription } from './Subscription';
 import { From } from './helpers';
 import 'symbol-observable';
@@ -20,7 +20,7 @@ export class Observable<T = any> {
     if (isObservableCompatible(item)) {
       return From.compatible(Constructor, item) as Observable<T>;
     }
-    if (isIterable(item)) {
+    if (TypeGuard.isIterable(item)) {
       return From.iterable(Constructor, item) as Observable<T>;
     }
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);

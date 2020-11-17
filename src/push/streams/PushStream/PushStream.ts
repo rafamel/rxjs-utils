@@ -1,6 +1,6 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
-import { isObservableCompatible, isObservableLike } from '@utils';
 import { Handler, TypeGuard } from '@helpers';
+import { isObservableCompatible, isObservableLike } from '../../utils';
 import { Observable } from '../Observable';
 import { Broker } from './Broker';
 import 'symbol-observable';

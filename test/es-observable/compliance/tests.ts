@@ -2,8 +2,8 @@
 /* eslint-disable prefer-const */
 import assert from 'assert';
 import { Push } from '@definitions';
-import { isObservable } from '@utils';
 import { Handler, TypeGuard } from '@helpers';
+import { isObservable } from '@push';
 import { runTests } from '../module/tests';
 import { Test, test } from './engine';
 import 'symbol-observable';

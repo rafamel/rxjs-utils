@@ -18,7 +18,7 @@ module.exports.scripts = {
     scripts.build,
     kpo.json('./pkg/package.json', ({ json }) => ({
       ...json,
-      files: [...json.files, 'definitions/', 'pull/', 'push/', 'utils/']
+      files: [...json.files, 'definitions/', 'pull/', 'push/']
     })),
     kpo.json('./pkg/definitions/package.json', () => ({
       sideEffects: false,
@@ -40,13 +40,6 @@ module.exports.scripts = {
       main: '../dist/push/index.js',
       types: '../dist/push/index.d.ts',
       esnext: '../dist-src/push/index.js'
-    })),
-    kpo.json('./pkg/utils/package.json', () => ({
-      sideEffects: false,
-      name: 'multitude/utils',
-      main: '../dist/utils/index.js',
-      types: '../dist/utils/index.d.ts',
-      esnext: '../dist-src/utils/index.js'
     }))
   ]
 };

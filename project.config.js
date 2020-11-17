@@ -25,7 +25,6 @@ module.exports = create({
       '@definitions': './src/definitions',
       '@pull': './src/pull',
       '@push': './src/push',
-      '@utils': './src/utils',
       '@helpers': './src/helpers'
     }
   },

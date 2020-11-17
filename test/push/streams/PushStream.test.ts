@@ -1,5 +1,4 @@
-import { PushStream } from '@push';
-import { isObservableCompatible, isObservableLike } from '@utils';
+import { PushStream, isObservableCompatible, isObservableLike } from '@push';
 import assert from 'assert';
 
 test(`PushStream is Observable`, () => {

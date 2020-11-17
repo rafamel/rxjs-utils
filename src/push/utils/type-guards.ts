@@ -2,10 +2,6 @@ import { Push } from '@definitions';
 import { TypeGuard } from '@helpers';
 import 'symbol-observable';
 
-export function isIterable(item: any): item is Iterable<unknown> {
-  return TypeGuard.isIterable(item);
-}
-
 export function isObservableLike(item: any): item is Push.Like<unknown> {
   return TypeGuard.isObject(item) && TypeGuard.isFunction(item.subscribe);
 }
