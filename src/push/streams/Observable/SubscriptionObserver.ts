@@ -28,10 +28,11 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
     const observer = ManageObserver.get(subscription);
 
     let method = $empty;
-    Handler.tries(
-      () => (method = observer.next).call(observer, value),
-      (err) => TypeGuard.isEmpty(method) || report(err)
-    );
+    try {
+      (method = observer.next).call(observer, value);
+    } catch (err) {
+      TypeGuard.isEmpty(method) || report(err);
+    }
   }
   public error(error: Error): void {
     const subscription = this[$subscription];
@@ -43,11 +44,13 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
     ManageObserver.close(subscription);
 
     let method = $empty;
-    Handler.tries(
-      () => (method = observer.error).call(observer, error),
-      (err) => report(TypeGuard.isEmpty(method) ? error : err),
-      () => Handler.tries(subscription.unsubscribe.bind(subscription), report)
-    );
+    try {
+      (method = observer.error).call(observer, error);
+    } catch (err) {
+      report(TypeGuard.isEmpty(method) ? error : err);
+    } finally {
+      Handler.tries(subscription.unsubscribe.bind(subscription), report);
+    }
   }
   public complete(): void {
     const subscription = this[$subscription];
@@ -59,11 +62,13 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
     ManageObserver.close(subscription);
 
     let method = $empty;
-    Handler.tries(
-      () => (method = observer.complete).call(observer),
-      (err) => TypeGuard.isEmpty(method) || report(err),
-      () => Handler.tries(subscription.unsubscribe.bind(subscription), report)
-    );
+    try {
+      (method = observer.complete).call(observer);
+    } catch (err) {
+      TypeGuard.isEmpty(method) || report(err);
+    } finally {
+      Handler.tries(subscription.unsubscribe.bind(subscription), report);
+    }
   }
 }
 
