@@ -1,5 +1,5 @@
 /* eslint-disable promise/param-names */
-import { Empty, NoParamFn, Push, UnaryFn, WideRecord } from '@definitions';
+import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
 import { Subscription } from '../Observable';
 import { terminateToAsyncFunction } from './helpers';
@@ -10,7 +10,7 @@ const $resolve = Symbol('resolve');
 const $reject = Symbol('reject');
 
 class Broker<T = any> extends Subscription<T> implements Push.Broker {
-  private [$hearback]: Empty | WideRecord;
+  private [$hearback]: Empty | Push.Hearback<T>;
   private [$promise]: Promise<void>;
   private [$resolve]: NoParamFn;
   private [$reject]: UnaryFn<Error>;
@@ -64,7 +64,7 @@ class Broker<T = any> extends Subscription<T> implements Push.Broker {
     this[$hearback] = null;
     Handler.tries(
       () => {
-        const method = hearback.terminate;
+        const method: any = hearback.terminate;
         if (!TypeGuard.isEmpty(method)) method.call(hearback);
       },
       this[$reject],

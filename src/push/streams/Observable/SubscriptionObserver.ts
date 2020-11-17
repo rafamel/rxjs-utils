@@ -61,11 +61,11 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
 
     ManageObserver.close(subscription);
 
-    let method = $empty;
     try {
-      (method = observer.complete).call(observer);
+      const method = observer.complete;
+      if (!TypeGuard.isEmpty(method)) method.call(observer);
     } catch (err) {
-      TypeGuard.isEmpty(method) || report(err);
+      report(err);
     } finally {
       Handler.tries(subscription.unsubscribe.bind(subscription), report);
     }

@@ -3,7 +3,6 @@ import { Handler, TypeGuard } from '@helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import { ManageObserver, teardownToFunction } from './helpers';
 
-const $empty = Symbol('empty');
 const $report = Symbol('report');
 const $teardown = Symbol('teardown');
 
@@ -21,11 +20,10 @@ class Subscription<T = any> implements Push.Subscription {
 
     const reports = this[$report];
 
-    let method = $empty;
-    Handler.tries(
-      () => (method = (observer as any).start).call(observer, this),
-      (err) => TypeGuard.isEmpty(method) || reports(err)
-    );
+    Handler.tries(() => {
+      const method: any = observer.start;
+      if (!TypeGuard.isEmpty(method)) method.call(observer, this);
+    }, reports);
 
     if (ManageObserver.isClosed(this)) return;
 
