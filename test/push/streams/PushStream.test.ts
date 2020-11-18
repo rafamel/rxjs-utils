@@ -2,7 +2,8 @@ import {
   PushStream,
   Observable,
   isObservableCompatible,
-  isObservableLike
+  isObservableLike,
+  Broker
 } from '@push';
 import { Handler } from '@helpers';
 import assert from 'assert';
@@ -132,6 +133,26 @@ test(`Observer.start: doesn't reject when it succeeds`, async () => {
 
   subscription.unsubscribe();
   await subscription;
+});
+test(`Observer.start: receives a functioning broker`, async () => {
+  let pass = false;
+  let closed = false;
+
+  const broker = new PushStream(() => undefined).subscribe({
+    start: (broker) => {
+      pass = broker instanceof Broker;
+      try {
+        broker.then(() => (closed = true));
+      } catch (err) {
+        pass = false;
+      }
+    }
+  });
+
+  broker.unsubscribe();
+  assert(pass);
+  await broker;
+  assert(closed);
 });
 test(`Observer.next: rejects when it fails (sync)`, async () => {
   const times = [0, 0, 0, 0, 0, 0, 0];

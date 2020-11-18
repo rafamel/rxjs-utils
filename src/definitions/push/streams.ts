@@ -2,10 +2,10 @@ import { Empty, NoParamFn, UnaryFn } from '../types';
 import {
   Observable,
   Compatible,
-  Observer,
   Subscription,
   SubscriptionObserver,
-  Cleanup
+  Cleanup,
+  ObserverLike
 } from './observables';
 
 /* Constructor */
@@ -28,12 +28,13 @@ export interface Stream<T = any> extends Observable<T> {
 }
 
 /* Hearback */
-export interface Hearback<T = any> extends Observer<T> {
+export interface Hearback<T = any> extends ObserverLike<T> {
+  start?: (broker: Broker) => void;
   terminate?: NoParamFn;
 }
 
 /* Broker */
-export type Broker = Subscription & Promise<void>;
+export interface Broker extends Subscription, Promise<void> {}
 
 /* Producer */
 export type Producer<T = any> = (talkback: Talkback<T>) => Teardown;

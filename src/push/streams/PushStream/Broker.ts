@@ -1,55 +1,47 @@
 /* eslint-disable promise/param-names */
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
-import { Handler, TypeGuard } from '@helpers';
+import { Handler, ResultManager, TypeGuard } from '@helpers';
 import { Subscription } from '../Observable';
-import { terminateToAsyncFunction } from './helpers';
+import { ManagePromise, terminateToAsyncFunction } from './helpers';
 
+const $manager = Symbol('manager');
 const $hearback = Symbol('terminate');
-const $promise = Symbol('promise');
-const $resolve = Symbol('resolve');
-const $reject = Symbol('reject');
 
 class Broker<T = any> extends Subscription<T> implements Push.Broker {
+  private [$manager]: ResultManager;
   private [$hearback]: Empty | Push.Hearback<T>;
-  private [$promise]: Promise<void>;
-  private [$resolve]: NoParamFn;
-  private [$reject]: UnaryFn<Error>;
   public constructor(hearback: Push.Hearback<T>, producer: Push.Producer<T>) {
     let ready = false;
-    let earlyFail = false;
 
-    let resolve: any;
-    let reject: any;
-    const promise = new Promise<void>((a, b) => {
-      resolve = a;
-      reject = b;
-    });
+    const manager = new ResultManager();
 
     super(
-      hearback,
+      hearback as Push.Observer<T>,
       (obs) => {
-        if (earlyFail) return;
+        if (manager.replete) return;
 
         const fn = terminateToAsyncFunction(producer(obs));
         return () => {
-          const a = resolve;
-          resolve = Handler.noop;
-          fn().then(a, reject);
+          const pass = manager.pass.bind(manager);
+          manager.pass = Handler.noop;
+          fn().then(pass, manager.fail.bind(manager));
         };
       },
       (err: Error) => {
-        reject(err);
+        manager.fail(err);
         if (ready) Handler.tries(this.unsubscribe.bind(this));
-        else earlyFail = true;
       }
     );
 
-    this[$hearback] = hearback;
-    this[$promise] = promise;
-    this[$resolve] = () => resolve();
-    this[$reject] = reject;
+    const actions = ManagePromise.getActions(this);
+    manager.onPass(actions[0]);
+    manager.onFail(actions[1]);
 
-    if (earlyFail || this.closed) this.unsubscribe();
+    this[$manager] = manager;
+    this[$hearback] = hearback;
+
+    if (manager.replete || this.closed) this.unsubscribe();
+
     ready = true;
   }
   public get [Symbol.toStringTag](): string {
@@ -62,30 +54,34 @@ class Broker<T = any> extends Subscription<T> implements Push.Broker {
     if (!hearback) return;
 
     this[$hearback] = null;
-    Handler.tries(
-      () => {
-        const method: any = hearback.terminate;
-        if (!TypeGuard.isEmpty(method)) method.call(hearback);
-      },
-      this[$reject],
-      this[$resolve]
-    );
+
+    try {
+      const method: any = hearback.terminate;
+      if (!TypeGuard.isEmpty(method)) method.call(hearback);
+    } catch (err) {
+      this[$manager].fail(err);
+    } finally {
+      this[$manager].pass();
+    }
   }
   public then<U = void, V = never>(
     onResolve?: Empty | UnaryFn<void, U | PromiseLike<U>>,
     onReject?: Empty | UnaryFn<Error, V | PromiseLike<V>>
   ): Promise<U | V> {
-    return this[$promise].then(onResolve || null, onReject || null);
+    return ManagePromise.getPromise(this).then(
+      onResolve || null,
+      onReject || null
+    );
   }
   public catch<U = never>(
     onReject?: Empty | UnaryFn<Error, U | PromiseLike<U>>
   ): Promise<void | U> {
-    return this[$promise].catch(onReject || null);
+    return ManagePromise.getPromise(this).catch(onReject || null);
   }
   public finally(
     onFinally?: Empty | NoParamFn<void | Promise<void>>
   ): Promise<void> {
-    return this[$promise].finally(onFinally || null);
+    return ManagePromise.getPromise(this).finally(onFinally || null);
   }
 }
 
