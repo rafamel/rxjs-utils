@@ -1,5 +1,8 @@
 import { Push } from '@definitions';
-import { isObservableCompatible, isObservableLike } from '../../utils';
+import {
+  isObservableCompatible,
+  isObservableLike
+} from '../../utils/type-guards';
 import { Observable } from '../../observable';
 import { PushStream } from '../PushStream';
 

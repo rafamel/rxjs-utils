@@ -2,7 +2,7 @@ import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
 import { Observable } from '../observable';
 import { terminateToAsyncFunction } from './helpers';
-import { Broker } from './assistance';
+import { Broker } from './assistance/Broker';
 import 'symbol-observable';
 
 const $producer = Symbol('producer');
