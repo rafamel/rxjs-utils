@@ -1,5 +1,5 @@
 import { Empty, Push, UnaryFn } from '@definitions';
-import { PushStream } from '../streams';
+import { PushStream } from '../stream';
 import { intercept } from './intercept';
 import { transform } from './transform';
 

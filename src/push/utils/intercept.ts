@@ -1,5 +1,5 @@
 import { Empty, Push, UnaryFn } from '@definitions';
-import { Create, Forwarder } from '../streams';
+import { Create, Forwarder } from '../stream';
 
 export function intercept<T>(
   observable: Push.Like<T> | Push.Compatible<T>,

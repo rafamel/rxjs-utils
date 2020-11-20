@@ -1,6 +1,6 @@
 import { NoParamFn, Push, WideRecord } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
-import { isSubscriptionLike } from '../../utils';
+import { isSubscriptionLike } from '../utils';
 import { Subscription } from './Subscription';
 
 export function teardownToFunction(teardown: Push.Cleanup): NoParamFn {

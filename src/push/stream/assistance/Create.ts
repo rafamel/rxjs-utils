@@ -1,7 +1,7 @@
 import { Push } from '@definitions';
-import { isObservableCompatible, isObservableLike } from '../utils';
-import { Observable } from './Observable';
-import { PushStream } from './PushStream';
+import { isObservableCompatible, isObservableLike } from '../../utils';
+import { Observable } from '../../observable';
+import { PushStream } from '../PushStream';
 
 export class Create {
   public static of<T>(...items: T[]): PushStream<T> {

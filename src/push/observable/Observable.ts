@@ -1,6 +1,6 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { isObservableCompatible } from '../../utils';
+import { isObservableCompatible } from '../utils';
 import { Subscription } from './Subscription';
 import { From } from './helpers';
 import 'symbol-observable';

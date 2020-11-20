@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { Create } from '../streams';
+import { Create } from '../stream';
 
 export function transform<T, R>(
   transformation: (observable: Push.Stream<T>) => R

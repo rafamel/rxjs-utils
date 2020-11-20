@@ -1,8 +1,8 @@
 /* eslint-disable promise/param-names */
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { Handler, ResultManager, TypeGuard } from '@helpers';
-import { Subscription } from '../Observable';
-import { ManagePromise, terminateToAsyncFunction } from './helpers';
+import { Subscription } from '../../observable';
+import { ManagePromise, terminateToAsyncFunction } from '../helpers';
 
 const $manager = Symbol('manager');
 const $hearback = Symbol('terminate');

@@ -1,9 +1,9 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
-import { Observable } from '../Observable';
-import { Broker } from './Broker';
-import 'symbol-observable';
+import { Observable } from '../observable';
 import { terminateToAsyncFunction } from './helpers';
+import { Broker } from './assistance';
+import 'symbol-observable';
 
 const $producer = Symbol('producer');
 const $observable = Symbol('observable');
