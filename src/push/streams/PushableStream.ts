@@ -1,26 +1,47 @@
 import { Push } from '@definitions';
 import { PushStream } from './PushStream';
 
-const $talkback = Symbol('talkback');
+const $closed = Symbol('closed');
+const $talkbacks = Symbol('talkbacks');
 
 export class PushableStream<T = any> extends PushStream<T>
-  implements Push.Stream<T>, Push.Talkback<T> {
-  private [$talkback]: Push.Talkback<T>;
+  implements Push.Pushable<T> {
+  private [$closed]: boolean;
+  private [$talkbacks]: Set<Push.Talkback<T>>;
   public constructor() {
+    const talkbacks = new Set<Push.Talkback<T>>();
     super((tb) => {
-      this[$talkback] = tb;
+      if (this.closed) {
+        tb.error(Error(`Stream is already closed`));
+        return null;
+      } else {
+        talkbacks.add(tb);
+        return () => talkbacks.delete(tb);
+      }
     });
+    this[$closed] = false;
+    this[$talkbacks] = talkbacks;
   }
   public get closed(): boolean {
-    return this[$talkback].closed;
+    return this[$closed];
   }
   public next(value: T): void {
-    this[$talkback].next(value);
+    for (const talkback of this[$talkbacks]) {
+      talkback.next(value);
+    }
   }
   public error(error: Error): void {
-    this[$talkback].error(error);
+    this[$closed] = true;
+    for (const talkback of this[$talkbacks]) {
+      talkback.error(error);
+    }
+    this[$talkbacks].clear();
   }
   public complete(): void {
-    this[$talkback].complete();
+    this[$closed] = true;
+    for (const talkback of this[$talkbacks]) {
+      talkback.complete();
+    }
+    this[$talkbacks].clear();
   }
 }

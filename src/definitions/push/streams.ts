@@ -17,6 +17,8 @@ export interface StreamConstructor {
 }
 
 /* Stream */
+export type Pushable<T = any> = Stream<T> & Talkback<T>;
+
 export interface Stream<T = any> extends Observable<T> {
   subscribe(hearback?: Empty | Hearback<T>): Broker;
   subscribe(
