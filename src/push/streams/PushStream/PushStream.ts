@@ -1,6 +1,5 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
-import { isObservableCompatible, isObservableLike } from '../../utils';
 import { Observable } from '../Observable';
 import { Broker } from './Broker';
 import 'symbol-observable';
@@ -10,23 +9,6 @@ const $producer = Symbol('producer');
 const $observable = Symbol('observable');
 
 export class PushStream<T = any> implements Push.Stream<T> {
-  public static of<T>(...items: T[]): PushStream<T> {
-    const Constructor = typeof this === 'function' ? this : PushStream;
-    return Observable.of.call(Constructor, ...items) as any;
-  }
-  public static from<T>(
-    item: Push.Observable<T> | Push.Compatible<T> | Push.Like<T> | Iterable<T>
-  ): PushStream<T> {
-    const Constructor = TypeGuard.isFunction(this) ? this : PushStream;
-    const from = Observable.from.bind(Constructor);
-
-    if (isObservableCompatible(item)) return from(item) as any;
-    if (isObservableLike(item)) {
-      const compatible: any = { [Symbol.observable]: () => item };
-      return from(compatible) as any;
-    }
-    return from(item) as any;
-  }
   private [$producer]: Push.Producer<T>;
   private [$observable]: void | Observable<T>;
   public constructor(producer: Push.Producer<T>) {

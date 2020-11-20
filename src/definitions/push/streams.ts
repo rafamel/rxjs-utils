@@ -1,7 +1,6 @@
-import { Empty, NoParamFn, UnaryFn } from '../types';
+import { Empty, Intersection, NoParamFn, UnaryFn } from '../types';
 import {
   Observable,
-  Compatible,
   Subscription,
   SubscriptionObserver,
   Cleanup,
@@ -11,14 +10,10 @@ import {
 /* Constructor */
 export interface StreamConstructor {
   new <T = any>(producer: Producer<T>): Stream<T>;
-  of<T>(...items: T[]): Stream<T>;
-  from<T>(item: Observable<T> | Compatible<T> | Iterable<T>): Stream<T>;
   prototype: Stream;
 }
 
-/* Stream */
-export type Pushable<T = any> = Stream<T> & Talkback<T>;
-
+/* Streams */
 export interface Stream<T = any> extends Observable<T> {
   subscribe(hearback?: Empty | Hearback<T>): Broker;
   subscribe(
@@ -29,6 +24,8 @@ export interface Stream<T = any> extends Observable<T> {
   ): Broker;
 }
 
+export type Pushable<T = any> = Intersection<Stream<T>, Talkback<T>>;
+
 /* Hearback */
 export interface Hearback<T = any> extends ObserverLike<T> {
   start?: (broker: Broker) => void;
@@ -36,7 +33,7 @@ export interface Hearback<T = any> extends ObserverLike<T> {
 }
 
 /* Broker */
-export interface Broker extends Subscription, Promise<void> {}
+export type Broker = Intersection<Subscription, Promise<void>>;
 
 /* Producer */
 export type Producer<T = any> = (talkback: Talkback<T>) => Teardown;

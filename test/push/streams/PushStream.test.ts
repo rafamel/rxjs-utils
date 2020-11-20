@@ -19,15 +19,6 @@ test(`PushStream is ObservableCompatible`, () => {
   const observable = instance[Symbol.observable]();
   assert(observable instanceof Observable);
 });
-test(`PushStream.from: creates from ObservableLike`, () => {
-  const instance = new PushStream((obs) => obs.next('foo'));
-  const obs = { subscribe: instance.subscribe.bind(instance) };
-
-  let response: any;
-  PushStream.from(obs).subscribe((value) => (response = value));
-
-  assert(response === 'foo');
-});
 test(`Subscribe: rejects when Observer is not empty, a function or an object`, async () => {
   const instance: any = new PushStream(() => undefined);
 
