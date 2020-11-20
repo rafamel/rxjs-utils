@@ -1,7 +1,7 @@
 import { NoParamFn, Push, UnaryFn } from '@definitions';
-import { Handler, TypeGuard } from '@helpers';
+import { Handler } from '@helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
-import { ManageObserver, teardownToFunction } from './helpers';
+import { invoke, ManageObserver, teardownFn } from './helpers';
 
 const $report = Symbol('report');
 const $teardown = Symbol('teardown');
@@ -20,11 +20,7 @@ class Subscription<T = any> implements Push.Subscription {
 
     const reports = this[$report];
 
-    Handler.tries(() => {
-      const method: any = observer.start;
-      if (!TypeGuard.isEmpty(method)) method.call(observer, this);
-    }, reports);
-
+    invoke('start', this, this, reports);
     if (ManageObserver.isClosed(this)) return;
 
     const subscriptionObserver = new SubscriptionObserver(this, reports);
@@ -32,7 +28,7 @@ class Subscription<T = any> implements Push.Subscription {
     let teardown: NoParamFn = Handler.noop;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
-      teardown = teardownToFunction(unsubscribe);
+      teardown = teardownFn(unsubscribe);
     } catch (err) {
       subscriptionObserver.error(err);
     } finally {

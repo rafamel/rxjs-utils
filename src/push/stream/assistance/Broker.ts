@@ -7,6 +7,7 @@ import { ManagePromise, terminateToAsyncFunction } from '../helpers';
 const $manager = Symbol('manager');
 const $hearback = Symbol('terminate');
 
+// TODO: rename
 class Broker<T = any> extends Subscription<T> implements Push.Broker {
   private [$manager]: ResultManager;
   private [$hearback]: Empty | Push.Hearback<T>;

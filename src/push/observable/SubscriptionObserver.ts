@@ -1,7 +1,7 @@
 import { Push, UnaryFn } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
 import { Subscription } from './Subscription';
-import { ManageObserver } from './helpers';
+import { invoke, ManageObserver } from './helpers';
 
 const $empty = Symbol('empty');
 const $report = Symbol('report');
@@ -24,51 +24,20 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
     const subscription = this[$subscription];
     if (ManageObserver.isClosed(subscription)) return;
 
-    const report = this[$report];
+    // Does not use invoke to increase performance
     const observer = ManageObserver.get(subscription);
-
     let method = $empty;
     try {
       (method = observer.next).call(observer, value);
     } catch (err) {
-      TypeGuard.isEmpty(method) || report(err);
+      if (!TypeGuard.isEmpty(method)) this[$report](err);
     }
   }
   public error(error: Error): void {
-    const subscription = this[$subscription];
-    if (ManageObserver.isClosed(subscription)) return;
-
-    const report = this[$report];
-    const observer = ManageObserver.get(subscription);
-
-    ManageObserver.close(subscription);
-
-    let method = $empty;
-    try {
-      (method = observer.error).call(observer, error);
-    } catch (err) {
-      report(TypeGuard.isEmpty(method) ? error : err);
-    } finally {
-      Handler.tries(subscription.unsubscribe.bind(subscription), report);
-    }
+    invoke('error', error, this[$subscription], this[$report]);
   }
   public complete(): void {
-    const subscription = this[$subscription];
-    if (ManageObserver.isClosed(subscription)) return;
-
-    const report = this[$report];
-    const observer = ManageObserver.get(subscription);
-
-    ManageObserver.close(subscription);
-
-    try {
-      const method = observer.complete;
-      if (!TypeGuard.isEmpty(method)) method.call(observer);
-    } catch (err) {
-      report(err);
-    } finally {
-      Handler.tries(subscription.unsubscribe.bind(subscription), report);
-    }
+    invoke('complete', undefined, this[$subscription], this[$report]);
   }
 }
 

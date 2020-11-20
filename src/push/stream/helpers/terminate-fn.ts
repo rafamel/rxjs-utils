@@ -1,7 +1,6 @@
-import { NoParamFn, Push, UnaryFn } from '@definitions';
+import { NoParamFn, Push } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
-import { isSubscriptionLike } from '../utils/type-guards';
-import { Broker } from './assistance';
+import { isSubscriptionLike } from '../../utils/type-guards';
 
 const empty = Promise.resolve();
 const noop = (): Promise<void> => empty;
@@ -35,26 +34,4 @@ export function terminateToAsyncFunction(
 
   const fns = terminate.map(each);
   return () => Promise.all(fns.map((fn) => fn())).then(Handler.noop);
-}
-
-const $promise = Symbol('promise');
-const $actions = Symbol('actions');
-export class ManagePromise {
-  public static getPromise(broker: Broker): Promise<void> {
-    const instance = broker as any;
-    const promise = instance[$promise];
-    if (promise) return promise;
-
-    return (instance[$promise] = new Promise<void>((resolve, reject) => {
-      instance[$actions] = [resolve, reject];
-    }));
-  }
-  public static getActions(broker: Broker): [NoParamFn, UnaryFn<Error>] {
-    const instance = broker as any;
-    const actions = instance[$actions];
-    if (actions) return actions;
-
-    this.getPromise(broker);
-    return (broker as any)[$actions];
-  }
 }
