@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
-import { Create, Observable, PushStream } from '@push';
+import { Observable, PushStream, of, from } from '@push';
 import { Handler } from '@helpers';
 import { Observable as ESObservable } from './module';
 import { compliance } from './compliance';
 import chalk from 'chalk';
 
 const StreamConstructor: any = PushStream;
-StreamConstructor.of = Create.of;
-StreamConstructor.from = Create.from;
+StreamConstructor.of = of;
+StreamConstructor.from = from;
 process.on('unhandledRejection', Handler.noop);
 
 console.log(chalk.bold('\nCOMPLIANCE'));

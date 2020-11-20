@@ -1,7 +1,7 @@
 import { NoParamFn, Push, UnaryFn } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
 import { isSubscriptionLike } from '../utils/type-guards';
-import { Broker } from './assistance/Broker';
+import { Broker } from './assistance';
 
 const empty = Promise.resolve();
 const noop = (): Promise<void> => empty;

@@ -1,5 +1,5 @@
 import { Empty, Push, UnaryFn } from '@definitions';
-import { Create, Forwarder } from '../stream';
+import { from, Forwarder } from '../stream';
 
 export function intercept<T>(
   observable: Push.Like<T> | Push.Compatible<T>,
@@ -21,7 +21,7 @@ export function intercept(
   hearback?: Push.Hearback | Empty,
   duplicate?: boolean | Empty
 ): Push.Broker {
-  const stream = Create.from(observable);
+  const stream = from(observable);
   return hearback
     ? stream.subscribe(new Forwarder(talkback, hearback, duplicate))
     : stream.subscribe(talkback);
