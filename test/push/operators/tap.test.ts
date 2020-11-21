@@ -1,4 +1,4 @@
-import { Broker, Observable, PushStream, tap } from '@push';
+import { Observable, PushStream, Subscription, tap } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
@@ -12,8 +12,8 @@ test(`Hearback.start`, () => {
   const obs = into(
     new PushStream<number>(() => undefined),
     tap({
-      start(broker) {
-        pass = broker instanceof Broker;
+      start(subscription) {
+        pass = subscription instanceof Subscription;
       }
     })
   );

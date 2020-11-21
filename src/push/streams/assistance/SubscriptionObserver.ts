@@ -1,43 +1,49 @@
-import { Push, UnaryFn } from '@definitions';
-import { Handler, TypeGuard } from '@helpers';
+import { Empty, Push, UnaryFn } from '@definitions';
+import { TypeGuard } from '@helpers';
+import { Parse } from '../helpers';
+import { SubscriptionManager, Invoke } from './helpers';
 import { Subscription } from './Subscription';
-import { invoke, ManageObserver } from './helpers';
 
 const $empty = Symbol('empty');
-const $report = Symbol('report');
+const $hooks = Symbol('hooks');
 const $subscription = Symbol('subscription');
 
 class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
-  private [$report]: UnaryFn<Error>;
+  private [$hooks]: [UnaryFn<Error>, UnaryFn<T>];
   private [$subscription]: Subscription;
   public constructor(
     subscription: Subscription<T>,
-    ...report: [] | [UnaryFn<Error>]
+    ...hooks: [] | [Push.Hooks<T> | Empty]
   ) {
+    this[$hooks] = Parse.hooks(subscription, hooks[0]);
     this[$subscription] = subscription;
-    this[$report] = report[0] ? report[0] : Handler.noop;
   }
   public get closed(): boolean {
-    return ManageObserver.isClosed(this[$subscription]);
+    return SubscriptionManager.isClosed(this[$subscription]);
   }
   public next(value: T): void {
     const subscription = this[$subscription];
-    if (ManageObserver.isClosed(subscription)) return;
+    if (SubscriptionManager.isClosed(subscription)) return;
 
     // Does not use invoke to increase performance
-    const observer = ManageObserver.get(subscription);
+    const observer = SubscriptionManager.getObserver(subscription);
     let method = $empty;
     try {
       (method = observer.next).call(observer, value);
     } catch (err) {
-      if (!TypeGuard.isEmpty(method)) this[$report](err);
+      if (!TypeGuard.isEmpty(method)) this[$hooks][0](err);
     }
   }
   public error(error: Error): void {
-    invoke('error', error, this[$subscription], this[$report]);
+    Invoke.observer('error', error, this[$subscription], ...this[$hooks]);
   }
   public complete(): void {
-    invoke('complete', undefined, this[$subscription], this[$report]);
+    Invoke.observer(
+      'complete',
+      undefined,
+      this[$subscription],
+      ...this[$hooks]
+    );
   }
 }
 

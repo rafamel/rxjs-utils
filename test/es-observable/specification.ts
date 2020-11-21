@@ -1,14 +1,13 @@
 /* eslint-disable no-console */
 import { Observable, PushStream, of, from } from '@push';
-import { Handler } from '@helpers';
 import { Observable as ESObservable } from './module';
 import { compliance } from './compliance';
 import chalk from 'chalk';
 
+PushStream.configure({ onUnhandledError: null });
 const StreamConstructor: any = PushStream;
 StreamConstructor.of = of;
 StreamConstructor.from = from;
-process.on('unhandledRejection', Handler.noop);
 
 console.log(chalk.bold('\nCOMPLIANCE'));
 let pass = true;

@@ -1,12 +1,11 @@
 import { Observable, PushStream, of, from } from '@push';
-import { Handler } from '@helpers';
 import { compliance } from '../../es-observable/compliance';
 import assert from 'assert';
 
+PushStream.configure({ onUnhandledError: null });
 const StreamConstructor: any = PushStream;
 StreamConstructor.of = of;
 StreamConstructor.from = from;
-process.on('unhandledRejection', Handler.noop);
 
 test(`Observable passes compliance tests`, async () => {
   const response = await compliance('Observable', Observable, 'silent', true);

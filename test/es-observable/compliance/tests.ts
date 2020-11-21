@@ -2,7 +2,7 @@
 /* eslint-disable prefer-const */
 import assert from 'assert';
 import { Push } from '@definitions';
-import { Handler, TypeGuard } from '@helpers';
+import { Handler } from '@helpers';
 import { isObservable } from '@push';
 import { runTests } from '../module/tests';
 import { Test, test } from './engine';
@@ -129,10 +129,6 @@ export function tests(
       const res = instance[Symbol.observable]();
 
       assert(isObservable(res));
-
-      const subscription = res.subscribe();
-      assert(!TypeGuard.isPromiseLike(subscription));
-
       if (spec) assert(res === instance);
     }),
     test('Observable.prototype.subscribe: does not throw', () => {
@@ -248,8 +244,7 @@ export function tests(
       assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
 
       assert(subscription);
-      if (spec) assert(!subscription.closed, 'Subscription closed');
-      else assert(subscription.closed, 'Subscription open');
+      assert(!subscription.closed, 'Subscription closed');
     }),
     test('Observer.prototype.start: errors in getter are catched', () => {
       let pass = true;
@@ -274,8 +269,7 @@ export function tests(
       assert.deepStrictEqual(times, [1, 0, 0, 0, 0], 'unexpected calls');
 
       assert(subscription);
-      if (spec) assert(!subscription.closed, 'Subscription closed');
-      else assert(subscription.closed, 'Subscription open');
+      assert(!subscription.closed, 'Subscription closed');
     }),
     test(`Observer.prototype.start: is not obtained more than once per call`, () => {
       const times = [0, 0];
@@ -399,14 +393,8 @@ export function tests(
 
       assert(pass);
       assert(subscription);
-
-      if (spec) {
-        assert(!subscription.closed, 'Subscription closed');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
-      } else {
-        assert(subscription.closed, 'Subscription open');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 1], 'unexpected calls');
-      }
+      assert(!subscription.closed, 'Subscription closed');
+      assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
     }),
     test('Observer.prototype.next: errors are catched (async)', async () => {
       const times = [0, 0, 0, 0, 0];
@@ -436,14 +424,8 @@ export function tests(
 
       assert(pass);
       assert(subscription);
-
-      if (spec) {
-        assert(!subscription.closed, 'Subscription closed');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
-      } else {
-        assert(subscription.closed, 'Subscription open');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 1], 'unexpected calls');
-      }
+      assert(!subscription.closed, 'Subscription closed');
+      assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
     }),
     test('Observer.prototype.next: errors in getter are catched (sync)', () => {
       const times = [0, 0, 0, 0, 0];
@@ -469,14 +451,8 @@ export function tests(
 
       assert(pass);
       assert(subscription);
-
-      if (spec) {
-        assert(!subscription.closed, 'Subscription closed');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
-      } else {
-        assert(subscription.closed, 'Subscription open');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 1], 'unexpected calls');
-      }
+      assert(!subscription.closed, 'Subscription closed');
+      assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
     }),
     test('Observer.prototype.next: errors in getter are catched (async)', async () => {
       const times = [0, 0, 0, 0, 0];
@@ -506,14 +482,8 @@ export function tests(
 
       assert(pass);
       assert(subscription);
-
-      if (spec) {
-        assert(!subscription.closed, 'Subscription closed');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
-      } else {
-        assert(subscription.closed, 'Subscription open');
-        assert.deepStrictEqual(times, [1, 1, 0, 0, 1], 'unexpected calls');
-      }
+      assert(!subscription.closed, 'Subscription closed');
+      assert.deepStrictEqual(times, [1, 1, 0, 0, 0], 'unexpected calls');
     }),
     test(`Observer.prototype.next: is not obtained more than once per call`, () => {
       const times = [0, 0];

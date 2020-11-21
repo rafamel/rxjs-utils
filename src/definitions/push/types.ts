@@ -1,5 +1,10 @@
-import { Stream } from './streams';
-import { Compatible, Like } from './observables';
+import { Compatible, Like, Stream, Subscription } from './push';
+import { BinaryFn, Empty } from '../types';
+
+export interface Hooks<T = any> {
+  onUnhandledError?: Empty | BinaryFn<[Error, Subscription]>;
+  onStoppedNotification?: Empty | BinaryFn<[T, Subscription]>;
+}
 
 export interface Transformation<T, R> {
   (observable: Like<T> | Compatible<T>): R;

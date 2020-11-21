@@ -1,5 +1,6 @@
-import { Empty, Intersection, Push, UnaryFn } from '@definitions';
+import { Empty, Push, UnaryFn } from '@definitions';
 import { TypeGuard } from '@helpers';
+import { Invoke } from './helpers';
 
 const $empty = Symbol('empty');
 const $items = Symbol('items');
@@ -7,19 +8,18 @@ const $options = Symbol('options');
 const $closed = Symbol('closed');
 const $terminated = Symbol('terminated');
 
-export interface RouterOptions {
+export interface TalkbackOptions {
   report?: UnaryFn<Error>;
   multicast?: boolean;
 }
 
-export class Router<T>
-  implements Intersection<Push.Hearback<T>, Push.Talkback<T>> {
+export class Talkback<T = any> implements Push.Talkback<T> {
   private [$items]: Set<Push.Hearback<T>>;
-  private [$options]: RouterOptions;
+  private [$options]: TalkbackOptions;
   private [$closed]: boolean;
   private [$terminated]: boolean;
   public constructor(
-    options?: RouterOptions | Empty,
+    options?: TalkbackOptions | Empty,
     ...items: Array<Push.Hearback<T>>
   ) {
     this[$items] = new Set<Push.Hearback<T>>();
@@ -48,10 +48,10 @@ export class Router<T>
       set.delete(item);
     }
   }
-  public start(broker: Push.Broker): void {
+  public start(subscription: Push.Subscription): void {
     return this.closed
       ? undefined
-      : invoke('start', broker, this[$items], this[$options]);
+      : Invoke.hearbacks('start', subscription, this[$items], this[$options]);
   }
   public next(value: T): void {
     if (this.closed) return;
@@ -75,36 +75,31 @@ export class Router<T>
   }
   public error(error: Error): void {
     if (this.closed) return;
+
     this[$closed] = true;
-    return invoke('error', error, this[$items], this[$options]);
+    return Invoke.hearbacks('error', error, this[$items], this[$options]);
   }
   public complete(): void {
     if (this.closed) return;
+
     this[$closed] = true;
-    return invoke('complete', undefined, this[$items], this[$options]);
+    return Invoke.hearbacks(
+      'complete',
+      undefined,
+      this[$items],
+      this[$options]
+    );
   }
   public terminate(): void {
     if (this[$terminated]) return;
+
     this[$closed] = true;
     this[$terminated] = true;
-    return invoke('terminate', undefined, this[$items], this[$options]);
-  }
-}
-
-function invoke(
-  action: keyof Push.Hearback,
-  payload: any,
-  items: Set<Push.Hearback>,
-  options: RouterOptions
-): void {
-  for (const item of items) {
-    try {
-      const method: any = item[action];
-      if (TypeGuard.isEmpty(method)) continue;
-      else method.call(item, payload);
-    } catch (err) {
-      if (options.report) options.report(err);
-    }
-    if (!options.multicast) break;
+    return Invoke.hearbacks(
+      'terminate',
+      undefined,
+      this[$items],
+      this[$options]
+    );
   }
 }

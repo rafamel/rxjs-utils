@@ -1,10 +1,10 @@
 import { Push } from '@definitions';
-import { PushStream } from '../stream';
+import { PushStream } from '../streams';
 import { intercept } from './intercept';
 import { transform } from './transform';
 
 export function operate<T, U = T>(
-  operation: (talkback: Push.Talkback<U>) => Push.Hearback<T>
+  operation: (observer: Push.SubscriptionObserver<U>) => Push.Hearback<T>
 ): Push.Operation<T, U> {
   return transform((stream) => {
     return new PushStream((tb) => {

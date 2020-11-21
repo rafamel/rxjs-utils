@@ -20,9 +20,9 @@ test(`succeeds w/ count (1)`, () => {
   );
 
   const values: any[] = [];
-  const broker = obs.subscribe((x) => values.push(x));
+  const subscription = obs.subscribe((x) => values.push(x));
 
-  assert(broker.closed);
+  assert(subscription.closed);
   assert.deepStrictEqual(values, [1, 2, 3]);
 });
 test(`succeeds w/ count (2)`, () => {
@@ -39,9 +39,9 @@ test(`succeeds w/ count (2)`, () => {
   );
 
   const values: any[] = [];
-  const broker = obs.subscribe((x) => values.push(x));
+  const subscription = obs.subscribe((x) => values.push(x));
 
-  assert(broker.closed);
+  assert(subscription.closed);
   assert.deepStrictEqual(values, [1, 2, 3]);
 });
 test(`succeeds w/ while (value)`, () => {
@@ -60,9 +60,9 @@ test(`succeeds w/ while (value)`, () => {
   );
 
   const values: any[] = [];
-  const broker = obs.subscribe((x) => values.push(x));
+  const subscription = obs.subscribe((x) => values.push(x));
 
-  assert(broker.closed);
+  assert(subscription.closed);
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ while (index)`, () => {
@@ -79,9 +79,9 @@ test(`succeeds w/ while (index)`, () => {
   );
 
   const values: any[] = [];
-  const broker = obs.subscribe((x) => values.push(x));
+  const subscription = obs.subscribe((x) => values.push(x));
 
-  assert(broker.closed);
+  assert(subscription.closed);
   assert.deepStrictEqual(values, [1, 2, 3]);
 });
 test(`succeeds w/ count + while (1)`, () => {
@@ -100,9 +100,9 @@ test(`succeeds w/ count + while (1)`, () => {
   );
 
   const values: any[] = [];
-  const broker = obs.subscribe((x) => values.push(x));
+  const subscription = obs.subscribe((x) => values.push(x));
 
-  assert(broker.closed);
+  assert(subscription.closed);
   assert.deepStrictEqual(values, [1, 2, 3, 4]);
 });
 test(`succeeds w/ count + while (2)`, () => {
@@ -121,8 +121,8 @@ test(`succeeds w/ count + while (2)`, () => {
   );
 
   const values: any[] = [];
-  const broker = obs.subscribe((x) => values.push(x));
+  const subscription = obs.subscribe((x) => values.push(x));
 
-  assert(broker.closed);
+  assert(subscription.closed);
   assert.deepStrictEqual(values, [1, 2, 3, 4]);
 });
