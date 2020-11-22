@@ -1,6 +1,6 @@
 import { NoParamFn, Push } from '@definitions';
 import { Handler, TypeGuard } from '@helpers';
-import { isSubscriptionLike } from '../../utils';
+import { isSubscriptionLike } from '../../utils/type-guards';
 
 export class Parse {
   public static teardown(teardown: Push.Teardown): NoParamFn {
