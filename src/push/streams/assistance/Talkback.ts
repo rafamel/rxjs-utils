@@ -1,6 +1,6 @@
 import { Empty, Push, UnaryFn } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { Invoke } from './helpers';
+import { Invoke } from '../helpers';
 
 const $empty = Symbol('empty');
 
@@ -38,7 +38,6 @@ export class Talkback<T = any> implements Push.Talkback<T> {
   }
   public delete(...items: Array<Push.Hearback<T>>): void {
     const itemsSet = this.#items;
-    if (!itemsSet) return;
 
     for (const item of items) {
       itemsSet.delete(item);

@@ -7,13 +7,14 @@ export class PushableStream<T = any>
   implements Push.Pushable<T> {
   #talkback: Talkback<T>;
   public constructor() {
-    super((tb) => {
+    super((obs) => {
+      const talkback = this.#talkback;
       if (this.closed) {
-        tb.error(Error(`Stream is already closed`));
+        obs.error(Error(`Stream is already closed`));
         return null;
       } else {
-        this.#talkback.add(tb);
-        return () => this.#talkback.delete(tb);
+        talkback.add(obs);
+        return () => talkback.delete(obs);
       }
     });
 

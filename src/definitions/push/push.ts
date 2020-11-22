@@ -51,6 +51,12 @@ export interface Pushable<T = any> extends Stream<T> {
   complete(): void;
 }
 
+export interface Connectable<T = any> extends Stream<T> {
+  size: number;
+  connect(): void;
+  disconnect(): void;
+}
+
 /* Observer */
 export interface ObserverLike<T = any> {
   next?: (value: T) => void;
@@ -77,9 +83,6 @@ export interface SubscriptionObserver<T = any> {
 }
 
 export interface Talkback<T = any> extends SubscriptionObserver<T> {
-  size: number;
-  add(...items: Array<Hearback<T>>): void;
-  delete(...items: Array<Hearback<T>>): void;
   start(subscription: Subscription): void;
   terminate(): void;
 }
