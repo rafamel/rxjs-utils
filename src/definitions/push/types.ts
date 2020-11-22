@@ -1,9 +1,10 @@
 import { Compatible, Like, Stream, Subscription } from './push';
-import { BinaryFn, Empty } from '../types';
+import { BinaryFn, Empty, UnaryFn } from '../types';
 
 export interface Hooks<T = any> {
   onUnhandledError?: Empty | BinaryFn<[Error, Subscription]>;
   onStoppedNotification?: Empty | BinaryFn<[T, Subscription]>;
+  onCloseSubscription?: Empty | UnaryFn<Subscription>;
 }
 
 export interface Transformation<T, R> {

@@ -1,20 +1,28 @@
-import { Push, UnaryFn } from '@definitions';
+import { Empty, Push } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { Subscription } from '../Subscription';
-import { TalkbackOptions } from '../Talkback';
+import { Hooks, Subscription, TalkbackOptions } from '../assistance';
 import { SubscriptionManager } from './SubscriptionManager';
 
 const $empty = Symbol('empty');
 
 export class Invoke {
+  public static method<T extends object, K extends keyof T>(
+    obj: T | Empty,
+    key: K,
+    ...payload: any[]
+  ): void {
+    if (!obj) return;
+    const method = (obj as any)[key];
+    if (!TypeGuard.isEmpty(method)) method.call(obj, ...payload);
+  }
   public static observer(
     action: 'start' | 'error' | 'complete',
     payload: any,
     subscription: Subscription,
-    onUnhandledError: UnaryFn<Error>
+    hooks: Hooks
   ): void {
     if (SubscriptionManager.isClosed(subscription)) {
-      if (action === 'error') onUnhandledError(payload);
+      if (action === 'error') hooks.onUnhandledError(payload, subscription);
       return;
     }
 
@@ -27,14 +35,18 @@ export class Invoke {
       if (action === 'complete') method.call(observer);
       else method.call(observer, payload);
     } catch (err) {
-      if (!TypeGuard.isEmpty(method)) onUnhandledError(err);
-      else if (action === 'error') onUnhandledError(payload);
+      if (!TypeGuard.isEmpty(method)) {
+        hooks.onUnhandledError(err, subscription);
+      } else if (action === 'error') {
+        hooks.onUnhandledError(payload, subscription);
+      }
     } finally {
       if (action !== 'start') {
+        hooks.onCloseSubscription(subscription);
         try {
           subscription.unsubscribe();
         } catch (err) {
-          onUnhandledError(err);
+          hooks.onUnhandledError(err, subscription);
         }
       }
     }

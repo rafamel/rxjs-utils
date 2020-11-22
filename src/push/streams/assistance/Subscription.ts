@@ -1,23 +1,22 @@
-import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
+import { Empty, NoParamFn, Push } from '@definitions';
 import { Handler } from '@helpers';
-import { Parse } from '../helpers';
+import { Invoke, SubscriptionManager, Parse } from '../helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
-import { Invoke, SubscriptionManager } from './helpers';
+import { Hooks } from './Hooks';
 
 class Subscription<T = any> implements Push.Subscription {
-  #hooks: [UnaryFn<Error>, UnaryFn<T>];
   #teardown: NoParamFn | null;
+  #hooks: Hooks<T>;
   public constructor(
     observer: Push.Observer<T>,
     subscriber: Push.Subscriber<T>,
     ...hooks: [] | [Push.Hooks<T> | Empty]
   ) {
-    this.#hooks = Parse.hooks(this, hooks[0]);
     this.#teardown = null;
-
+    this.#hooks = new Hooks(hooks[0]);
     SubscriptionManager.setObserver(this, observer);
 
-    Invoke.observer('start', this, this, this.#hooks[0]);
+    Invoke.observer('start', this, this, this.#hooks);
     if (SubscriptionManager.isClosed(this)) return;
 
     const subscriptionObserver = new SubscriptionObserver(this, hooks[0]);
@@ -33,7 +32,7 @@ class Subscription<T = any> implements Push.Subscription {
         try {
           teardown();
         } catch (err) {
-          this.#hooks[0](err);
+          this.#hooks.onUnhandledError(err, this);
         }
       } else {
         this.#teardown = teardown;
@@ -44,7 +43,10 @@ class Subscription<T = any> implements Push.Subscription {
     return SubscriptionManager.isClosed(this);
   }
   public unsubscribe(): void {
-    if (!SubscriptionManager.isClosed(this)) SubscriptionManager.close(this);
+    if (!SubscriptionManager.isClosed(this)) {
+      SubscriptionManager.close(this);
+      this.#hooks.onCloseSubscription(this);
+    }
 
     const teardown = this.#teardown;
     if (!teardown) return;
@@ -53,7 +55,7 @@ class Subscription<T = any> implements Push.Subscription {
     try {
       teardown();
     } catch (err) {
-      this.#hooks[0](err);
+      this.#hooks.onUnhandledError(err, this);
     }
   }
 }

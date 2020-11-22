@@ -12,7 +12,7 @@ export interface ObservableConstructor {
 
 export interface StreamConstructor {
   new <T = any>(subscriber: Subscriber<T>): Stream<T>;
-  configure(hooks: Hooks): void;
+  configure(hooks?: Hooks): void;
   prototype: Stream;
 }
 
@@ -77,6 +77,9 @@ export interface SubscriptionObserver<T = any> {
 }
 
 export interface Talkback<T = any> extends SubscriptionObserver<T> {
+  size: number;
+  add(...items: Array<Hearback<T>>): void;
+  delete(...items: Array<Hearback<T>>): void;
   start(subscription: Subscription): void;
   terminate(): void;
 }

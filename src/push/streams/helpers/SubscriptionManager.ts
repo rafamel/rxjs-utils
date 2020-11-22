@@ -1,6 +1,6 @@
 import { Push, WideRecord } from '@definitions';
 import { Accessor } from '@helpers';
-import { Subscription } from '../Subscription';
+import { Subscription } from '../assistance';
 
 const $observer = Symbol('observer');
 
