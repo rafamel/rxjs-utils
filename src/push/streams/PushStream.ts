@@ -1,35 +1,36 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
-import { Handler, PropertyManager, TypeGuard } from '@helpers';
+import { Accessor, Handler, TypeGuard } from '@helpers';
 import { Subscription } from './assistance';
 import { Observable } from './Observable';
 import { Parse } from './helpers';
 import 'symbol-observable';
 
-const $subscriber = Symbol('subscriber');
+const $hooks = Symbol('hooks');
 const $observable = Symbol('observable');
 
-const $hooks = new PropertyManager<Push.Hooks>('hooks');
-
-export class PushStream<T = any> implements Push.Stream<T> {
+class PushStream<T = any> implements Push.Stream<T> {
   public static configure(hooks: Push.Hooks): void {
-    $hooks.set(this, Object.assign({}, $hooks.get(this), hooks));
+    const Constructor: any = TypeGuard.isFunction(this) ? this : PushStream;
+
+    const inherits = Object.create(Constructor[$hooks]);
+    Object.assign(inherits, hooks);
+
+    Accessor.define(this, $hooks, inherits);
   }
-  private [$subscriber]: Push.Subscriber<T>;
-  private [$observable]: void | Observable<T>;
+  #subscriber: Push.Subscriber<T>;
   public constructor(subscriber: Push.Subscriber<T>) {
     if (!TypeGuard.isFunction(subscriber)) {
       throw new TypeError('Expected producer to be a function');
     }
 
-    this[$subscriber] = subscriber;
+    this.#subscriber = subscriber;
   }
   public [Symbol.observable](): Observable<T> {
-    let observable = this[$observable];
-    if (observable) return observable;
-
-    const subscriber = this[$subscriber];
-    observable = new Observable((obs) => subscriber(obs));
-    return (this[$observable] = observable);
+    return Accessor.fallback(
+      this,
+      $observable,
+      () => new Observable((obs) => this.#subscriber(obs))
+    );
   }
   public subscribe(hearback?: Empty | Push.Hearback<T>): Push.Subscription;
   public subscribe(
@@ -39,7 +40,7 @@ export class PushStream<T = any> implements Push.Stream<T> {
     onTerminate?: NoParamFn
   ): Push.Subscription;
   public subscribe(hearback: any, ...arr: any[]): Push.Subscription {
-    let subscriber = this[$subscriber];
+    let subscriber = this.#subscriber;
 
     if (TypeGuard.isFunction(hearback)) {
       hearback = {
@@ -59,12 +60,8 @@ export class PushStream<T = any> implements Push.Stream<T> {
       hearback = {};
     }
 
-    const hooks = $hooks.fallback(this.constructor, {
-      onUnhandledError(error, subscription) {
-        subscription.unsubscribe();
-        setTimeout(() => Handler.throws(error), 0);
-      }
-    });
+    const Constructor: any = this.constructor;
+    const hooks: Push.Hooks = Constructor[$hooks];
 
     const errors: Error[] = [];
     const subscription = new Subscription(
@@ -90,6 +87,7 @@ export class PushStream<T = any> implements Push.Stream<T> {
     );
 
     function onError(err: Error): void {
+      if (!hooks) return;
       if (typeof subscription !== 'undefined') {
         if (hooks.onUnhandledError) hooks.onUnhandledError(err, subscription);
       } else {
@@ -104,3 +102,12 @@ export class PushStream<T = any> implements Push.Stream<T> {
     return subscription;
   }
 }
+
+Accessor.define(PushStream, $hooks, {
+  onUnhandledError(error: Error, subscription: Push.Subscription) {
+    subscription.unsubscribe();
+    setTimeout(() => Handler.throws(error), 0);
+  }
+});
+
+export { PushStream };

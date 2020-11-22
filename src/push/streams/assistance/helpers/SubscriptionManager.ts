@@ -1,4 +1,5 @@
 import { Push, WideRecord } from '@definitions';
+import { Accessor } from '@helpers';
 import { Subscription } from '../Subscription';
 
 const $observer = Symbol('observer');
@@ -8,15 +9,15 @@ export class SubscriptionManager {
     subscription: Subscription<T>,
     observer: Push.Observer<T>
   ): void {
-    (subscription as any)[$observer] = observer;
+    Accessor.define(subscription, $observer, observer);
   }
   public static getObserver<T>(subscription: Subscription<T>): WideRecord {
-    return (subscription as any)[$observer];
+    return (subscription as any)[$observer] as WideRecord;
   }
   public static close<T>(subscription: Subscription<T>): void {
-    (subscription as any)[$observer] = null;
+    Accessor.define(subscription, $observer, null);
   }
   public static isClosed<T>(subscription: Subscription<T>): boolean {
-    return !(subscription as any)[$observer];
+    return this.getObserver(subscription) === null;
   }
 }

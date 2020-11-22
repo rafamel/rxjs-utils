@@ -4,23 +4,20 @@ import { Parse } from '../helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import { Invoke, SubscriptionManager } from './helpers';
 
-const $hooks = Symbol('hooks');
-const $teardown = Symbol('teardown');
-
 class Subscription<T = any> implements Push.Subscription {
-  private [$hooks]: [UnaryFn<Error>, UnaryFn<T>];
-  private [$teardown]: NoParamFn | null;
+  #hooks: [UnaryFn<Error>, UnaryFn<T>];
+  #teardown: NoParamFn | null;
   public constructor(
     observer: Push.Observer<T>,
     subscriber: Push.Subscriber<T>,
     ...hooks: [] | [Push.Hooks<T> | Empty]
   ) {
-    this[$hooks] = Parse.hooks(this, hooks[0]);
-    this[$teardown] = null;
+    this.#hooks = Parse.hooks(this, hooks[0]);
+    this.#teardown = null;
 
     SubscriptionManager.setObserver(this, observer);
 
-    Invoke.observer('start', this, this, ...this[$hooks]);
+    Invoke.observer('start', this, this, this.#hooks[0]);
     if (SubscriptionManager.isClosed(this)) return;
 
     const subscriptionObserver = new SubscriptionObserver(this, hooks[0]);
@@ -36,10 +33,10 @@ class Subscription<T = any> implements Push.Subscription {
         try {
           teardown();
         } catch (err) {
-          this[$hooks][0](err);
+          this.#hooks[0](err);
         }
       } else {
-        this[$teardown] = teardown;
+        this.#teardown = teardown;
       }
     }
   }
@@ -49,14 +46,14 @@ class Subscription<T = any> implements Push.Subscription {
   public unsubscribe(): void {
     if (!SubscriptionManager.isClosed(this)) SubscriptionManager.close(this);
 
-    const teardown = this[$teardown];
+    const teardown = this.#teardown;
     if (!teardown) return;
 
-    this[$teardown] = null;
+    this.#teardown = null;
     try {
       teardown();
     } catch (err) {
-      this[$hooks][0](err);
+      this.#hooks[0](err);
     }
   }
 }

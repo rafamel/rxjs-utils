@@ -8,22 +8,18 @@ const $empty = Symbol('empty');
 
 export class Invoke {
   public static observer(
-    action: keyof Push.Observer,
+    action: 'start' | 'error' | 'complete',
     payload: any,
     subscription: Subscription,
-    onUnhandledError: UnaryFn<Error>,
-    onStoppedNotification: UnaryFn<any>
+    onUnhandledError: UnaryFn<Error>
   ): void {
     if (SubscriptionManager.isClosed(subscription)) {
       if (action === 'error') onUnhandledError(payload);
-      else if (action === 'next') onStoppedNotification(payload);
       return;
     }
 
     const observer = SubscriptionManager.getObserver(subscription);
-    if (action === 'error' || action === 'complete') {
-      SubscriptionManager.close(subscription);
-    }
+    if (action !== 'start') SubscriptionManager.close(subscription);
 
     let method: any = $empty;
     try {
@@ -34,7 +30,7 @@ export class Invoke {
       if (!TypeGuard.isEmpty(method)) onUnhandledError(err);
       else if (action === 'error') onUnhandledError(payload);
     } finally {
-      if (action === 'error' || action === 'complete') {
+      if (action !== 'start') {
         try {
           subscription.unsubscribe();
         } catch (err) {

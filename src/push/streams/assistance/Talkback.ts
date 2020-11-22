@@ -3,10 +3,6 @@ import { TypeGuard } from '@helpers';
 import { Invoke } from './helpers';
 
 const $empty = Symbol('empty');
-const $items = Symbol('items');
-const $options = Symbol('options');
-const $closed = Symbol('closed');
-const $terminated = Symbol('terminated');
 
 export interface TalkbackOptions {
   report?: UnaryFn<Error>;
@@ -14,51 +10,51 @@ export interface TalkbackOptions {
 }
 
 export class Talkback<T = any> implements Push.Talkback<T> {
-  private [$items]: Set<Push.Hearback<T>>;
-  private [$options]: TalkbackOptions;
-  private [$closed]: boolean;
-  private [$terminated]: boolean;
+  #items: Set<Push.Hearback<T>>;
+  #options: TalkbackOptions;
+  #closed: boolean;
+  #terminated: boolean;
   public constructor(
     options?: TalkbackOptions | Empty,
     ...items: Array<Push.Hearback<T>>
   ) {
-    this[$items] = new Set<Push.Hearback<T>>();
-    this[$options] = options || {};
-    this[$closed] = false;
-    this[$terminated] = false;
+    this.#items = new Set<Push.Hearback<T>>();
+    this.#options = options || {};
+    this.#closed = false;
+    this.#terminated = false;
 
     if (items.length) this.add(...items);
   }
   public get closed(): boolean {
-    return this[$closed];
+    return this.#closed;
   }
   public add(...items: Array<Push.Hearback<T>>): void {
-    const set = this[$items];
-    if (!set) return;
+    const itemsSet = this.#items;
+    if (!itemsSet) return;
 
     for (const item of items) {
-      if (!set.has(item)) set.add(item);
+      if (!itemsSet.has(item)) itemsSet.add(item);
     }
   }
   public delete(...items: Array<Push.Hearback<T>>): void {
-    const set = this[$items];
-    if (!set) return;
+    const itemsSet = this.#items;
+    if (!itemsSet) return;
 
     for (const item of items) {
-      set.delete(item);
+      itemsSet.delete(item);
     }
   }
   public start(subscription: Push.Subscription): void {
     return this.closed
       ? undefined
-      : Invoke.hearbacks('start', subscription, this[$items], this[$options]);
+      : Invoke.hearbacks('start', subscription, this.#items, this.#options);
   }
   public next(value: T): void {
     if (this.closed) return;
 
-    // Does not use invoke to increase performance
-    const items = this[$items];
-    const options = this[$options];
+    // Does not use invoke to improve performance
+    const items = this.#items;
+    const options = this.#options;
 
     for (const item of items) {
       let method: any = $empty;
@@ -76,30 +72,20 @@ export class Talkback<T = any> implements Push.Talkback<T> {
   public error(error: Error): void {
     if (this.closed) return;
 
-    this[$closed] = true;
-    return Invoke.hearbacks('error', error, this[$items], this[$options]);
+    this.#closed = true;
+    return Invoke.hearbacks('error', error, this.#items, this.#options);
   }
   public complete(): void {
     if (this.closed) return;
 
-    this[$closed] = true;
-    return Invoke.hearbacks(
-      'complete',
-      undefined,
-      this[$items],
-      this[$options]
-    );
+    this.#closed = true;
+    return Invoke.hearbacks('complete', undefined, this.#items, this.#options);
   }
   public terminate(): void {
-    if (this[$terminated]) return;
+    if (this.#terminated) return;
 
-    this[$closed] = true;
-    this[$terminated] = true;
-    return Invoke.hearbacks(
-      'terminate',
-      undefined,
-      this[$items],
-      this[$options]
-    );
+    this.#closed = true;
+    this.#terminated = true;
+    return Invoke.hearbacks('terminate', undefined, this.#items, this.#options);
   }
 }

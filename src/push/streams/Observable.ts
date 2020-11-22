@@ -5,8 +5,6 @@ import { Subscription } from './assistance';
 import { From } from './helpers';
 import 'symbol-observable';
 
-const $subscriber = Symbol('subscriber');
-
 export class Observable<T = any> {
   public static of<T>(...items: T[]): Observable<T> {
     const Constructor = typeof this === 'function' ? this : Observable;
@@ -25,13 +23,13 @@ export class Observable<T = any> {
     }
     throw new TypeError(`Unable to convert ${typeof item} into an Observable`);
   }
-  private [$subscriber]: Push.Subscriber<T>;
+  #subscriber: Push.Subscriber<T>;
   public constructor(subscriber: Push.Subscriber<T>) {
     if (!TypeGuard.isFunction(subscriber)) {
       throw new TypeError('Expected subscriber to be a function');
     }
 
-    this[$subscriber] = subscriber;
+    this.#subscriber = subscriber;
   }
   public [Symbol.observable](): Observable<T> {
     return this;
@@ -49,6 +47,6 @@ export class Observable<T = any> {
       observer = {};
     }
 
-    return new Subscription(observer, this[$subscriber]);
+    return new Subscription(observer, this.#subscriber);
   }
 }
