@@ -15,9 +15,9 @@ test(`succeeds (error, 1)`, async () => {
         obs.next(2);
         obs.error(error);
         obs.next(3);
-      }, 95);
+      }, 100);
     }),
-    delay(95)
+    delay(100)
   );
 
   const values: any[] = [];
@@ -27,7 +27,7 @@ test(`succeeds (error, 1)`, async () => {
   });
 
   assert.deepStrictEqual(values, []);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 150));
   assert.deepStrictEqual(values, [1]);
   await new Promise((resolve) => setTimeout(resolve, 100));
   assert.deepStrictEqual(values, [1, 2, error]);
@@ -41,9 +41,9 @@ test(`succeeds (error, 2)`, async () => {
       setTimeout(() => {
         obs.error(error);
         obs.next(3);
-      }, 45);
+      }, 50);
     }),
-    delay(95)
+    delay(100)
   );
 
   const values: any[] = [];
@@ -53,7 +53,7 @@ test(`succeeds (error, 2)`, async () => {
   });
 
   assert.deepStrictEqual(values, []);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 200));
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds (error, 3)`, async () => {
@@ -65,9 +65,9 @@ test(`succeeds (error, 3)`, async () => {
       setTimeout(() => {
         obs.error(error);
         obs.next(3);
-      }, 180);
+      }, 200);
     }),
-    delay(95)
+    delay(100)
   );
 
   const values: any[] = [];
@@ -77,7 +77,7 @@ test(`succeeds (error, 3)`, async () => {
   });
 
   assert.deepStrictEqual(values, []);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 150));
   assert.deepStrictEqual(values, [1, 2]);
   await new Promise((resolve) => setTimeout(resolve, 100));
   assert.deepStrictEqual(values, [1, 2, error]);
@@ -90,9 +90,9 @@ test(`succeeds (complete, 1)`, async () => {
         obs.next(2);
         obs.complete();
         obs.next(3);
-      }, 95);
+      }, 100);
     }),
-    delay(95)
+    delay(100)
   );
 
   let complete = false;
@@ -103,7 +103,7 @@ test(`succeeds (complete, 1)`, async () => {
   });
 
   assert.deepStrictEqual(values, []);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 150));
   assert(!complete);
   assert.deepStrictEqual(values, [1]);
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -118,9 +118,9 @@ test(`succeeds (complete, 2)`, async () => {
       setTimeout(() => {
         obs.complete();
         obs.next(3);
-      }, 45);
+      }, 100);
     }),
-    delay(95)
+    delay(100)
   );
 
   let complete = false;
@@ -132,7 +132,7 @@ test(`succeeds (complete, 2)`, async () => {
 
   assert(!complete);
   assert.deepStrictEqual(values, []);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 150));
   assert(complete);
   assert.deepStrictEqual(values, [1, 2]);
 });
@@ -144,9 +144,9 @@ test(`succeeds (complete, 3)`, async () => {
       setTimeout(() => {
         obs.complete();
         obs.next(3);
-      }, 180);
+      }, 200);
     }),
-    delay(95)
+    delay(100)
   );
 
   let complete = false;
@@ -157,7 +157,7 @@ test(`succeeds (complete, 3)`, async () => {
   });
 
   assert.deepStrictEqual(values, []);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 150));
   assert(!complete);
   assert.deepStrictEqual(values, [1, 2]);
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -169,10 +169,10 @@ test(`succeeds (unsubscribe)`, async () => {
     new PushStream<any>((obs) => {
       obs.next(1);
       obs.next(2);
-      setTimeout(() => obs.next(3), 90);
-      setTimeout(() => obs.next(3), 145);
+      setTimeout(() => obs.next(3), 100);
+      setTimeout(() => obs.next(3), 200);
     }),
-    delay({ due: 95 })
+    delay({ due: 100 })
   );
 
   const values: any[] = [];
@@ -182,7 +182,7 @@ test(`succeeds (unsubscribe)`, async () => {
   assert.deepStrictEqual(values, []);
   await new Promise((resolve) => setTimeout(resolve, 150));
   assert.deepStrictEqual(values, [1, 2]);
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, 250));
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ signals (error, 1)`, async () => {
@@ -194,9 +194,9 @@ test(`succeeds w/ signals (error, 1)`, async () => {
       setTimeout(() => {
         obs.error(error);
         obs.next(3);
-      }, 90);
+      }, 100);
     }),
-    delay({ due: 95, signals: true })
+    delay({ due: 100, signals: true })
   );
 
   const values: any[] = [];
@@ -208,7 +208,7 @@ test(`succeeds w/ signals (error, 1)`, async () => {
   assert.deepStrictEqual(values, []);
   await new Promise((resolve) => setTimeout(resolve, 150));
   assert.deepStrictEqual(values, [1, 2]);
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, 100));
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds w/ signals (error, 2)`, async () => {
@@ -222,7 +222,7 @@ test(`succeeds w/ signals (error, 2)`, async () => {
         obs.next(3);
       }, 100);
     }),
-    delay({ due: 95, signals: true })
+    delay({ due: 100, signals: true })
   );
 
   const values: any[] = [];
@@ -234,7 +234,7 @@ test(`succeeds w/ signals (error, 2)`, async () => {
   assert.deepStrictEqual(values, []);
   await new Promise((resolve) => setTimeout(resolve, 150));
   assert.deepStrictEqual(values, [1, 2]);
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, 100));
   assert.deepStrictEqual(values, [1, 2, error]);
 });
 test(`succeeds w/ signals (complete, 1)`, async () => {
@@ -245,9 +245,9 @@ test(`succeeds w/ signals (complete, 1)`, async () => {
       setTimeout(() => {
         obs.complete();
         obs.next(3);
-      }, 90);
+      }, 100);
     }),
-    delay({ due: 95, signals: true })
+    delay({ due: 100, signals: true })
   );
 
   let complete = false;
@@ -275,7 +275,7 @@ test(`succeeds w/ signals (complete, 2)`, async () => {
         obs.next(3);
       }, 100);
     }),
-    delay({ due: 95, signals: true })
+    delay({ due: 100, signals: true })
   );
 
   let complete = false;
@@ -289,88 +289,95 @@ test(`succeeds w/ signals (complete, 2)`, async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   assert(!complete);
   assert.deepStrictEqual(values, [1, 2]);
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, 100));
   assert(complete);
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ condition`, async () => {
   let doDelay = true;
-  setTimeout(() => (doDelay = false), 100);
-  setTimeout(() => (doDelay = true), 200);
-  setTimeout(() => (doDelay = false), 300);
+  setTimeout(() => (doDelay = false), 200);
+  setTimeout(() => (doDelay = true), 350);
+  setTimeout(() => (doDelay = false), 550);
 
-  const values: [any[], any[]] = [[], []];
+  const checks: Array<[any, number]> = [];
   const obs = into(
     new PushStream<any>((obs) => {
       obs.next(1);
-      setTimeout(() => obs.next(2), 95);
-      setTimeout(() => obs.next(3), 145);
-      setTimeout(() => obs.next(4), 195);
-      setTimeout(() => obs.next(5), 210);
-      setTimeout(() => obs.next(6), 395);
+      setTimeout(() => obs.next(2), 150);
+      setTimeout(() => obs.next(3), 300);
+      setTimeout(() => obs.next(4), 400);
+      setTimeout(() => obs.next(5), 600);
+      setTimeout(() => obs.next(6), 700);
     }),
     delay({
-      due: 95,
+      due: 100,
       condition(x, i) {
-        values[0].push([x, i]);
+        checks.push([x, i]);
         return doDelay;
       }
     })
   );
 
-  obs.subscribe({ next: (x) => values[1].push(x) });
+  const values: any[] = [];
+  obs.subscribe({ next: (x) => values.push(x) });
 
-  assert.deepStrictEqual(values, [[[1, 0]], []]);
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  assert.deepStrictEqual(values, [
-    [
-      [1, 0],
-      [2, 1]
-    ],
-    [1]
+  const start = Date.now();
+  const to = (ms: number): number => start + ms - Date.now();
+
+  assert.deepStrictEqual(checks, [[1, 0]]);
+  await new Promise((resolve) => setTimeout(resolve, to(150)));
+  assert.deepStrictEqual(values, [1]);
+
+  await new Promise((resolve) => setTimeout(resolve, to(200)));
+  assert.deepStrictEqual(checks, [
+    [1, 0],
+    [2, 1]
   ]);
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  assert.deepStrictEqual(values, [
-    [
-      [1, 0],
-      [2, 1],
-      [3, 2],
-      [4, 3]
-    ],
-    [1, 2, 3, 4]
+
+  await new Promise((resolve) => setTimeout(resolve, to(350)));
+  assert.deepStrictEqual(values, [1, 2, 3]);
+  assert.deepStrictEqual(checks, [
+    [1, 0],
+    [2, 1],
+    [3, 2]
   ]);
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  assert.deepStrictEqual(values, [
-    [
-      [1, 0],
-      [2, 1],
-      [3, 2],
-      [4, 3],
-      [5, 4]
-    ],
-    [1, 2, 3, 4]
+
+  await new Promise((resolve) => setTimeout(resolve, to(450)));
+  assert.deepStrictEqual(values, [1, 2, 3]);
+  assert.deepStrictEqual(checks, [
+    [1, 0],
+    [2, 1],
+    [3, 2],
+    [4, 3]
   ]);
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  assert.deepStrictEqual(values, [
-    [
-      [1, 0],
-      [2, 1],
-      [3, 2],
-      [4, 3],
-      [5, 4]
-    ],
-    [1, 2, 3, 4, 5]
+
+  await new Promise((resolve) => setTimeout(resolve, to(550)));
+  assert.deepStrictEqual(values, [1, 2, 3, 4]);
+  assert.deepStrictEqual(checks, [
+    [1, 0],
+    [2, 1],
+    [3, 2],
+    [4, 3]
   ]);
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  assert.deepStrictEqual(values, [
-    [
-      [1, 0],
-      [2, 1],
-      [3, 2],
-      [4, 3],
-      [5, 4],
-      [6, 5]
-    ],
-    [1, 2, 3, 4, 5, 6]
+
+  await new Promise((resolve) => setTimeout(resolve, to(650)));
+  assert.deepStrictEqual(values, [1, 2, 3, 4, 5]);
+  assert.deepStrictEqual(checks, [
+    [1, 0],
+    [2, 1],
+    [3, 2],
+    [4, 3],
+    [5, 4]
+  ]);
+
+  await new Promise((resolve) => setTimeout(resolve, to(750)));
+  assert.deepStrictEqual(values, [1, 2, 3, 4, 5, 6]);
+  assert.deepStrictEqual(checks, [
+    [1, 0],
+    [2, 1],
+    [3, 2],
+    [4, 3],
+    [5, 4],
+    [6, 5]
   ]);
 });
