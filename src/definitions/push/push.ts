@@ -3,7 +3,12 @@ import 'symbol-observable';
 import { Hooks } from './types';
 
 /* Constructors */
-export interface ObservableConstructor {
+export interface LikeConstructor {
+  new <T = any>(subscriber: Subscriber<T>): Like<T>;
+  prototype: Like;
+}
+
+export interface ObservableConstructor extends LikeConstructor {
   new <T = any>(subscriber: Subscriber<T>): Observable<T>;
   of<T>(...items: T[]): Observable<T>;
   from<T>(item: Observable<T> | Compatible<T> | Iterable<T>): Observable<T>;

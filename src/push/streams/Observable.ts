@@ -7,7 +7,7 @@ import 'symbol-observable';
 
 export class Observable<T = any> {
   public static of<T>(...items: T[]): Observable<T> {
-    const Constructor = typeof this === 'function' ? this : Observable;
+    const Constructor = TypeGuard.isFunction(this) ? this : Observable;
     return From.iterable(Constructor, items) as Observable<T>;
   }
   public static from<T>(
