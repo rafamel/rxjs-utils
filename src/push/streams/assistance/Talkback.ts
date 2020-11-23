@@ -12,21 +12,14 @@ export interface TalkbackOptions {
 export class Talkback<T = any> implements Push.Talkback<T> {
   #items: Set<Push.Hearback<T>>;
   #options: TalkbackOptions;
-  #closed: boolean;
-  #terminated: boolean;
   public constructor(
     options?: TalkbackOptions | Empty,
     ...items: Array<Push.Hearback<T>>
   ) {
     this.#items = new Set<Push.Hearback<T>>();
     this.#options = options || {};
-    this.#closed = false;
-    this.#terminated = false;
 
     if (items.length) this.add(...items);
-  }
-  public get closed(): boolean {
-    return this.#closed;
   }
   public add(...items: Array<Push.Hearback<T>>): void {
     const itemsSet = this.#items;
@@ -44,13 +37,9 @@ export class Talkback<T = any> implements Push.Talkback<T> {
     }
   }
   public start(subscription: Push.Subscription): void {
-    return this.closed
-      ? undefined
-      : Invoke.hearbacks('start', subscription, this.#items, this.#options);
+    Invoke.hearbacks('start', subscription, this.#items, this.#options);
   }
   public next(value: T): void {
-    if (this.closed) return;
-
     // Does not use invoke to improve performance
     const items = this.#items;
     const options = this.#options;
@@ -69,22 +58,12 @@ export class Talkback<T = any> implements Push.Talkback<T> {
     }
   }
   public error(error: Error): void {
-    if (this.closed) return;
-
-    this.#closed = true;
     return Invoke.hearbacks('error', error, this.#items, this.#options);
   }
   public complete(): void {
-    if (this.closed) return;
-
-    this.#closed = true;
     return Invoke.hearbacks('complete', undefined, this.#items, this.#options);
   }
   public terminate(): void {
-    if (this.#terminated) return;
-
-    this.#closed = true;
-    this.#terminated = true;
     return Invoke.hearbacks('terminate', undefined, this.#items, this.#options);
   }
 }

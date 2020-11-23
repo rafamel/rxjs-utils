@@ -1,6 +1,6 @@
 import { Empty, NoParamFn, UnaryFn } from '../types';
-import 'symbol-observable';
 import { Hooks } from './types';
+import 'symbol-observable';
 
 /* Constructors */
 export interface LikeConstructor {
@@ -50,16 +50,11 @@ export interface Stream<T = any> extends Observable<T> {
 }
 
 export interface Pushable<T = any> extends Stream<T> {
+  value: T | void;
   closed: boolean;
   next(value: T): void;
   error(error: Error): void;
   complete(): void;
-}
-
-export interface Connectable<T = any> extends Stream<T> {
-  size: number;
-  connect(): void;
-  disconnect(): void;
 }
 
 /* Observer */
@@ -80,16 +75,19 @@ export interface Hearback<T = any> extends Observer<T> {
   terminate?: () => void;
 }
 
+export interface Talkback<T = any> extends Hearback<T> {
+  start(subscription: Subscription): void;
+  next(value: T): void;
+  error(error: Error): void;
+  complete(): void;
+  terminate(): void;
+}
+
 export interface SubscriptionObserver<T = any> {
   closed: boolean;
   next(value: T): void;
   error(error: Error): void;
   complete(): void;
-}
-
-export interface Talkback<T = any> extends SubscriptionObserver<T> {
-  start(subscription: Subscription): void;
-  terminate(): void;
 }
 
 /* Subscription */
