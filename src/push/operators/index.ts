@@ -1,4 +1,5 @@
 export * from './changes';
+export * from './connect';
 export * from './delay';
 export * from './distinct';
 export * from './filter';
