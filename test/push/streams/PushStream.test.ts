@@ -8,8 +8,6 @@ import {
 } from '@push';
 import assert from 'assert';
 
-process.on('uncaughtException', Handler.noop);
-
 test(`PushStream is ObservableLike`, () => {
   const instance = new PushStream(() => undefined);
   assert(isObservableLike(instance));
@@ -98,8 +96,10 @@ test(`Observer.start: errors when it fails`, () => {
   assert(!subscription.closed);
   assert.deepStrictEqual(times, [1, 1, 0]);
 });
-test(`Observer.start: defaults unsubscribe on error`, () => {
-  PushStream.configure();
+test(`Observer.start: hooks properly unsubscribe on error`, () => {
+  PushStream.configure({
+    onUnhandledError: (_, subscription) => subscription.unsubscribe()
+  });
 
   const times = [0, 0, 0];
   const subscription = new PushStream(() => {
@@ -142,8 +142,10 @@ test(`Observer.start: receives a subscription`, () => {
 
   assert(pass);
 });
-test(`Observer.next: defaults unsubscribe on error (sync)`, () => {
-  PushStream.configure();
+test(`Observer.next: hooks properly unsubscribe on error (sync)`, () => {
+  PushStream.configure({
+    onUnhandledError: (_, subscription) => subscription.unsubscribe()
+  });
 
   const times = [0, 0, 0, 0, 0, 0, 0];
   const subscription = new PushStream<void>((obs) => {
@@ -164,8 +166,10 @@ test(`Observer.next: defaults unsubscribe on error (sync)`, () => {
   assert(subscription.closed);
   assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0, 1]);
 });
-test(`Observer.next: defaults unsubscribe on error (async)`, async () => {
-  PushStream.configure();
+test(`Observer.next: hooks properly unsubscribe on error (async)`, async () => {
+  PushStream.configure({
+    onUnhandledError: (_, subscription) => subscription.unsubscribe()
+  });
 
   const times = [0, 0, 0, 0, 0, 0, 0];
   const subscription = new PushStream<void>((obs) => {
