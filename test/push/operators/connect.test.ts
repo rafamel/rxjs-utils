@@ -7,26 +7,27 @@ test(`returns PushStream`, () => {
   assert(obs instanceof PushStream);
 });
 test(`succeeds wo/ replay`, async () => {
-  const obs = into(interval({ every: 200, timeout: 2000 }), connect());
+  const obs = into(interval({ every: 100, cancel: (i) => i >= 8 }), connect());
 
   const start = Date.now();
   const to = (ms: number): number => start + ms - Date.now();
 
-  await new Promise((resolve) => setTimeout(resolve, to(700)));
+  await new Promise((resolve) => setTimeout(resolve, to(350)));
 
   const values: any[] = [];
   let subscription = obs.subscribe((value) => values.push(value));
 
-  await new Promise((resolve) => setTimeout(resolve, to(1100)));
+  await new Promise((resolve) => setTimeout(resolve, to(550)));
   subscription.unsubscribe();
 
-  await new Promise((resolve) => setTimeout(resolve, to(1500)));
+  await new Promise((resolve) => setTimeout(resolve, to(750)));
   subscription = obs.subscribe((value) => values.push(value));
 
-  await new Promise((resolve) => setTimeout(resolve, to(1900)));
+  await new Promise((resolve) => setTimeout(resolve, to(950)));
   subscription.unsubscribe();
 
-  await new Promise((resolve) => setTimeout(resolve, to(2300)));
+  await new Promise((resolve) => setTimeout(resolve, to(1150)));
+
   let didComplete = false;
   subscription = obs.subscribe({
     complete: () => (didComplete = true)
@@ -38,7 +39,7 @@ test(`succeeds wo/ replay`, async () => {
 });
 test(`succeeds w/ replay`, async () => {
   const obs = into(
-    interval({ every: 100, timeout: 1000 }),
+    interval({ every: 100, cancel: (i) => i >= 8 }),
     connect({ replay: 1 })
   );
 

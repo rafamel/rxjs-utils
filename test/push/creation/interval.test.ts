@@ -1,4 +1,5 @@
 import { interval } from '@push';
+import { Handler } from '@helpers';
 import assert from 'assert';
 
 test(`succeeds wo/ arguments`, async () => {
@@ -33,8 +34,8 @@ test(`succeeds w/ every`, async () => {
   assert(!errorCalled);
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
-test(`succeeds w/ every, timeout (number)`, async () => {
-  const obs = interval({ every: 100, timeout: 550 });
+test(`succeeds w/ every, cancel (callback success)`, async () => {
+  const obs = interval({ every: 100, cancel: (i) => i >= 4 });
 
   let errorCalled = false;
   const values: any[] = [];
@@ -49,11 +50,26 @@ test(`succeeds w/ every, timeout (number)`, async () => {
   assert(!errorCalled);
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
+test(`succeeds w/ every, cancel (callback failure)`, async () => {
+  const obs = interval({ every: 100, cancel: () => Handler.throws(Error()) });
 
-test(`succeeds w/ every, timeout (Promise resolution)`, async () => {
+  let errorCalled = false;
+  const values: any[] = [];
+  const subscription = obs.subscribe({
+    next: (value) => values.push(value),
+    error: () => (errorCalled = true)
+  });
+
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  subscription.unsubscribe();
+
+  assert(errorCalled);
+  assert.deepStrictEqual(values, [0]);
+});
+test(`succeeds w/ every, cancel (Promise resolution)`, async () => {
   const obs = interval({
     every: 100,
-    timeout: new Promise((resolve) => setTimeout(resolve, 550))
+    cancel: new Promise((resolve) => setTimeout(resolve, 550))
   });
 
   let errorCalled = false;
@@ -69,10 +85,10 @@ test(`succeeds w/ every, timeout (Promise resolution)`, async () => {
   assert(!errorCalled);
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
-test(`succeeds w/ every, timeout (Promise rejection)`, async () => {
+test(`succeeds w/ every, cancel (Promise rejection)`, async () => {
   const obs = interval({
     every: 100,
-    timeout: new Promise((resolve, reject) => {
+    cancel: new Promise((resolve, reject) => {
       setTimeout(() => reject(Error()), 550);
     })
   });
