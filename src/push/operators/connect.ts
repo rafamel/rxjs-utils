@@ -3,7 +3,7 @@ import { PushableStream, PushStream } from '../streams';
 import { transform } from '../utils';
 
 export interface ConnectOptions {
-  replay: boolean | number;
+  replay?: boolean | number;
 }
 
 /**

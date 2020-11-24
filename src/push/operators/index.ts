@@ -5,6 +5,7 @@ export * from './distinct';
 export * from './filter';
 export * from './group';
 export * from './map';
+export * from './share';
 export * from './skip';
 export * from './take';
 export * from './tap';
