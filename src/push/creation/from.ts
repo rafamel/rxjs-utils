@@ -15,6 +15,11 @@ export function from<T>(
 ): Push.Stream<T> {
   const from = Observable.from.bind(PushStream);
 
+  if (item instanceof PushStream) {
+    return item.constructor === PushStream
+      ? item
+      : from({ [Symbol.observable]: () => item as any });
+  }
   if (isObservableCompatible(item)) {
     return from(item);
   }
