@@ -7,6 +7,7 @@ export * from './group';
 export * from './map';
 export * from './share';
 export * from './skip';
+export * from './switchMap';
 export * from './take';
 export * from './tap';
 export * from './timestamp';
