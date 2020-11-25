@@ -1,5 +1,5 @@
 import { Empty, Push } from '@definitions';
-import { Talkback } from './assistance';
+import { Invoke } from './helpers';
 import { PushStream } from './PushStream';
 
 export interface PushableOptions {
@@ -9,42 +9,34 @@ export interface PushableOptions {
 export class PushableStream<T = any>
   extends PushStream<T>
   implements Push.Pushable<T> {
+  #items: Set<Push.SubscriptionObserver<T>>;
+  #replay: number;
   #value: T | void;
   #values: T[];
   #termination: boolean | [Error];
-  #talkback: Talkback<T>;
   public constructor(options?: PushableOptions | Empty) {
     super((obs) => {
-      if (this.#termination) {
-        typeof this.#termination === 'boolean'
+      const termination = this.#termination;
+      if (termination) {
+        return typeof termination === 'boolean'
           ? obs.complete()
-          : obs.error(this.#termination[0]);
-      } else {
-        for (const value of this.#values) {
-          obs.next(value);
-        }
-        this.#talkback.add(obs);
-        return () => this.#talkback.delete(obs);
+          : obs.error(termination[0]);
       }
+
+      for (const value of this.#values) {
+        obs.next(value);
+      }
+
+      const items = this.#items;
+      items.add(obs);
+      return () => items.delete(obs);
     });
 
     const opts = options || {};
-    const values: T[] = [];
-    const talkback = new Talkback<T>({ multicast: true });
-
-    if (opts.replay) {
-      const n = Number(opts.replay);
-      talkback.add({
-        next: (value) => {
-          values.push(value);
-          if (values.length > n) values.shift();
-        }
-      });
-    }
-
-    this.#values = values;
+    this.#items = new Set();
+    this.#replay = Math.max(0, Number(opts.replay));
+    this.#values = [];
     this.#termination = false;
-    this.#talkback = talkback;
   }
   public get value(): T | void {
     return this.#value;
@@ -54,19 +46,28 @@ export class PushableStream<T = any>
   }
   public next(value: T): void {
     if (this.closed) return;
+
     this.#value = value;
-    return this.#talkback.next(value);
+
+    const replay = this.#replay;
+    if (replay) {
+      const values = this.#values;
+      values.push(value);
+      if (values.length > replay) values.shift();
+    }
+
+    Invoke.subscriptionObservers('next', value, this.#items);
   }
   public error(error: Error): void {
     if (this.closed) return;
 
     this.#termination = [error];
-    return this.#talkback.error(error);
+    Invoke.subscriptionObservers('error', error, this.#items);
   }
   public complete(): void {
     if (this.closed) return;
 
     this.#termination = true;
-    return this.#talkback.complete();
+    Invoke.subscriptionObservers('complete', undefined, this.#items);
   }
 }

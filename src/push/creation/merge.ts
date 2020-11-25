@@ -1,5 +1,6 @@
 import { Push } from '@definitions';
-import { PushStream, Talkback } from '../streams';
+import { PushStream } from '../streams';
+import { intercept } from '../utils';
 import { from } from './from';
 
 export function merge<A, B = A, C = A, D = A, E = A, F = A, G = A, T = A>(
@@ -21,21 +22,19 @@ export function merge(...arr: any): Push.Stream {
   return new PushStream((obs) => {
     let terminated = 0;
 
-    const talkback = new Talkback(
-      { multicast: false },
-      {
-        complete() {
-          if (terminated + 1 >= streams.length) obs.complete();
-        },
-        terminate() {
-          terminated++;
-        }
-      },
-      obs
-    );
-
     const subscriptions = streams
-      .map((stream) => (obs.closed ? null : stream.subscribe(talkback)))
+      .map((stream) => {
+        return obs.closed
+          ? null
+          : intercept(stream, obs, {
+              complete() {
+                if (terminated + 1 >= streams.length) obs.complete();
+              },
+              terminate() {
+                terminated++;
+              }
+            });
+      })
       .filter((item): item is Push.Subscription => Boolean(item));
 
     return () => {

@@ -7,21 +7,27 @@ export class Hooks<T = any> implements Push.Hooks<T> {
     this.#hooks = hooks;
   }
   public onUnhandledError(error: Error, subscription: Push.Subscription): void {
-    return Invoke.method(this.#hooks, 'onUnhandledError', error, subscription);
+    return Invoke.method(this.#hooks, 'onUnhandledError', [
+      error,
+      subscription
+    ]);
   }
   public onStoppedNotification(
     value: T,
     subscription: Push.Subscription
   ): void {
     try {
-      Invoke.method(this.#hooks, 'onStoppedNotification', value, subscription);
+      Invoke.method(this.#hooks, 'onStoppedNotification', [
+        value,
+        subscription
+      ]);
     } catch (err) {
       this.onUnhandledError(err, subscription);
     }
   }
   public onCloseSubscription(subscription: Push.Subscription): void {
     try {
-      Invoke.method(this.#hooks, 'onCloseSubscription', subscription);
+      Invoke.method(this.#hooks, 'onCloseSubscription', [subscription]);
     } catch (err) {
       this.onUnhandledError(err, subscription);
     }

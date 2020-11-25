@@ -1,14 +1,20 @@
-import { Push } from '@definitions';
+import { Empty, Push } from '@definitions';
 import { PushStream } from '../streams';
-import { intercept } from './intercept';
+import { intercept, InterceptOptions } from './intercept';
 import { transform } from './transform';
 
+export type OperateOptions = InterceptOptions;
+
 export function operate<T, U = T>(
-  operation: (observer: Push.SubscriptionObserver<U>) => Push.Hearback<T>
+  operation: (obs: Push.SubscriptionObserver<U>) => Push.Hearback<T> | Empty,
+  options?: OperateOptions
 ): Push.Operation<T, U> {
   return transform((stream) => {
-    return new PushStream((tb) => {
-      return intercept({ multicast: false }, stream, tb, operation(tb));
+    return new PushStream((obs: Push.SubscriptionObserver) => {
+      const hearback = operation(obs);
+      return hearback
+        ? intercept(stream, obs, hearback, options)
+        : stream.subscribe(obs);
     });
   });
 }

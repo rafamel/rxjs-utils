@@ -6,12 +6,7 @@ import { of } from './of';
 
 export function from<T>(
   this: Push.StreamConstructor | void,
-  item:
-    | Push.Observable<T>
-    | Push.Compatible<T>
-    | Push.Like<T>
-    | Iterable<T>
-    | PromiseLike<T>
+  item: Push.Source<T>
 ): Push.Stream<T> {
   const from = Observable.from.bind(PushStream);
 

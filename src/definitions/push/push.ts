@@ -57,7 +57,7 @@ export interface Pushable<T = any> extends Stream<T> {
   complete(): void;
 }
 
-/* Observer */
+/* Observers */
 export interface ObserverLike<T = any> {
   next?: (value: T) => void;
   error?: (error: Error) => void;
@@ -75,7 +75,7 @@ export interface Hearback<T = any> extends Observer<T> {
   terminate?: () => void;
 }
 
-export interface Talkback<T = any> extends Hearback<T> {
+export interface Talkback<T = any> {
   start(subscription: Subscription): void;
   next(value: T): void;
   error(error: Error): void;

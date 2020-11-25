@@ -1,4 +1,4 @@
-import { Empty, Push } from '@definitions';
+import { Empty, NoParamFn, Push } from '@definitions';
 import { TypeGuard } from '@helpers';
 import { Hooks, Subscription, TalkbackOptions } from '../assistance';
 import { SubscriptionManager } from './SubscriptionManager';
@@ -9,11 +9,18 @@ export class Invoke {
   public static method<T extends object, K extends keyof T>(
     obj: T | Empty,
     key: K,
-    ...payload: any[]
+    payload?: Empty | any[],
+    onEmpty?: Empty | NoParamFn
   ): void {
     if (!obj) return;
-    const method = (obj as any)[key];
-    if (!TypeGuard.isEmpty(method)) method.call(obj, ...payload);
+    let method: any = $empty;
+    try {
+      method = (obj as any)[key];
+      payload ? method.call(obj, ...payload) : method.call(obj);
+    } catch (err) {
+      if (TypeGuard.isEmpty(method)) onEmpty && onEmpty();
+      else throw err;
+    }
   }
   public static observer(
     action: 'start' | 'error' | 'complete',
@@ -29,17 +36,17 @@ export class Invoke {
     const observer = SubscriptionManager.getObserver(subscription);
     if (action !== 'start') SubscriptionManager.close(subscription);
 
-    let method: any = $empty;
     try {
-      method = observer[action];
-      if (action === 'complete') method.call(observer);
-      else method.call(observer, payload);
+      this.method(
+        observer,
+        action,
+        action === 'complete' ? null : [payload],
+        action === 'error'
+          ? () => hooks.onUnhandledError(payload, subscription)
+          : null
+      );
     } catch (err) {
-      if (!TypeGuard.isEmpty(method)) {
-        hooks.onUnhandledError(err, subscription);
-      } else if (action === 'error') {
-        hooks.onUnhandledError(payload, subscription);
-      }
+      hooks.onUnhandledError(err, subscription);
     } finally {
       if (action !== 'start') {
         hooks.onCloseSubscription(subscription);
@@ -51,19 +58,29 @@ export class Invoke {
       }
     }
   }
+  public static subscriptionObservers(
+    action: Exclude<keyof Push.SubscriptionObserver, 'closed'>,
+    payload: any,
+    items: Set<Push.SubscriptionObserver>
+  ): void {
+    for (const item of items) {
+      item[action](payload);
+    }
+  }
   public static hearbacks(
     action: keyof Push.Hearback,
     payload: any,
-    items: Set<Push.Hearback>,
+    items: Push.Hearback[],
     options: TalkbackOptions
   ): void {
     for (const item of items) {
+      let method: any = $empty;
       try {
-        const method: any = item[action];
-        if (TypeGuard.isEmpty(method)) continue;
-        else method.call(item, payload);
+        method = item[action];
+        method.call(item, payload);
       } catch (err) {
-        if (options.report) options.report(err);
+        if (TypeGuard.isEmpty(method)) continue;
+        else if (options.onError) options.onError(err);
       }
       if (!options.multicast) break;
     }

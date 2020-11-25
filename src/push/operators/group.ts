@@ -3,7 +3,6 @@ import { TypeGuard } from '@helpers';
 import { operate } from '../utils';
 
 /**
- *
  * @param every default: 2
  */
 export function group<T>(every?: number): Push.Operation<T, T[]> {

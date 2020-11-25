@@ -3,7 +3,6 @@ import { TypeGuard } from '@helpers';
 import { operate } from '../utils';
 
 /**
- *
  * @param count default: 2
  */
 export function trail<T>(count?: number): Push.Operation<T, T[]> {
