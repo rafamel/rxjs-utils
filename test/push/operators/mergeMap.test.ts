@@ -1,11 +1,11 @@
-import { Observable, PushStream, switchMap } from '@push';
+import { Observable, PushStream, mergeMap } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
 test(`returns PushStream`, () => {
   const obs = into(
     new Observable(() => undefined),
-    switchMap(() => new Observable(() => undefined))
+    mergeMap(() => new Observable(() => undefined))
   );
   assert(obs instanceof PushStream);
 });
@@ -17,7 +17,7 @@ test(`succeeds: inner error (sync)`, () => {
       obs.next(20);
       obs.complete();
     }),
-    switchMap((value: number) => {
+    mergeMap((value: number) => {
       return new PushStream<number>((obs) => {
         times[0]++;
         obs.next(value);
@@ -50,29 +50,29 @@ test(`succeeds: inner error (sync)`, () => {
   assert.deepStrictEqual(times, [1, 1, 1, 2, 1, 0, 1]);
 });
 test(`succeeds: inner error (async)`, async () => {
+  let error: any;
+  const values: any[] = [];
   const times = [0, 0, 0, 0, 0, 0, 0];
+
   const obs = into(
     new PushStream<number>((obs) => {
       obs.next(10);
       obs.next(20);
       obs.complete();
     }),
-    switchMap((value: number) => {
+    mergeMap((value: number) => {
       return new PushStream<number>((obs) => {
         times[0]++;
         obs.next(value);
         Promise.resolve().then(() => {
-          if (obs.closed) return;
           obs.next(value + 1);
-          obs.error(Error(String(value)));
+          if (!error) obs.error(Error(String(value)));
         });
         return () => times[1]++;
       });
     })
   );
 
-  let error: any;
-  const values: any[] = [];
   const subscription = obs.subscribe({
     start: () => times[2]++,
     next: (value) => {
@@ -88,12 +88,11 @@ test(`succeeds: inner error (async)`, async () => {
   });
 
   assert.deepStrictEqual(values, [10, 20]);
-  assert.deepStrictEqual(times, [2, 1, 1, 2, 0, 0, 0]);
-
+  assert.deepStrictEqual(times, [2, 0, 1, 2, 0, 0, 0]);
   await Promise.resolve();
   assert(subscription.closed);
-  assert(error && error.message === '20');
-  assert.deepStrictEqual(values, [10, 20, 21]);
+  assert(error && error.message === '10');
+  assert.deepStrictEqual(values, [10, 20, 11]);
   assert.deepStrictEqual(times, [2, 2, 1, 3, 1, 0, 1]);
 });
 test(`succeeds: outer error (sync)`, () => {
@@ -104,7 +103,7 @@ test(`succeeds: outer error (sync)`, () => {
       obs.next(20);
       obs.error(Error('foo'));
     }),
-    switchMap((value: number) => {
+    mergeMap((value: number) => {
       return new PushStream<number>((obs) => {
         times[0]++;
         obs.next(value);
@@ -144,7 +143,7 @@ test(`succeeds: outer error (async)`, async () => {
       obs.next(20);
       obs.error(Error('foo'));
     }),
-    switchMap((value: number) => {
+    mergeMap((value: number) => {
       return new PushStream<number>((obs) => {
         times[0]++;
         obs.next(value);
@@ -186,7 +185,7 @@ test(`succeeds: complete (sync)`, () => {
       obs.next(20);
       obs.complete();
     }),
-    switchMap((value: number) => {
+    mergeMap((value: number) => {
       return new PushStream<number>((obs) => {
         times[0]++;
         obs.next(value);
@@ -221,7 +220,7 @@ test(`succeeds: complete (async)`, async () => {
       obs.next(20);
       obs.complete();
     }),
-    switchMap((value: number) => {
+    mergeMap((value: number) => {
       return new PushStream<number>((obs) => {
         times[0]++;
         obs.next(value);
@@ -249,12 +248,12 @@ test(`succeeds: complete (async)`, async () => {
   });
 
   assert.deepStrictEqual(values, [10, 11, 20, 21]);
-  assert.deepStrictEqual(times, [2, 1, 1, 4, 0, 0, 0]);
+  assert.deepStrictEqual(times, [2, 0, 1, 4, 0, 0, 0]);
 
   await Promise.resolve();
   assert(subscription.closed);
-  assert.deepStrictEqual(values, [10, 11, 20, 21, 22, 23]);
-  assert.deepStrictEqual(times, [2, 2, 1, 6, 0, 1, 1]);
+  assert.deepStrictEqual(values, [10, 11, 20, 21, 12, 13, 22, 23]);
+  assert.deepStrictEqual(times, [2, 2, 1, 8, 0, 1, 1]);
 });
 test(`succeeds: unsubscribe`, () => {
   const times = [0, 0, 0, 0, 0, 0, 0];
@@ -264,7 +263,7 @@ test(`succeeds: unsubscribe`, () => {
       obs.next(20);
       obs.complete();
     }),
-    switchMap((value: number) => {
+    mergeMap((value: number) => {
       return new PushStream<number>((obs) => {
         times[0]++;
         obs.next(value);
