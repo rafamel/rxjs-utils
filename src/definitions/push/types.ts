@@ -1,7 +1,7 @@
 import { Compatible, Like, Stream, Subscription, Observable } from './push';
 import { BinaryFn, Empty, UnaryFn } from '../types';
 
-export type Source<T> =
+export type Source<T = any> =
   | Like<T>
   | Compatible<T>
   | Observable<T>

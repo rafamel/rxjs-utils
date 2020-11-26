@@ -4,15 +4,16 @@ import { intercept } from '../utils';
 import { from } from './from';
 
 export function merge<A, B = A, C = A, D = A, E = A, F = A, G = A, T = A>(
-  a: Push.Compatible<A> | Push.Like<A>,
-  b?: Push.Compatible<B> | Push.Like<B>,
-  c?: Push.Compatible<C> | Push.Like<C>,
-  d?: Push.Compatible<D> | Push.Like<D>,
-  e?: Push.Compatible<E> | Push.Like<E>,
-  f?: Push.Compatible<F> | Push.Like<F>,
-  g?: Push.Compatible<G> | Push.Like<G>,
-  ...arr: Array<Push.Compatible<T> | Push.Like<T>>
+  a: Push.Source<A>,
+  b?: Push.Source<B>,
+  c?: Push.Source<C>,
+  d?: Push.Source<D>,
+  e?: Push.Source<E>,
+  f?: Push.Source<F>,
+  g?: Push.Source<G>,
+  ...arr: Array<Push.Source<T>>
 ): Push.Stream<A | B | C | D | E | F | G | T>;
+export function merge<T>(...arr: Array<Push.Source<T>>): Push.Stream<T>;
 export function merge(...arr: any): Push.Stream {
   if (arr.length < 1) throw Error(`Must provide at least one stream to merge`);
 

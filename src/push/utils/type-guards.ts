@@ -22,6 +22,15 @@ export function isObservable(item: any): item is Push.Observable<unknown> {
   );
 }
 
+export function isSource(item: any): item is Push.Source<unknown> {
+  return (
+    isObservableLike(item) ||
+    isObservableCompatible(item) ||
+    TypeGuard.isIterable(item) ||
+    TypeGuard.isPromiseLike(item)
+  );
+}
+
 export function isSubscriptionLike(item: any): item is Push.SubscriptionLike {
   return TypeGuard.isObject(item) && TypeGuard.isFunction(item.unsubscribe);
 }
