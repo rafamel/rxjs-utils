@@ -8,28 +8,25 @@ export interface TalkbackOptions {
 }
 
 export class Talkback<T = any> implements Push.Talkback<T> {
-  #items: Array<Push.Hearback<T>>;
+  #items: Array<Push.Observer<T>>;
   #options: TalkbackOptions;
   public constructor(
-    item: Push.Hearback<T> | Array<Push.Hearback<T>>,
+    item: Push.Observer<T> | Array<Push.Observer<T>>,
     options?: TalkbackOptions
   ) {
     this.#items = TypeGuard.isArray(item) ? item : [item];
     this.#options = options || {};
   }
   public start(subscription: Push.Subscription): void {
-    Invoke.hearbacks('start', subscription, this.#items, this.#options);
+    Invoke.observers('start', subscription, this.#items, this.#options);
   }
   public next(value: T): void {
-    return Invoke.hearbacks('next', value, this.#items, this.#options);
+    return Invoke.observers('next', value, this.#items, this.#options);
   }
   public error(error: Error): void {
-    return Invoke.hearbacks('error', error, this.#items, this.#options);
+    return Invoke.observers('error', error, this.#items, this.#options);
   }
   public complete(): void {
-    return Invoke.hearbacks('complete', undefined, this.#items, this.#options);
-  }
-  public terminate(): void {
-    return Invoke.hearbacks('terminate', undefined, this.#items, this.#options);
+    return Invoke.observers('complete', undefined, this.#items, this.#options);
   }
 }

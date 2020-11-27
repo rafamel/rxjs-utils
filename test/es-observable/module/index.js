@@ -6,4 +6,5 @@ require('@babel/register')({
   cache: false
 });
 
-module.exports = require('es-observable/src/Observable');
+const { Observable } = require('es-observable/src/Observable');
+module.exports = { ESObservable: Observable };

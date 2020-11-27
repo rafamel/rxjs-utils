@@ -16,7 +16,7 @@ export function delay<T>(due?: number | DelayOptions<T>): Push.Operation<T> {
   const signals = options.signals || false;
   const ms = options.due || 0;
 
-  return operate<T>((tb) => {
+  return operate<T>((obs) => {
     const pending: NoParamFn[] = [];
     const timeouts: Set<NodeJS.Timeout> = new Set();
 
@@ -45,25 +45,26 @@ export function delay<T>(due?: number | DelayOptions<T>): Push.Operation<T> {
 
     let index = 0;
     let final = false;
-    return {
-      next: condition
-        ? (value) => queue(condition(value, index++), tb.next.bind(tb, value))
-        : (value) => queue(true, tb.next.bind(tb, value)),
-      error(error) {
+    return [
+      null,
+      condition
+        ? (value) => queue(condition(value, index++), obs.next.bind(obs, value))
+        : (value) => queue(true, obs.next.bind(obs, value)),
+      function error(error) {
         final = true;
-        queue(signals, tb.error.bind(tb, error));
+        queue(signals, obs.error.bind(obs, error));
       },
-      complete() {
+      function complete() {
         final = true;
-        queue(signals, tb.complete.bind(tb));
+        queue(signals, obs.complete.bind(obs));
       },
-      terminate() {
+      function teardown() {
         if (final) return;
 
         for (const timeout of timeouts) {
           clearTimeout(timeout);
         }
       }
-    };
+    ];
   });
 }

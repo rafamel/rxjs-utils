@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
 import { from } from '../creation';
-import { Talkback } from '../streams';
+import { Talkback } from '../classes';
 
 export interface InterceptOptions {
   /** See TalkbackOptions.multicast */
@@ -8,15 +8,15 @@ export interface InterceptOptions {
 }
 
 export function intercept<T, U>(
-  observable: Push.Source<T>,
-  observer: Push.SubscriptionObserver<U>,
-  hearback: Push.Hearback<T>,
+  convertible: Push.Convertible<T>,
+  to: Push.SubscriptionObserver<U>,
+  between: Push.Observer<T>,
   options?: InterceptOptions
 ): Push.Subscription {
-  return from(observable).subscribe(
-    new Talkback<any>([hearback, observer], {
+  return from(convertible).subscribe(
+    new Talkback<any>([between, to], {
       multicast: options && options.multicast,
-      onError: observer.error.bind(observer)
+      onError: to.error.bind(to)
     })
   );
 }

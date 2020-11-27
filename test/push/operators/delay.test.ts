@@ -1,15 +1,11 @@
-import { Observable, PushStream, delay } from '@push';
+import { delay, Observable } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), delay());
-  assert(obs instanceof PushStream);
-});
 test(`succeeds (error, 1)`, async () => {
   const error = Error('foo');
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       setTimeout(() => {
         obs.next(2);
@@ -35,7 +31,7 @@ test(`succeeds (error, 1)`, async () => {
 test(`succeeds (error, 2)`, async () => {
   const error = Error('foo');
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -59,7 +55,7 @@ test(`succeeds (error, 2)`, async () => {
 test(`succeeds (error, 3)`, async () => {
   const error = Error('foo');
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -84,7 +80,7 @@ test(`succeeds (error, 3)`, async () => {
 });
 test(`succeeds (complete, 1)`, async () => {
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       setTimeout(() => {
         obs.next(2);
@@ -112,7 +108,7 @@ test(`succeeds (complete, 1)`, async () => {
 });
 test(`succeeds (complete, 2)`, async () => {
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -138,7 +134,7 @@ test(`succeeds (complete, 2)`, async () => {
 });
 test(`succeeds (complete, 3)`, async () => {
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -166,7 +162,7 @@ test(`succeeds (complete, 3)`, async () => {
 });
 test(`succeeds (unsubscribe)`, async () => {
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => obs.next(3), 100);
@@ -188,7 +184,7 @@ test(`succeeds (unsubscribe)`, async () => {
 test(`succeeds w/ signals (error, 1)`, async () => {
   const error = Error('foo');
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -214,7 +210,7 @@ test(`succeeds w/ signals (error, 1)`, async () => {
 test(`succeeds w/ signals (error, 2)`, async () => {
   const error = Error('foo');
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -239,7 +235,7 @@ test(`succeeds w/ signals (error, 2)`, async () => {
 });
 test(`succeeds w/ signals (complete, 1)`, async () => {
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -267,7 +263,7 @@ test(`succeeds w/ signals (complete, 1)`, async () => {
 });
 test(`succeeds w/ signals (complete, 2)`, async () => {
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       obs.next(2);
       setTimeout(() => {
@@ -301,7 +297,7 @@ test(`succeeds w/ condition`, async () => {
 
   const checks: Array<[any, number]> = [];
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(1);
       setTimeout(() => obs.next(2), 150);
       setTimeout(() => obs.next(3), 300);

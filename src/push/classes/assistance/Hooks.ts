@@ -25,11 +25,4 @@ export class Hooks<T = any> implements Push.Hooks<T> {
       this.onUnhandledError(err, subscription);
     }
   }
-  public onCloseSubscription(subscription: Push.Subscription): void {
-    try {
-      Invoke.method(this.#hooks, 'onCloseSubscription', [subscription]);
-    } catch (err) {
-      this.onUnhandledError(err, subscription);
-    }
-  }
 }

@@ -1,20 +1,48 @@
-import { Empty, Push } from '@definitions';
-import { PushStream } from '../streams';
-import { intercept, InterceptOptions } from './intercept';
+import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
+import { TypeGuard } from '@helpers';
+import { Observable } from '../classes';
 import { transform } from './transform';
+import { teardown } from './teardown';
+import { intercept, InterceptOptions } from './intercept';
 
 export type OperateOptions = InterceptOptions;
+export type OperateObserverList<T> = [
+  NoParamFn | Empty,
+  UnaryFn<T> | Empty,
+  UnaryFn<Error> | Empty,
+  NoParamFn | Empty,
+  Push.Teardown | Empty
+];
 
 export function operate<T, U = T>(
-  operation: (obs: Push.SubscriptionObserver<U>) => Push.Hearback<T> | Empty,
+  operation: (
+    observer: Push.SubscriptionObserver<U>
+  ) => Push.Observer<T> | OperateObserverList<T>,
   options?: OperateOptions
 ): Push.Operation<T, U> {
-  return transform((stream) => {
-    return new PushStream((obs: Push.SubscriptionObserver) => {
-      const hearback = operation(obs);
-      return hearback
-        ? intercept(stream, obs, hearback, options)
-        : stream.subscribe(obs);
+  return transform((observable) => {
+    return new Observable((obs: Push.SubscriptionObserver) => {
+      const response = operation(obs);
+
+      if (!TypeGuard.isArray(response)) {
+        return intercept(observable, obs, response, options);
+      }
+
+      const subscription = intercept(
+        observable,
+        obs,
+        {
+          start: response[0] || undefined,
+          next: response[1] || undefined,
+          error: response[2] || undefined,
+          complete: response[3] || undefined
+        },
+        options
+      );
+      return () => {
+        subscription.unsubscribe();
+        teardown(response[4])();
+      };
     });
   });
 }

@@ -1,5 +1,5 @@
 import * as Pull from './pull';
 import * as Push from './push';
 
-export { Push, Pull };
+export { Pull, Push };
 export * from './types';

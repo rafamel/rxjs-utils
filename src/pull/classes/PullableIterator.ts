@@ -2,7 +2,7 @@ import { Pull, WideRecord } from '@definitions';
 import { Handler, TypeGuard, Resolver } from '@helpers';
 import { Validate } from './helpers';
 
-export class StreamIterator<O, I> implements Pull.StreamIterator<O, I> {
+export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
   #closed: boolean;
   #iterator: WideRecord;
   public constructor(iterator: Pull.PureIterator<O, I>) {

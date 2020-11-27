@@ -1,2 +1,2 @@
-export * from './stream';
+export * from './classes';
 export * from './utils';

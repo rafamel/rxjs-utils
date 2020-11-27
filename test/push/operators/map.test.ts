@@ -1,15 +1,10 @@
-import { Observable, PushStream, map } from '@push';
-import { Handler } from '@helpers';
+import { Observable, map } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), map(Handler.noop));
-  assert(obs instanceof PushStream);
-});
 test(`succeeds`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);

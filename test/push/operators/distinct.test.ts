@@ -1,15 +1,11 @@
-import { Observable, PushStream, distinct } from '@push';
+import { Observable, distinct } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), distinct());
-  assert(obs instanceof PushStream);
-});
 test(`succeeds w/ default selector`, () => {
   const arr = [1, {}, 'b', {}];
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(arr[0]);
       obs.next(arr[1]);
       obs.next(arr[1]);
@@ -30,7 +26,7 @@ test(`succeeds w/ default selector`, () => {
 test(`succeeds w/ custom selector (1)`, () => {
   const arr = [1, {}, 'b', {}];
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(arr[0]);
       obs.next(arr[1]);
       obs.next(arr[1]);
@@ -60,7 +56,7 @@ test(`succeeds w/ custom selector (1)`, () => {
 test(`succeeds w/ custom selector (2)`, () => {
   const arr = [1, {}, 'b', {}];
   const obs = into(
-    new PushStream<any>((obs) => {
+    new Observable<any>((obs) => {
       obs.next(arr[0]);
       obs.next(arr[1]);
       obs.next(arr[1]);

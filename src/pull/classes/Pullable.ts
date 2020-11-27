@@ -1,12 +1,12 @@
 import { Pull } from '@definitions';
 import { Consume, Validate } from './helpers';
-import { StreamIterator } from './StreamIterator';
+import { PullableIterator } from './PullableIterator';
 
-export class PullStream<O = any, I = void> implements Pull.PullStream<O, I> {
+export class Pullable<O = any, I = void> implements Pull.Pullable<O, I> {
   #source: Pull.Source<O, I>;
   public constructor(provider: Pull.Provider<O, I>) {
     Validate.provider(provider);
-    this.#source = () => new StreamIterator(provider());
+    this.#source = () => new PullableIterator(provider());
   }
   public [Symbol.asyncIterator](): Pull.Iterator<O, I> {
     const source = this.source();
@@ -37,7 +37,7 @@ export class PullStream<O = any, I = void> implements Pull.PullStream<O, I> {
   public consume(consumer: Pull.Consumer<O, I>): void {
     Validate.consumer(consumer);
 
-    const sink = new StreamIterator(consumer());
+    const sink = new PullableIterator(consumer());
     const source = this.source();
 
     Consume.process(source, sink, undefined);

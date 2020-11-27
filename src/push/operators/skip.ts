@@ -10,19 +10,19 @@ export interface SkipOptions<T> {
 export function skip<T>(count: number | SkipOptions<T>): Push.Operation<T> {
   const options = !count || TypeGuard.isNumber(count) ? { count } : count;
 
-  return operate<T>((tb) => {
+  return operate<T>((obs) => {
     let index = -1;
     let stop = false;
     return {
       next(value: T): void {
         index++;
 
-        if (stop) return tb.next(value);
+        if (stop) return obs.next(value);
         if (options.count && index < options.count) return;
         if (options.while && options.while(value, index)) return;
 
         stop = true;
-        return tb.next(value);
+        return obs.next(value);
       }
     };
   });

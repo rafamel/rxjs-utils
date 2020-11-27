@@ -1,21 +1,11 @@
-import { Compatible, Like, Stream, Subscription, Observable } from './push';
-import { BinaryFn, Empty, UnaryFn } from '../types';
+import { Subscription, Observable, Convertible } from './observable';
+import { BinaryFn, Empty } from '../types';
 
-export type Source<T = any> =
-  | Like<T>
-  | Compatible<T>
-  | Observable<T>
-  | Iterable<T>
-  | PromiseLike<T>;
+export type Transformation<T, R> = (observable: Convertible<T>) => R;
 
-export interface Transformation<T, R> {
-  (observable: Source<T>): R;
-}
-
-export type Operation<T, U = T> = Transformation<T, Stream<U>>;
+export type Operation<T, U = T> = Transformation<T, Observable<U>>;
 
 export interface Hooks<T = any> {
   onUnhandledError?: Empty | BinaryFn<[Error, Subscription]>;
   onStoppedNotification?: Empty | BinaryFn<[T, Subscription]>;
-  onCloseSubscription?: Empty | UnaryFn<Subscription>;
 }

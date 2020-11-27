@@ -1,20 +1,39 @@
-import { Empty, Push } from '@definitions';
+import { Push } from '@definitions';
+import { into } from 'pipettes';
+import { tap } from '../operators';
 import { Invoke } from './helpers';
-import { PushStream } from './PushStream';
+import { Observable } from './Observable';
 
-export interface PushableOptions {
+export interface SubjectOptions {
   replay?: boolean | number;
 }
 
-export class PushableStream<T = any>
-  extends PushStream<T>
-  implements Push.Pushable<T> {
+export class Subject<T = any> extends Observable<T> implements Push.Subject<T> {
+  public static from<T>(
+    item: Push.Convertible<T>,
+    options?: SubjectOptions
+  ): Subject<T> {
+    const obs = super.from(item);
+    const subject = new this(options);
+
+    let subscription: any;
+    into(obs, tap({ start: (subs) => (subscription = subs) })).subscribe(
+      subject
+    );
+
+    subject.subscribe({
+      error: subscription.unsubscribe.bind(subscription),
+      complete: subscription.unsubscribe.bind(subscription)
+    });
+
+    return subject;
+  }
   #items: Set<Push.SubscriptionObserver<T>>;
   #replay: number;
   #value: T | void;
   #values: T[];
   #termination: boolean | [Error];
-  public constructor(options?: PushableOptions | Empty) {
+  public constructor(options?: SubjectOptions) {
     super((obs) => {
       const termination = this.#termination;
       if (termination) {
@@ -43,6 +62,9 @@ export class PushableStream<T = any>
   }
   public get closed(): boolean {
     return Boolean(this.#termination);
+  }
+  public [Symbol.observable](): Observable<T> {
+    return Observable.from(this);
   }
   public next(value: T): void {
     if (this.closed) return;

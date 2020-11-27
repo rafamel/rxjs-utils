@@ -1,41 +1,56 @@
 import { Push } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { Observable, PushStream } from '../streams';
+import { Observable } from '../classes';
 import { isObservableCompatible, isObservableLike } from '../utils';
 import { of } from './of';
 
 export function from<T>(
-  this: Push.StreamConstructor | void,
-  item: Push.Source<T>
-): Push.Stream<T> {
-  const from = Observable.from.bind(PushStream);
+  this: Push.LikeConstructor | void,
+  item: Push.Convertible<T>
+): Push.Observable<T> {
+  const Constructor: Push.LikeConstructor = TypeGuard.isFunction(this)
+    ? this
+    : Observable;
 
-  if (item instanceof PushStream) {
-    return item.constructor === PushStream
-      ? item
-      : from({ [Symbol.observable]: () => item as any });
+  if (item instanceof Observable) {
+    return item.constructor === Constructor
+      ? (item as Push.Observable<T>)
+      : fromLike(Constructor, item);
+  } else if (item.constructor === Constructor) {
+    return item as Push.Observable<T>;
   }
+
   if (isObservableCompatible(item)) {
-    return from(item);
+    return fromCompatible(Constructor, item);
   }
   if (isObservableLike(item)) {
-    return from({ [Symbol.observable]: () => item as any });
+    return fromLike(Constructor, item);
   }
   if (TypeGuard.isIterable(item)) {
-    return of(...item);
+    return of.call(Constructor, ...item) as Push.Observable<T>;
   }
-  if (TypeGuard.isPromiseLike(item)) {
-    return new PushStream((obs) => {
-      item.then(
-        (value) => {
-          obs.next(value);
-          obs.complete();
-        },
-        (error) => {
-          obs.error(error);
-        }
-      );
-    });
+
+  throw new TypeError(`Unable to convert ${typeof item} into a Observable`);
+}
+
+function fromCompatible<T>(
+  Constructor: Push.LikeConstructor,
+  compatible: Push.Compatible<T>
+): Push.Observable<T> {
+  const observable = compatible[Symbol.observable]();
+
+  if (!TypeGuard.isObject(observable) && !TypeGuard.isFunction(observable)) {
+    throw new TypeError('Invalid Observable compatible object');
   }
-  throw new TypeError(`Unable to convert ${typeof item} into a PushStream`);
+
+  return fromLike(Constructor, observable);
+}
+
+function fromLike<T>(
+  Constructor: Push.LikeConstructor,
+  like: Push.Like<T>
+): Push.Observable<T> {
+  return like.constructor === Constructor
+    ? (like as any)
+    : new Constructor((observer) => like.subscribe(observer as any));
 }

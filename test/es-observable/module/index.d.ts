@@ -1,3 +1,3 @@
 import { Push } from '@definitions';
 
-export declare const Observable: Push.ObservableConstructor;
+export declare const ESObservable: Push.ObservableConstructor;

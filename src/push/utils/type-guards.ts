@@ -2,6 +2,16 @@ import { Push } from '@definitions';
 import { TypeGuard } from '@helpers';
 import 'symbol-observable';
 
+export function isObservableConvertible(
+  item: any
+): item is Push.Convertible<unknown> {
+  return (
+    isObservableLike(item) ||
+    isObservableCompatible(item) ||
+    TypeGuard.isIterable(item)
+  );
+}
+
 export function isObservableLike(item: any): item is Push.Like<unknown> {
   return TypeGuard.isObject(item) && TypeGuard.isFunction(item.subscribe);
 }
@@ -19,15 +29,6 @@ export function isObservable(item: any): item is Push.Observable<unknown> {
     TypeGuard.isObject(item) &&
     TypeGuard.isFunction(item[Symbol.observable]) &&
     TypeGuard.isFunction(item.subscribe)
-  );
-}
-
-export function isSource(item: any): item is Push.Source<unknown> {
-  return (
-    isObservableLike(item) ||
-    isObservableCompatible(item) ||
-    TypeGuard.isIterable(item) ||
-    TypeGuard.isPromiseLike(item)
   );
 }
 

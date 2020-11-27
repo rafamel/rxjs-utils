@@ -1,14 +1,10 @@
-import { Observable, PushStream, group } from '@push';
+import { Observable, group } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), group());
-  assert(obs instanceof PushStream);
-});
 test(`succeeds w/ default`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);
@@ -28,7 +24,7 @@ test(`succeeds w/ default`, () => {
 });
 test(`succeeds w/ custom`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);

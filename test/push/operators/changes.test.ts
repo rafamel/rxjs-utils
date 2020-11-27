@@ -1,11 +1,7 @@
-import { Observable, PushStream, changes, from } from '@push';
+import { changes, from } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), changes());
-  assert(obs instanceof PushStream);
-});
 test(`succeeds w/ strict strategy`, () => {
   const obj = {};
   const arr = [1, 1, 2, 1, {}, {}, obj, obj, obj, 'a', 'b', 'a'];

@@ -1,14 +1,10 @@
-import { Observable, PushStream, skip } from '@push';
+import { Observable, skip } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), skip(0));
-  assert(obs instanceof PushStream);
-});
 test(`succeeds w/ count (1)`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);
@@ -26,7 +22,7 @@ test(`succeeds w/ count (1)`, () => {
 });
 test(`succeeds w/ count (2)`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);
@@ -44,7 +40,7 @@ test(`succeeds w/ count (2)`, () => {
 });
 test(`succeeds w/ while (value)`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);
@@ -64,7 +60,7 @@ test(`succeeds w/ while (value)`, () => {
 });
 test(`succeeds w/ while (index)`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);
@@ -82,7 +78,7 @@ test(`succeeds w/ while (index)`, () => {
 });
 test(`succeeds w/ count + while (1)`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);
@@ -102,7 +98,7 @@ test(`succeeds w/ count + while (1)`, () => {
 });
 test(`succeeds w/ count + while (2)`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
       obs.next(3);

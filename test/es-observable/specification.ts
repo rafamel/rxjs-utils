@@ -1,20 +1,16 @@
 /* eslint-disable no-console */
-import { Observable, PushStream, of, from } from '@push';
-import { Observable as ESObservable } from './module';
+import { Observable } from '@push';
+import { ESObservable } from './module';
 import { compliance } from './compliance';
 import chalk from 'chalk';
 
-PushStream.configure({ onUnhandledError: null });
-const StreamConstructor: any = PushStream;
-StreamConstructor.of = of;
-StreamConstructor.from = from;
+Observable.configure({ onUnhandledError: null });
 
 console.log(chalk.bold('\nCOMPLIANCE'));
 let pass = true;
 [
-  () => compliance('ES Observable', ESObservable, 'final', true),
-  () => compliance('Observable', Observable, 'final', true),
-  () => compliance('PushStream', StreamConstructor, 'each', false)
+  () => compliance('ES Observable', ESObservable, 'final'),
+  () => compliance('Observable', Observable, 'each')
 ]
   .reduce((acc, item) => {
     return acc.then(item).then((result) => {

@@ -1,38 +1,40 @@
 import { Push } from '@definitions';
-import { PushStream } from '../streams';
+import { Observable } from '../classes';
 import { intercept } from '../utils';
 import { from } from './from';
 
 export function merge<A, B = A, C = A, D = A, E = A, F = A, G = A, T = A>(
-  a: Push.Source<A>,
-  b?: Push.Source<B>,
-  c?: Push.Source<C>,
-  d?: Push.Source<D>,
-  e?: Push.Source<E>,
-  f?: Push.Source<F>,
-  g?: Push.Source<G>,
-  ...arr: Array<Push.Source<T>>
-): Push.Stream<A | B | C | D | E | F | G | T>;
-export function merge<T>(...arr: Array<Push.Source<T>>): Push.Stream<T>;
-export function merge(...arr: any): Push.Stream {
-  if (arr.length < 1) throw Error(`Must provide at least one stream to merge`);
+  a: Push.Convertible<A>,
+  b?: Push.Convertible<B>,
+  c?: Push.Convertible<C>,
+  d?: Push.Convertible<D>,
+  e?: Push.Convertible<E>,
+  f?: Push.Convertible<F>,
+  g?: Push.Convertible<G>,
+  ...arr: Array<Push.Convertible<T>>
+): Push.Observable<A | B | C | D | E | F | G | T>;
+export function merge<T>(
+  ...arr: Array<Push.Convertible<T>>
+): Push.Observable<T>;
+export function merge(...arr: any): Push.Observable {
+  if (arr.length < 1) {
+    throw Error(`Must provide at least one observable to merge`);
+  }
 
-  const streams: Push.Stream[] = arr.map(from);
-  if (streams.length === 1) return streams[0];
+  const observables: Push.Observable[] = arr.map(from);
+  if (observables.length === 1) return observables[0];
 
-  return new PushStream((obs) => {
-    let terminated = 0;
+  return new Observable((obs) => {
+    let completed = 0;
 
-    const subscriptions = streams
-      .map((stream) => {
+    const subscriptions = observables
+      .map((observable) => {
         return obs.closed
           ? null
-          : intercept(stream, obs, {
+          : intercept(observable, obs, {
               complete() {
-                if (terminated + 1 >= streams.length) obs.complete();
-              },
-              terminate() {
-                terminated++;
+                completed++;
+                if (completed >= observables.length) obs.complete();
               }
             });
       })

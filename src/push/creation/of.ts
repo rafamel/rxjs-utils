@@ -1,6 +1,23 @@
 import { Push } from '@definitions';
-import { Observable, PushStream } from '../streams';
+import { TypeGuard } from '@helpers';
+import { Observable } from '../classes';
 
-export function of<T>(...items: T[]): Push.Stream<T> {
-  return Observable.of.call(PushStream, ...items) as any;
+export function of<T>(
+  this: Push.LikeConstructor | void,
+  ...items: T[]
+): Push.Observable<T> {
+  const Constructor: Push.LikeConstructor = TypeGuard.isFunction(this)
+    ? this
+    : Observable;
+
+  const obs$ = new Constructor((obs) => {
+    for (const item of items) {
+      obs.next(item);
+    }
+    obs.complete();
+
+    return () => undefined;
+  });
+
+  return obs$ as Push.Observable<T>;
 }

@@ -49,7 +49,6 @@ export class Invoke {
       hooks.onUnhandledError(err, subscription);
     } finally {
       if (action !== 'start') {
-        hooks.onCloseSubscription(subscription);
         try {
           subscription.unsubscribe();
         } catch (err) {
@@ -58,19 +57,10 @@ export class Invoke {
       }
     }
   }
-  public static subscriptionObservers(
-    action: Exclude<keyof Push.SubscriptionObserver, 'closed'>,
+  public static observers(
+    action: keyof Push.Observer,
     payload: any,
-    items: Set<Push.SubscriptionObserver>
-  ): void {
-    for (const item of items) {
-      item[action](payload);
-    }
-  }
-  public static hearbacks(
-    action: keyof Push.Hearback,
-    payload: any,
-    items: Push.Hearback[],
+    items: Push.Observer[],
     options: TalkbackOptions
   ): void {
     for (const item of items) {
@@ -83,6 +73,15 @@ export class Invoke {
         else if (options.onError) options.onError(err);
       }
       if (!options.multicast) break;
+    }
+  }
+  public static subscriptionObservers(
+    action: Exclude<keyof Push.SubscriptionObserver, 'closed'>,
+    payload: any,
+    items: Set<Push.SubscriptionObserver>
+  ): void {
+    for (const item of items) {
+      item[action](payload);
     }
   }
 }

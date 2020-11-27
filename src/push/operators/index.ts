@@ -3,6 +3,7 @@ export * from './connect';
 export * from './delay';
 export * from './distinct';
 export * from './filter';
+export * from './finalize';
 export * from './group';
 export * from './map';
 export * from './mergeMap';

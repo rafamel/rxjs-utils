@@ -1,11 +1,7 @@
-import { Observable, PushStream, connect, interval } from '@push';
+import { connect, interval } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), connect());
-  assert(obs instanceof PushStream);
-});
 test(`succeeds wo/ replay`, async () => {
   const obs = into(interval({ every: 100, cancel: (i) => i >= 8 }), connect());
 

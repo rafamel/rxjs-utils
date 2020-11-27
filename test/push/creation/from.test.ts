@@ -1,30 +1,30 @@
-import { PushStream, from, Observable, PushableStream } from '@push';
+import { from, Observable, Subject } from '@push';
 import assert from 'assert';
 import 'symbol-observable';
 
-test(`succeeds w/ PushStream`, () => {
-  const stream = new PushStream(() => undefined);
+test(`succeeds w/ Observable`, () => {
+  const observable = new Observable(() => undefined);
 
-  assert(from(stream) === stream);
+  assert(from(observable) === observable);
 });
-test(`succeeds w/ PushableStream`, () => {
-  const pushable = new PushableStream();
-  const stream = from(pushable);
+test(`succeeds w/ Subject`, () => {
+  const subject = new Subject();
+  const observable = from(subject);
 
-  assert(stream !== pushable);
-  assert(stream instanceof PushStream);
-  assert(!(stream instanceof PushableStream));
+  assert(observable !== subject);
+  assert(observable instanceof Observable);
+  assert(!(observable instanceof Subject));
 
   const values: any[] = [];
-  stream.subscribe((value) => values.push(value));
-  pushable.next(1);
-  pushable.next(2);
-  pushable.complete();
+  observable.subscribe((value) => values.push(value));
+  subject.next(1);
+  subject.next(2);
+  subject.complete();
 
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ Observable`, () => {
-  const stream = from(
+  const observable = from(
     new Observable((obs) => {
       obs.next(1);
       obs.next(2);
@@ -32,10 +32,10 @@ test(`succeeds w/ Observable`, () => {
     })
   );
 
-  assert(stream instanceof PushStream);
+  assert(observable instanceof Observable);
 
   const values: any[] = [];
-  stream.subscribe((value) => values.push(value));
+  observable.subscribe((value) => values.push(value));
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ Compatible`, () => {
@@ -44,16 +44,16 @@ test(`succeeds w/ Compatible`, () => {
     obs.next(2);
     obs.complete();
   });
-  const stream = from({
+  const observable = from({
     [Symbol.observable]() {
       return obs;
     }
   });
 
-  assert(stream instanceof PushStream);
+  assert(observable instanceof Observable);
 
   const values: any[] = [];
-  stream.subscribe((value) => values.push(value));
+  observable.subscribe((value) => values.push(value));
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`fails w/ invalid Compatible`, () => {
@@ -74,51 +74,24 @@ test(`succeeds w/ Like`, () => {
     obs.complete();
   });
 
-  const stream = from({
+  const observable = from({
     subscribe(...arr: any[]) {
       return obs.subscribe(...arr);
     }
   });
 
-  assert(stream instanceof PushStream);
+  assert(observable instanceof Observable);
 
   const values: any[] = [];
-  stream.subscribe((value) => values.push(value));
+  observable.subscribe((value) => values.push(value));
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ Iterable`, () => {
-  const stream = from([1, 2]);
+  const observable = from([1, 2]);
 
-  assert(stream instanceof PushStream);
+  assert(observable instanceof Observable);
 
   const values: any[] = [];
-  stream.subscribe((value) => values.push(value));
+  observable.subscribe((value) => values.push(value));
   assert.deepStrictEqual(values, [1, 2]);
-});
-test(`succeeds w/ Promise resolution`, async () => {
-  const stream = from(Promise.resolve(1));
-
-  assert(stream instanceof PushStream);
-
-  const values: any[] = [];
-  stream.subscribe((value) => values.push(value));
-  await Promise.resolve();
-  assert.deepStrictEqual(values, [1]);
-});
-test(`succeeds w/ Promise rejection`, async () => {
-  const error = Error('foo');
-  const stream = from(Promise.reject(error));
-
-  assert(stream instanceof PushStream);
-
-  const values: any[] = [];
-  let err: any;
-  stream.subscribe({
-    next: (value) => values.push(value),
-    error: (error) => (err = error)
-  });
-
-  await Promise.resolve();
-  assert(error === err);
-  assert.deepStrictEqual(values, []);
 });

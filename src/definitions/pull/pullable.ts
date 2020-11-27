@@ -1,12 +1,12 @@
-import { Iterable } from './iterables';
+import { Iterable } from './iterable';
 
 /* Constructor */
-export interface StreamConstructor {
-  new <O, I = void>(provider: Provider<O, I>): PullStream<O, I>;
+export interface PullableConstructor {
+  new <O, I = void>(provider: Provider<O, I>): Pullable<O, I>;
 }
 
-/* Stream */
-export interface PullStream<O, I = void> extends Iterable<O, I> {
+/* Pullable */
+export interface Pullable<O, I = void> extends Iterable<O, I> {
   source: Source<O, I>;
   consume(consumer: Consumer<O, I>): void;
 }
@@ -15,8 +15,8 @@ export interface PullStream<O, I = void> extends Iterable<O, I> {
 export type Provider<O, I> = () => PureIterator<O, I | void>;
 export type Consumer<O, I> = () => PureIterator<I, O>;
 
-export type Source<O, I> = () => StreamIterator<O, I | void>;
-export type Sink<O, I> = () => StreamIterator<I, O>;
+export type Source<O, I> = () => PullableIterator<O, I | void>;
+export type Sink<O, I> = () => PullableIterator<I, O>;
 
 /* Iterators */
 // TODO: add "finally" to iterators
@@ -26,7 +26,7 @@ export interface PureIterator<O, I> {
   complete?: () => void | Promise<void>;
 }
 
-export interface StreamIterator<O, I> extends PureIterator<O, I> {
+export interface PullableIterator<O, I> extends PureIterator<O, I> {
   next: (value: I) => Response<O>;
   error: (error: Error) => Response<O>;
   complete: () => void | Promise<void>;

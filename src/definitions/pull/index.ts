@@ -1,2 +1,2 @@
-export * from './iterables';
-export * from './streams';
+export * from './iterable';
+export * from './pullable';

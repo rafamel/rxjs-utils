@@ -1,14 +1,10 @@
-import { Observable, PushStream, timestamp } from '@push';
+import { Observable, timestamp } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
-test(`returns PushStream`, () => {
-  const obs = into(new Observable(() => undefined), timestamp());
-  assert(obs instanceof PushStream);
-});
 test(`succeeds`, () => {
   const obs = into(
-    new PushStream<number>((obs) => {
+    new Observable<number>((obs) => {
       obs.next(1);
       obs.next(2);
     }),

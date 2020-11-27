@@ -21,8 +21,8 @@ export class Validate {
 
 export class Consume {
   public static process<T, U>(
-    current: Pull.StreamIterator<T, U>,
-    opposite: Pull.StreamIterator<U, T>,
+    current: Pull.PullableIterator<T, U>,
+    opposite: Pull.PullableIterator<U, T>,
     value: U
   ): void {
     Resolver.resolve(

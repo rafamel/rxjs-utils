@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { Push } from '@definitions';
-import { Observable, PushStream } from '@push';
-import { Observable as ESObservable } from './module';
+import { Observable } from '@push';
+import { ESObservable } from './module';
 import chalk from 'chalk';
 
 console.log(chalk.bold('\nPERFORMANCE'));
@@ -9,13 +9,6 @@ console.log(chalk.bold('\nPERFORMANCE'));
 const successes = [
   performs(
     ['Observable', Observable],
-    ['ES Observable', ESObservable],
-    100,
-    10 ** 5,
-    1.25
-  ),
-  performs(
-    ['PushStream', PushStream],
     ['ES Observable', ESObservable],
     100,
     10 ** 5,

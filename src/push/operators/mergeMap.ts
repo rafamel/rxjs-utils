@@ -2,7 +2,7 @@ import { Push } from '@definitions';
 import { intercept, operate } from '../utils';
 
 export function mergeMap<T, U>(
-  projection: (value: T, index: number) => Push.Like<U> | Push.Compatible<U>
+  projection: (value: T, index: number) => Push.Convertible<T>
 ): Push.Operation<T, U> {
   return operate<T, U>((obs) => {
     let index = 0;
@@ -16,8 +16,9 @@ export function mergeMap<T, U>(
       }
     }
 
-    return {
-      next(value: T): void {
+    return [
+      null,
+      function next(value: T): void {
         if (obs.closed) return;
 
         intercept(projection(value, index++), obs, {
@@ -39,15 +40,16 @@ export function mergeMap<T, U>(
           }
         });
       },
-      complete() {
+      null,
+      function complete() {
         parentComplete = true;
         if (completeSubscriptions >= subscriptions.length) {
           obs.complete();
         }
       },
-      terminate() {
+      function teardown() {
         if (obs.closed || !parentComplete) unsubscribe();
       }
-    };
+    ];
   });
 }

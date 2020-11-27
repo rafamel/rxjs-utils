@@ -1,6 +1,6 @@
 import { Push, UnaryFn } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { PushStream } from '../streams';
+import { Observable } from '../classes';
 
 export interface IntervalOptions {
   every?: number;
@@ -9,14 +9,14 @@ export interface IntervalOptions {
 
 export function interval(
   every?: number | IntervalOptions
-): Push.Stream<number> {
+): Push.Observable<number> {
   const options = !every || TypeGuard.isNumber(every) ? { every } : every;
 
   const cancel = options.cancel;
   const promise = TypeGuard.isPromiseLike(cancel) ? cancel : null;
   const callback = TypeGuard.isFunction(cancel) ? cancel : null;
 
-  return new PushStream((obs) => {
+  return new Observable((obs) => {
     let index = -1;
     const interval = setInterval(() => {
       index++;

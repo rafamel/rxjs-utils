@@ -15,13 +15,13 @@ export function changes<T>(
       ? strategy.bind(null, compare || 'strict')
       : compare;
 
-  return operate<T>((tb) => {
+  return operate<T>((obs) => {
     let last: any = $empty;
     return {
       next(value: T): void {
         if (last === $empty || !fn(value, last)) {
           last = value;
-          return tb.next(value);
+          return obs.next(value);
         }
       }
     };

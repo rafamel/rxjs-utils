@@ -1,6 +1,7 @@
 import { Empty, NoParamFn, Push } from '@definitions';
 import { Handler } from '@helpers';
-import { Invoke, SubscriptionManager, Parse } from '../helpers';
+import { teardown } from '../../utils';
+import { Invoke, SubscriptionManager } from '../helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import { Hooks } from './Hooks';
 
@@ -21,21 +22,21 @@ class Subscription<T = any> implements Push.Subscription {
 
     const subscriptionObserver = new SubscriptionObserver(this, hooks[0]);
 
-    let teardown: NoParamFn = Handler.noop;
+    let fn: NoParamFn = Handler.noop;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
-      teardown = Parse.teardown(unsubscribe);
+      fn = teardown(unsubscribe);
     } catch (err) {
       subscriptionObserver.error(err);
     } finally {
       if (SubscriptionManager.isClosed(this)) {
         try {
-          teardown();
+          fn();
         } catch (err) {
           this.#hooks.onUnhandledError(err, this);
         }
       } else {
-        this.#teardown = teardown;
+        this.#teardown = fn;
       }
     }
   }
@@ -45,7 +46,6 @@ class Subscription<T = any> implements Push.Subscription {
   public unsubscribe(): void {
     if (!SubscriptionManager.isClosed(this)) {
       SubscriptionManager.close(this);
-      this.#hooks.onCloseSubscription(this);
     }
 
     const teardown = this.#teardown;

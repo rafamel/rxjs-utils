@@ -8,7 +8,7 @@ import { operate } from '../utils';
 export function group<T>(every?: number): Push.Operation<T, T[]> {
   const number = TypeGuard.isEmpty(every) ? 2 : every;
 
-  return operate<T, T[]>((tb) => {
+  return operate<T, T[]>((obs) => {
     let arr: T[] = [];
 
     return {
@@ -17,7 +17,7 @@ export function group<T>(every?: number): Push.Operation<T, T[]> {
         if (arr.length >= number) {
           const response = arr;
           arr = [];
-          tb.next(response);
+          obs.next(response);
         }
       }
     };

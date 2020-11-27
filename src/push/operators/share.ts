@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { PushableStream, PushStream } from '../streams';
+import { Observable, Subject } from '../classes';
 import { transform } from '../utils';
 
 export interface ShareOptions {
@@ -9,14 +9,14 @@ export interface ShareOptions {
 }
 
 /**
- * 'on-demand': Default policy. Subscribes and re-subscribes to the original Observable once the resulting PushStream has open subscriptions, so long as the original Observable hasn't errored or completed on previous subscriptions. Unsubscribes from the original Observable once the resulting PushStream has no active subscriptions.
+ * 'on-demand': Default policy. Subscribes and re-subscribes to the original Observable once the resulting one has open subscriptions, so long as the original Observable hasn't errored or completed on previous subscriptions. Unsubscribes from the original Observable once the resulting Observable has no active subscriptions.
  * 'keep-open': Keeps the parent subscription open even if it has no current subscriptions.
- * 'keep-closed': Permanently unsubscribes from the original Observable once the resulting PushStreams has no active subscriptions. Subsequent subscriptions will error or complete immediately with the same signal as the original Observable if it finalized before being unsubscribed, or otherwise error.
+ * 'keep-closed': Permanently unsubscribes from the original Observable once the resulting one has no active subscriptions. Subsequent subscriptions will error or complete immediately with the same signal as the original Observable if it finalized before being unsubscribed, or otherwise error.
  */
 export type SharePolicy = 'on-demand' | 'keep-open' | 'keep-closed';
 
 /**
- * Creates a PushStream that multicasts the original Observable.
+ * Creates an Observable that multicasts the original Observable.
  * The original Observable won't be subscribed until there is at least
  * one subscriber.
  */
@@ -25,17 +25,17 @@ export function share<T>(
 ): Push.Operation<T> {
   const options = !policy || TypeGuard.isString(policy) ? { policy } : policy;
 
-  return transform((stream) => {
+  return transform((observable) => {
     let count = 0;
     let subscription: null | Push.Subscription = null;
 
-    const pushable = new PushableStream(options);
-    return new PushStream((obs) => {
+    const subject = new Subject(options);
+    return new Observable((obs) => {
       count++;
-      const subs = pushable.subscribe(obs);
+      const subs = subject.subscribe(obs);
 
-      if (!subscription && !pushable.closed) {
-        subscription = stream.subscribe(pushable);
+      if (!subscription && !subject.closed) {
+        subscription = observable.subscribe(subject);
       }
       return () => {
         count--;
@@ -49,7 +49,7 @@ export function share<T>(
           }
           case 'keep-closed': {
             if (subscription) subscription.unsubscribe();
-            pushable.error(Error('Multicasted subscription is already closed'));
+            subject.error(Error('Multicasted subscription is already closed'));
             return;
           }
           default: {

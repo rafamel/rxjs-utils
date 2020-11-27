@@ -81,7 +81,7 @@
   },
   "dependencies": {
     "equal-strategies": "^0.1.0",
-    "pipettes": "^0.1.0",
+    "pipettes": "^0.1.1",
     "symbol-observable": "^2.0.3"
   },
   "husky": {
