@@ -1,6 +1,6 @@
 import { Push, UnaryFn } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { Observable } from '../classes';
+import { Observable } from '../classes/Observable';
 
 export interface IntervalOptions {
   every?: number;

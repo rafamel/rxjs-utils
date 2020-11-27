@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
-import { Observable } from '../classes';
-import { intercept } from '../utils';
+import { Observable } from '../classes/Observable';
+import { intercept } from '../utils/intercept';
 import { from } from './from';
 
 export function merge<A, B = A, C = A, D = A, E = A, F = A, G = A, T = A>(

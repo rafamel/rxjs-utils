@@ -1,5 +1,5 @@
 import { BinaryFn, Push } from '@definitions';
-import { operate } from '../utils';
+import { operate } from '../utils/operate';
 
 export function distinct<T>(
   selector?: BinaryFn<[T, number], any>

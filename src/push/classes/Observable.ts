@@ -1,7 +1,8 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { Accessor, Handler, TypeGuard } from '@helpers';
+import { isObservableCompatible, isObservableLike } from '../utils/type-guards';
 import { Hooks, Subscription } from './assistance';
-import { from, of } from '../creation';
+import { From } from './helpers';
 import 'symbol-observable';
 
 const $hooks = Symbol('hooks');
@@ -23,10 +24,31 @@ export class Observable<T = any> {
     Accessor.define(this, $hooks, instance);
   }
   public static of<T>(...items: T[]): Observable<T> {
-    return of.apply(this, items) as Observable<T>;
+    const Constructor = TypeGuard.isFunction(this) ? this : Observable;
+    return From.iterable(Constructor, items) as Observable<T>;
   }
   public static from<T>(item: Push.Convertible<T>): Observable<T> {
-    return from.call(this, item) as Observable<T>;
+    const Constructor = TypeGuard.isFunction(this) ? this : Observable;
+
+    if (item instanceof Observable) {
+      return item.constructor === Constructor
+        ? item
+        : (From.like(Constructor, item) as Observable<T>);
+    } else if (item.constructor === Constructor) {
+      return item;
+    }
+
+    if (isObservableCompatible(item)) {
+      return From.compatible(Constructor, item) as Observable<T>;
+    }
+    if (isObservableLike(item)) {
+      return From.like(Constructor, item) as Observable<T>;
+    }
+    if (TypeGuard.isIterable(item)) {
+      return From.iterable(Constructor, item) as Observable<T>;
+    }
+
+    throw new TypeError(`Unable to convert ${typeof item} into a Observable`);
   }
   #subscriber: Push.Subscriber<T>;
   public constructor(subscriber: Push.Subscriber<T>) {

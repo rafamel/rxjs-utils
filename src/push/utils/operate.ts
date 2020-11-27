@@ -1,6 +1,6 @@
 import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { Observable } from '../classes';
+import { Observable } from '../classes/Observable';
 import { transform } from './transform';
 import { teardown } from './teardown';
 import { intercept, InterceptOptions } from './intercept';

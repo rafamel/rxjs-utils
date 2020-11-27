@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { Observable } from '../classes';
+import { Observable } from '../classes/Observable';
 
 export function fromPromise<T>(promise: PromiseLike<T>): Push.Observable<T> {
   return new Observable((obs) => {

@@ -1,6 +1,7 @@
 import { Push } from '@definitions';
-import { Observable } from '../classes';
-import { transform, teardown as _teardown } from '../utils';
+import { Observable } from '../classes/Observable';
+import { transform } from '../utils/transform';
+import { teardown as _teardown } from '../utils/teardown';
 
 export function finalize<T>(teardown?: Push.Teardown): Push.Operation<T> {
   return transform((observable) => {

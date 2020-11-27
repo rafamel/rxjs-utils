@@ -1,10 +1,11 @@
 import { Push, WideRecord } from '@definitions';
-import { into } from 'pipettes';
-import { map } from '../operators';
-import { Observable } from '../classes';
-import { intercept, isObservableConvertible } from '../utils';
+import { Observable } from '../classes/Observable';
+import { map } from '../operators/map';
+import { intercept } from '../utils/intercept';
+import { isObservableConvertible } from '../utils/type-guards';
 import { from } from './from';
 import { merge } from './merge';
+import { into } from 'pipettes';
 
 export type CombineResponse<T extends WideRecord<Push.Convertible>> = {
   [P in keyof T]: T[P] extends Push.Convertible<infer U> ? U : never;

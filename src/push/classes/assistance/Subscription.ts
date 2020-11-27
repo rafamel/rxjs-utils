@@ -1,6 +1,6 @@
 import { Empty, NoParamFn, Push } from '@definitions';
 import { Handler } from '@helpers';
-import { teardown } from '../../utils';
+import { teardown } from '../../utils/teardown';
 import { Invoke, SubscriptionManager } from '../helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import { Hooks } from './Hooks';

@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
 import { TypeGuard } from '@helpers';
-import { operate } from '../utils';
+import { operate } from '../utils/operate';
 
 /**
  * @param every default: 2

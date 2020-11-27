@@ -1,8 +1,8 @@
 import { Push } from '@definitions';
-import { into } from 'pipettes';
-import { tap } from '../operators';
+import { tap } from '../operators/tap';
 import { Invoke } from './helpers';
 import { Observable } from './Observable';
+import { into } from 'pipettes';
 
 export interface SubjectOptions {
   replay?: boolean | number;
