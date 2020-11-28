@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { from } from '../creation/from';
+import { from } from '../creators/from';
 
 export function transform<T, R>(
   transformation: (observable: Push.Observable<T>) => R

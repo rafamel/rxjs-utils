@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { from } from '../creation/from';
+import { from } from '../creators/from';
 import { Talkback } from '../classes/assistance/Talkback';
 
 export interface InterceptOptions {

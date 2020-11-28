@@ -1,7 +1,7 @@
 import { Push } from '@definitions';
-import { Observable } from '../classes/Observable';
-import { Subject } from '../classes/Subject';
-import { transform } from '../utils/transform';
+import { Observable } from '../../classes/Observable';
+import { Subject } from '../../classes/Subject';
+import { transform } from '../../utils/transform';
 
 export interface ConnectOptions {
   replay?: boolean | number;

@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { operate } from '../utils/operate';
+import { operate } from '../../utils/operate';
 import { TypeGuard } from 'type-core';
 
 export interface TakeOptions<T> {

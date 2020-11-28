@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
-import { operate } from '../utils/operate';
-import { intercept } from '../utils/intercept';
+import { operate } from '../../utils/operate';
+import { intercept } from '../../utils/intercept';
 
 export function switchMap<T, U>(
   projection: (value: T, index: number) => Push.Convertible<U>

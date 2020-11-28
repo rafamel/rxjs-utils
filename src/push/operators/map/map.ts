@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { operate } from '../utils/operate';
+import { operate } from '../../utils/operate';
 
 export function map<T, U>(
   projection: (value: T, index: number) => U

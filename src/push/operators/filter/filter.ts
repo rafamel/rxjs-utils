@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { operate } from '../utils/operate';
+import { operate } from '../../utils/operate';
 
 export function filter<T>(
   predicate: (value: T, index: number) => boolean

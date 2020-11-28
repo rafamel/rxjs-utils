@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { operate } from '../utils/operate';
+import { operate } from '../../utils/operate';
 import { BinaryFn, TypeGuard } from 'type-core';
 import { compare as strategy } from 'equal-strategies';
 

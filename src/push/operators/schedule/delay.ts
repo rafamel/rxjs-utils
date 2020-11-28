@@ -1,6 +1,6 @@
 import { Push } from '@definitions';
+import { operate } from '../../utils/operate';
 import { NullaryFn, TypeGuard } from 'type-core';
-import { operate } from '../utils/operate';
 
 export interface DelayOptions<T> {
   /** Delay in millisecons */
