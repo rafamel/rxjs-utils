@@ -1,8 +1,9 @@
-import { NoParamFn, Push } from '@definitions';
-import { Handler, TypeGuard } from '@helpers';
+import { Push } from '@definitions';
+import { Handler } from '@helpers';
 import { isSubscriptionLike } from './type-guards';
+import { NullaryFn, TypeGuard } from 'type-core';
 
-export function teardown(teardown: Push.Teardown): NoParamFn {
+export function teardown(teardown: Push.Teardown): NullaryFn {
   if (TypeGuard.isFunction(teardown)) return teardown;
   if (TypeGuard.isEmpty(teardown)) return Handler.noop;
   if (isSubscriptionLike(teardown)) return () => teardown.unsubscribe();

@@ -1,5 +1,5 @@
-import { NoParamFn, Push } from '@definitions';
-import { TypeGuard } from '@helpers';
+import { Push } from '@definitions';
+import { NullaryFn, TypeGuard } from 'type-core';
 import { operate } from '../utils/operate';
 
 export interface DelayOptions<T> {
@@ -17,10 +17,10 @@ export function delay<T>(due?: number | DelayOptions<T>): Push.Operation<T> {
   const ms = options.due || 0;
 
   return operate<T>((obs) => {
-    const pending: NoParamFn[] = [];
+    const pending: NullaryFn[] = [];
     const timeouts: Set<NodeJS.Timeout> = new Set();
 
-    function queue(delay: boolean, fn: NoParamFn): void {
+    function queue(delay: boolean, fn: NullaryFn): void {
       if (delay) {
         schedule(fn);
       } else {
@@ -29,13 +29,13 @@ export function delay<T>(due?: number | DelayOptions<T>): Push.Operation<T> {
       }
     }
 
-    function schedule(fn: NoParamFn): void {
+    function schedule(fn: NullaryFn): void {
       const timeout = setTimeout(() => {
         timeouts.delete(timeout);
         fn();
         if (!timeouts.size) {
           while (pending.length) {
-            const item = pending.shift() as NoParamFn;
+            const item = pending.shift() as NullaryFn;
             item();
           }
         }

@@ -40,6 +40,7 @@ module.exports.scripts = {
       main: '../dist/push/index.js',
       types: '../dist/push/index.d.ts',
       esnext: '../dist-src/push/index.js'
-    }))
+    })),
+    kpo.series('npm pack', { cwd: './pkg' })
   ]
 };

@@ -87,11 +87,11 @@ test(`succeeds w/ Like`, () => {
   assert.deepStrictEqual(values, [1, 2]);
 });
 test(`succeeds w/ Iterable`, () => {
-  const observable = from([1, 2]);
+  const observable = from([1, 2, 3, 4, 5, 6]);
 
   assert(observable instanceof Observable);
 
   const values: any[] = [];
   observable.subscribe((value) => values.push(value));
-  assert.deepStrictEqual(values, [1, 2]);
+  assert.deepStrictEqual(values, [1, 2, 3, 4, 5, 6]);
 });

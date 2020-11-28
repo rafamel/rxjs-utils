@@ -1,10 +1,11 @@
-import { Pull, WideRecord } from '@definitions';
-import { Handler, TypeGuard, Resolver } from '@helpers';
+import { Pull } from '@definitions';
+import { Handler, Resolver } from '@helpers';
 import { Validate } from './helpers';
+import { Members, TypeGuard } from 'type-core';
 
 export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
   #closed: boolean;
-  #iterator: WideRecord;
+  #iterator: Members;
   public constructor(iterator: Pull.PureIterator<O, I>) {
     Validate.counter(iterator);
 

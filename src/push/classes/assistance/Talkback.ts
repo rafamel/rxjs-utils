@@ -1,6 +1,6 @@
-import { Push, UnaryFn } from '@definitions';
-import { TypeGuard } from '@helpers';
+import { Push } from '@definitions';
 import { Invoke } from '../helpers';
+import { UnaryFn, TypeGuard } from 'type-core';
 
 export interface TalkbackOptions {
   multicast?: boolean;

@@ -1,5 +1,5 @@
 import { Subscription, Observable, Convertible } from './observable';
-import { BinaryFn, Empty } from '../types';
+import { BinaryFn, Empty } from 'type-core';
 
 export type Transformation<T, R> = (observable: Convertible<T>) => R;
 

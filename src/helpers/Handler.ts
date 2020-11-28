@@ -1,13 +1,13 @@
-import { Empty, NoParamFn, UnaryFn } from '@definitions';
+import { Empty, NullaryFn, UnaryFn } from 'type-core';
 
 export class Handler {
   public static noop(): void {
     return undefined;
   }
   public static tries(
-    tries: Empty | NoParamFn,
+    tries: Empty | NullaryFn,
     catches: Empty | UnaryFn<Error>,
-    finalizes: Empty | NoParamFn
+    finalizes: Empty | NullaryFn
   ): void {
     try {
       if (tries) tries();

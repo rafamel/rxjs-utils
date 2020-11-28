@@ -1,5 +1,6 @@
 import { Pull } from '@definitions';
-import { Resolver, TypeGuard } from '@helpers';
+import { Resolver } from '@helpers';
+import { TypeGuard } from 'type-core';
 
 export class Validate {
   public static provider(provider: Pull.Provider<any, any>): void {

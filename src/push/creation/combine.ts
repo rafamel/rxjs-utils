@@ -1,17 +1,18 @@
-import { Push, WideRecord } from '@definitions';
+import { Push } from '@definitions';
 import { Observable } from '../classes/Observable';
 import { map } from '../operators/map';
 import { intercept } from '../utils/intercept';
 import { isObservableConvertible } from '../utils/type-guards';
 import { from } from './from';
 import { merge } from './merge';
+import { Members } from 'type-core';
 import { into } from 'pipettes';
 
-export type CombineResponse<T extends WideRecord<Push.Convertible>> = {
+export type CombineResponse<T extends Members<Push.Convertible>> = {
   [P in keyof T]: T[P] extends Push.Convertible<infer U> ? U : never;
 };
 
-export function combine<T extends WideRecord<Push.Convertible>>(
+export function combine<T extends Members<Push.Convertible>>(
   observables: T
 ): Push.Observable<CombineResponse<T>>;
 export function combine<A>(a?: Push.Convertible<A>): Push.Observable<[A]>;
@@ -64,8 +65,8 @@ export function combine(...arr: any): Push.Observable {
     );
   }
 
-  const record: WideRecord<Push.Convertible> = arr[0];
-  const dict: WideRecord<string> = {};
+  const record: Members<Push.Convertible> = arr[0];
+  const dict: Members<string> = {};
   const list: Push.Convertible[] = [];
   for (const [key, obs] of Object.entries(record)) {
     dict[list.length] = key;

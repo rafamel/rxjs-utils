@@ -8,7 +8,12 @@ export interface SubjectOptions {
   replay?: boolean | number;
 }
 
-export class Subject<T = any> extends Observable<T> implements Push.Subject<T> {
+export class Subject<T = any, U extends T | void = T | void>
+  extends Observable<T>
+  implements Push.Subject<T> {
+  public static of<T>(...items: T[]): Subject<T> {
+    return this.from(items);
+  }
   public static from<T>(
     item: Push.Convertible<T>,
     options?: SubjectOptions
@@ -28,9 +33,14 @@ export class Subject<T = any> extends Observable<T> implements Push.Subject<T> {
 
     return subject;
   }
+  public static start<T>(value: T, options?: SubjectOptions): Subject<T, T> {
+    const subject = new this<T, T>(options);
+    subject.next(value);
+    return subject;
+  }
   #items: Set<Push.SubscriptionObserver<T>>;
   #replay: number;
-  #value: T | void;
+  #value: T | U;
   #values: T[];
   #termination: boolean | [Error];
   public constructor(options?: SubjectOptions) {
@@ -57,7 +67,7 @@ export class Subject<T = any> extends Observable<T> implements Push.Subject<T> {
     this.#values = [];
     this.#termination = false;
   }
-  public get value(): T | void {
+  public get value(): T | U {
     return this.#value;
   }
   public get closed(): boolean {

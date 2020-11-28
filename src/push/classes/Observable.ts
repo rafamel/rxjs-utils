@@ -1,8 +1,9 @@
-import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
-import { Accessor, Handler, TypeGuard } from '@helpers';
+import { Push } from '@definitions';
+import { Accessor, Handler } from '@helpers';
 import { isObservableCompatible, isObservableLike } from '../utils/type-guards';
 import { Hooks, Subscription } from './assistance';
 import { From } from './helpers';
+import { Empty, NullaryFn, UnaryFn, TypeGuard } from 'type-core';
 import 'symbol-observable';
 
 const $hooks = Symbol('hooks');
@@ -65,7 +66,7 @@ export class Observable<T = any> {
   public subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
-    onComplete?: NoParamFn
+    onComplete?: NullaryFn
   ): Push.Subscription;
   public subscribe(observer: any, ...arr: any[]): Push.Subscription {
     let subscriber = this.#subscriber;

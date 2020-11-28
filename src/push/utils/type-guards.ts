@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { TypeGuard } from '@helpers';
+import { TypeGuard } from 'type-core';
 import 'symbol-observable';
 
 export function isObservableConvertible(

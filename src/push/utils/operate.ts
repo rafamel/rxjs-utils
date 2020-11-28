@@ -1,16 +1,16 @@
-import { Empty, NoParamFn, Push, UnaryFn } from '@definitions';
-import { TypeGuard } from '@helpers';
+import { Push } from '@definitions';
 import { Observable } from '../classes/Observable';
 import { transform } from './transform';
 import { teardown } from './teardown';
 import { intercept, InterceptOptions } from './intercept';
+import { Empty, NullaryFn, UnaryFn, TypeGuard } from 'type-core';
 
 export type OperateOptions = InterceptOptions;
 export type OperateObserverList<T> = [
-  NoParamFn | Empty,
+  NullaryFn | Empty,
   UnaryFn<T> | Empty,
   UnaryFn<Error> | Empty,
-  NoParamFn | Empty,
+  NullaryFn | Empty,
   Push.Teardown | Empty
 ];
 

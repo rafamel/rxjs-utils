@@ -1,4 +1,4 @@
-import { NoParamFn } from '@definitions';
+import { NullaryFn } from 'type-core';
 
 export class Accessor {
   public static define<T>(
@@ -15,7 +15,7 @@ export class Accessor {
   public static fallback<T>(
     obj: object,
     key: string | number | symbol,
-    fn: NoParamFn<T>
+    fn: NullaryFn<T>
   ): T {
     const response = (obj as any)[key];
     if (response !== undefined) return response;

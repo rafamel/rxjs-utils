@@ -1,6 +1,6 @@
-import { BinaryFn, Push } from '@definitions';
-import { TypeGuard } from '@helpers';
+import { Push } from '@definitions';
 import { operate } from '../utils/operate';
+import { BinaryFn, TypeGuard } from 'type-core';
 import { compare as strategy } from 'equal-strategies';
 
 export type CompareStrategy = 'strict' | 'shallow' | 'deep';

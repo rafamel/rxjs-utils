@@ -1,12 +1,13 @@
-import { Empty, NoParamFn, Push } from '@definitions';
+import { Push } from '@definitions';
 import { Handler } from '@helpers';
 import { teardown } from '../../utils/teardown';
 import { Invoke, SubscriptionManager } from '../helpers';
 import { SubscriptionObserver } from './SubscriptionObserver';
 import { Hooks } from './Hooks';
+import { NullaryFn, Empty } from 'type-core';
 
 class Subscription<T = any> implements Push.Subscription {
-  #teardown: NoParamFn | null;
+  #teardown: NullaryFn | null;
   #hooks: Hooks<T>;
   public constructor(
     observer: Push.Observer<T>,
@@ -22,7 +23,7 @@ class Subscription<T = any> implements Push.Subscription {
 
     const subscriptionObserver = new SubscriptionObserver(this, hooks[0]);
 
-    let fn: NoParamFn = Handler.noop;
+    let fn: NullaryFn = Handler.noop;
     try {
       const unsubscribe = subscriber(subscriptionObserver);
       fn = teardown(unsubscribe);

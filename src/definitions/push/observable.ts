@@ -1,4 +1,4 @@
-import { Empty, NoParamFn, UnaryFn } from '../types';
+import { Empty, NullaryFn, UnaryFn } from 'type-core';
 import 'symbol-observable';
 
 /* Constructor */
@@ -30,14 +30,14 @@ export interface Observable<T = any> extends Compatible<T>, Like<T> {
   subscribe(
     onNext: UnaryFn<T>,
     onError?: UnaryFn<Error>,
-    onComplete?: NoParamFn
+    onComplete?: NullaryFn
   ): Subscription;
 }
 
-export interface Subject<T = any>
+export interface Subject<T = any, U extends T | void = T | void>
   extends Observable<T>,
     SubscriptionObserver<T> {
-  value: T | void;
+  value: T | U;
 }
 
 /* Observer */
@@ -83,4 +83,4 @@ export type Subscriber<T = any> = (
 ) => Teardown;
 
 /* Teardown */
-export type Teardown = Empty | NoParamFn | SubscriptionLike;
+export type Teardown = Empty | NullaryFn | SubscriptionLike;

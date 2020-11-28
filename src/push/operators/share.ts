@@ -1,8 +1,8 @@
 import { Push } from '@definitions';
-import { TypeGuard } from '@helpers';
 import { Observable } from '../classes/Observable';
 import { Subject } from '../classes/Subject';
 import { transform } from '../utils/transform';
+import { TypeGuard } from 'type-core';
 
 export interface ShareOptions {
   policy?: SharePolicy;

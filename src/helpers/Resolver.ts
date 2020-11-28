@@ -1,9 +1,8 @@
-import { Empty, NoParamFn, UnaryFn } from '@definitions';
-import { TypeGuard } from './TypeGuard';
+import { Empty, NullaryFn, UnaryFn, TypeGuard } from 'type-core';
 
 export class Resolver {
   public static resolve<T, U = T, V = U>(
-    fn: NoParamFn<Promise<T> | T>,
+    fn: NullaryFn<Promise<T> | T>,
     data: Empty | UnaryFn<T, U>,
     error: Empty | UnaryFn<Error, V>
   ): U | V | Promise<U | V> {

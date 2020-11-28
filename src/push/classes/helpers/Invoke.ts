@@ -1,7 +1,7 @@
-import { Empty, NoParamFn, Push } from '@definitions';
-import { TypeGuard } from '@helpers';
+import { Push } from '@definitions';
 import { Hooks, Subscription, TalkbackOptions } from '../assistance';
 import { SubscriptionManager } from './SubscriptionManager';
+import { Empty, NullaryFn, TypeGuard } from 'type-core';
 
 const $empty = Symbol('empty');
 
@@ -10,7 +10,7 @@ export class Invoke {
     obj: T | Empty,
     key: K,
     payload?: Empty | any[],
-    onEmpty?: Empty | NoParamFn
+    onEmpty?: Empty | NullaryFn
   ): void {
     if (!obj) return;
     let method: any = $empty;

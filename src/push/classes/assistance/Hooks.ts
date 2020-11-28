@@ -1,5 +1,6 @@
-import { Empty, Push } from '@definitions';
+import { Push } from '@definitions';
 import { Invoke } from '../helpers';
+import { Empty } from 'type-core';
 
 export class Hooks<T = any> implements Push.Hooks<T> {
   #hooks: Push.Hooks<T> | Empty;
