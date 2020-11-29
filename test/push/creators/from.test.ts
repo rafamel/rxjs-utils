@@ -11,32 +11,7 @@ test(`succeeds w/ Subject`, () => {
   const subject = new Subject();
   const observable = from(subject);
 
-  assert(observable !== subject);
-  assert(observable instanceof Observable);
-  assert(!(observable instanceof Subject));
-
-  const values: any[] = [];
-  observable.subscribe((value) => values.push(value));
-  subject.next(1);
-  subject.next(2);
-  subject.complete();
-
-  assert.deepStrictEqual(values, [1, 2]);
-});
-test(`succeeds w/ Observable`, () => {
-  const observable = from(
-    new Observable((obs) => {
-      obs.next(1);
-      obs.next(2);
-      obs.complete();
-    })
-  );
-
-  assert(observable instanceof Observable);
-
-  const values: any[] = [];
-  observable.subscribe((value) => values.push(value));
-  assert.deepStrictEqual(values, [1, 2]);
+  assert(observable === subject);
 });
 test(`succeeds w/ Compatible`, () => {
   const obs = new Observable((obs) => {
