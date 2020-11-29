@@ -11,8 +11,10 @@ export interface SubjectOptions {
 export class Subject<T = any, U extends T | void = T | void>
   extends Observable<T>
   implements Push.Subject<T> {
-  public static of<T>(...items: T[]): Subject<T> {
-    return this.from(items);
+  public static of<T>(item: T, options?: SubjectOptions): Subject<T, T> {
+    const subject = new this<T, T>(options);
+    subject.next(item);
+    return subject;
   }
   public static from<T>(
     item: Push.Convertible<T>,
@@ -31,11 +33,6 @@ export class Subject<T = any, U extends T | void = T | void>
       complete: subscription.unsubscribe.bind(subscription)
     });
 
-    return subject;
-  }
-  public static start<T>(value: T, options?: SubjectOptions): Subject<T, T> {
-    const subject = new this<T, T>(options);
-    subject.next(value);
     return subject;
   }
   #items: Set<Push.SubscriptionObserver<T>>;
