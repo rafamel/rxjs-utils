@@ -1,29 +1,12 @@
 import { Push } from '@definitions';
-import { Accessor, Handler } from '@helpers';
+import { HooksManager } from '../helpers';
 import { isObservableCompatible, isObservableLike } from '../utils/type-guards';
-import { Hooks, Subscription } from './assistance';
+import { Subscription } from './assistance';
 import { From } from './helpers';
 import { Empty, NullaryFn, UnaryFn, TypeGuard } from 'type-core';
 import 'symbol-observable';
 
-const $hooks = Symbol('hooks');
-
-const defaultHooks: Push.Hooks = {
-  onUnhandledError(error: Error, subscription: Push.Subscription) {
-    subscription.unsubscribe();
-    setTimeout(() => Handler.throws(error), 0);
-  }
-};
-
 export class Observable<T = any> {
-  public static configure(hooks?: Push.Hooks): void {
-    const Constructor: any = TypeGuard.isFunction(this) ? this : Observable;
-    const defaults = Object.getPrototypeOf(Constructor)[$hooks] || defaultHooks;
-
-    const instance = Object.create(defaults || {});
-    Object.assign(instance, hooks);
-    Accessor.define(this, $hooks, instance);
-  }
   public static of<T>(...items: T[]): Observable<T> {
     const Constructor = TypeGuard.isFunction(this) ? this : Observable;
     return From.iterable(Constructor, items) as Observable<T>;
@@ -84,11 +67,6 @@ export class Observable<T = any> {
       observer = {};
     }
 
-    const Constructor: any = this.constructor;
-    const hooks = new Hooks(Constructor[$hooks] || defaultHooks);
-    return new Subscription(observer, subscriber, {
-      onUnhandledError: hooks.onUnhandledError.bind(hooks),
-      onStoppedNotification: hooks.onStoppedNotification.bind(hooks)
-    });
+    return new Subscription(observer, subscriber, HooksManager.get());
   }
 }

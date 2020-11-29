@@ -2,12 +2,13 @@ import {
   Observable,
   isObservableCompatible,
   isObservableLike,
-  Subscription
+  Subscription,
+  configure
 } from '@push';
 import { Handler } from '@helpers';
 import assert from 'assert';
 
-Observable.configure();
+configure();
 
 test(`Observable is ObservableLike`, () => {
   const instance = new Observable(() => undefined);
@@ -22,7 +23,7 @@ test(`Observable is ObservableCompatible`, () => {
 });
 test(`Subscribe: errors when Observer is not empty, a function or an object`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const instance: any = new Observable(() => undefined);
 
@@ -35,7 +36,7 @@ test(`Subscribe: errors when Observer is not empty, a function or an object`, ()
 });
 test(`Subscribe: Doesn't error when Observer is empty, a function or an object`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const instance = new Observable(() => undefined);
 
@@ -53,7 +54,7 @@ test(`Subscribe: Doesn't error when Observer is empty, a function or an object`,
 });
 test(`Subscription.unsubscribe: errors when subscriber fails`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   new Observable(() => () => Handler.throws(Error())).subscribe().unsubscribe();
 
@@ -61,7 +62,7 @@ test(`Subscription.unsubscribe: errors when subscriber fails`, () => {
 });
 test(`Subscription.unsubscribe: doesn't error when subscriber succeeds`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   new Observable(() => () => undefined).subscribe().unsubscribe();
 
@@ -69,7 +70,7 @@ test(`Subscription.unsubscribe: doesn't error when subscriber succeeds`, () => {
 });
 test(`Observer.start: errors when it fails`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0];
   const error = Error('foo');
@@ -87,7 +88,7 @@ test(`Observer.start: errors when it fails`, () => {
   assert.deepStrictEqual(times, [1, 1]);
 });
 test(`Observer.start: hooks properly unsubscribe on error`, () => {
-  Observable.configure({
+  configure({
     onUnhandledError: (_, subscription) => subscription.unsubscribe()
   });
 
@@ -106,7 +107,7 @@ test(`Observer.start: hooks properly unsubscribe on error`, () => {
 });
 test(`Observer.start: doesn't error when it succeeds`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0];
   new Observable(() => {
@@ -132,7 +133,7 @@ test(`Observer.start: receives a subscription`, () => {
   assert(pass);
 });
 test(`Observer.next: hooks properly unsubscribe on error (sync)`, () => {
-  Observable.configure({
+  configure({
     onUnhandledError: (_, subscription) => subscription.unsubscribe()
   });
 
@@ -155,7 +156,7 @@ test(`Observer.next: hooks properly unsubscribe on error (sync)`, () => {
   assert.deepStrictEqual(times, [1, 1, 1, 1, 0, 0]);
 });
 test(`Observer.next: hooks properly unsubscribe on error (async)`, async () => {
-  Observable.configure({
+  configure({
     onUnhandledError: (_, subscription) => subscription.unsubscribe()
   });
 
@@ -182,7 +183,7 @@ test(`Observer.next: hooks properly unsubscribe on error (async)`, async () => {
 });
 test(`Observer.next: errors when it fails (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0, 0];
@@ -206,7 +207,7 @@ test(`Observer.next: errors when it fails (sync)`, () => {
 });
 test(`Observer.next: errors when it fails (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0, 0, 0, 0, 0];
   const subscription = new Observable<void>((obs) => {
@@ -232,7 +233,7 @@ test(`Observer.next: errors when it fails (async)`, async () => {
 });
 test(`Observer.next: doesn't error when it succeeds (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0, 0, 0, 0, 0];
   const subscription = new Observable<void>((obs) => {
@@ -256,7 +257,7 @@ test(`Observer.next: doesn't error when it succeeds (sync)`, () => {
 });
 test(`Observer.next: doesn't error when it succeeds (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0, 0, 0, 0, 0];
   const subscription = new Observable<void>((obs) => {
@@ -281,7 +282,7 @@ test(`Observer.next: doesn't error when it succeeds (async)`, async () => {
 });
 test(`Observer.error: errors when it fails (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0, 0];
@@ -305,7 +306,7 @@ test(`Observer.error: errors when it fails (sync)`, () => {
 });
 test(`Observer.error: errors when it fails (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0, 0];
@@ -334,7 +335,7 @@ test(`Observer.error: errors when it fails (async)`, async () => {
 });
 test(`Observer.error: errors after it's closed (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const values = [Error('foo'), Error('bar'), Error('baz')];
   const times = [0, 0, 0, 0, 0, 0];
@@ -358,7 +359,7 @@ test(`Observer.error: errors after it's closed (sync)`, () => {
 });
 test(`Observer.error: errors after it's closed (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const values = [Error('foo'), Error('bar'), Error('baz')];
   const times = [0, 0, 0, 0, 0, 0];
@@ -385,7 +386,7 @@ test(`Observer.error: errors after it's closed (async)`, async () => {
 });
 test(`Observer.error: errors when there's no listener (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0];
@@ -405,7 +406,7 @@ test(`Observer.error: errors when there's no listener (sync)`, () => {
 });
 test(`Observer.error: errors when there's no listener (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0];
@@ -426,7 +427,7 @@ test(`Observer.error: errors when there's no listener (async)`, async () => {
 });
 test(`Observer.error: doesn't error when it succeeds and there's a listener (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0, 0, 0, 0, 0];
   const subscription = new Observable((obs) => {
@@ -446,7 +447,7 @@ test(`Observer.error: doesn't error when it succeeds and there's a listener (syn
 });
 test(`Observer.error: doesn't error when it succeeds and there's a listener (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0, 0, 0, 0, 0];
 
@@ -468,7 +469,7 @@ test(`Observer.error: doesn't error when it succeeds and there's a listener (asy
 });
 test(`Observer.error: catches Subscriber error`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   let res: any;
   const error = Error('foo');
@@ -494,7 +495,7 @@ test(`Observer.error: catches Subscriber error`, () => {
 });
 test(`Observer.error: catches Subscriber error and errors on failure`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0];
@@ -517,7 +518,7 @@ test(`Observer.error: catches Subscriber error and errors on failure`, () => {
 });
 test(`Observer.error: catches Subscriber errors and errors when lacking listener`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0];
@@ -536,7 +537,7 @@ test(`Observer.error: catches Subscriber errors and errors when lacking listener
 });
 test(`Observer.complete: rejects when it fails (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0, 0];
@@ -560,7 +561,7 @@ test(`Observer.complete: rejects when it fails (sync)`, () => {
 });
 test(`Observer.complete: errors when it fails (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const error = Error('foo');
   const times = [0, 0, 0, 0, 0, 0];
@@ -585,7 +586,7 @@ test(`Observer.complete: errors when it fails (async)`, async () => {
 });
 test(`Observer.complete: doesn't error when it succeeds (sync)`, () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0, 0, 0, 0, 0];
   const subscription = new Observable((obs) => {
@@ -606,7 +607,7 @@ test(`Observer.complete: doesn't error when it succeeds (sync)`, () => {
 });
 test(`Observer.complete: doesn't error when it succeeds (async)`, async () => {
   const errors: Error[] = [];
-  Observable.configure({ onUnhandledError: (err) => errors.push(err) });
+  configure({ onUnhandledError: (err) => errors.push(err) });
 
   const times = [0, 0, 0, 0, 0, 0];
   const subscription = new Observable((obs) => {

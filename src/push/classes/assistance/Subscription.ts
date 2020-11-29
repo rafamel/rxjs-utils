@@ -15,7 +15,7 @@ class Subscription<T = any> implements Push.Subscription {
     ...hooks: [] | [Push.Hooks<T> | Empty]
   ) {
     this.#teardown = null;
-    this.#hooks = new Hooks(hooks[0]);
+    this.#hooks = Hooks.from(hooks[0]);
     SubscriptionManager.setObserver(this, observer);
 
     Invoke.observer('start', this, this, this.#hooks);

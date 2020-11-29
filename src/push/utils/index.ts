@@ -1,3 +1,4 @@
+export * from './configure';
 export * from './intercept';
 export * from './operate';
 export * from './teardown';

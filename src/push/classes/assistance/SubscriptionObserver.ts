@@ -15,7 +15,7 @@ class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
     subscription: Subscription<T>,
     ...hooks: [] | [Push.Hooks<T> | Empty]
   ) {
-    this.#hooks = new Hooks(hooks[0]);
+    this.#hooks = Hooks.from(hooks[0]);
     Accessor.define(this, $subscription, subscription);
   }
   public get closed(): boolean {

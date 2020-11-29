@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
-import { Observable } from '@push';
+import { Observable, configure } from '@push';
 import { ESObservable } from './module';
 import { compliance } from './compliance';
 import chalk from 'chalk';
 
-Observable.configure({ onUnhandledError: null });
+configure({ onUnhandledError: null });
 
 console.log(chalk.bold('\nCOMPLIANCE'));
 let pass = true;

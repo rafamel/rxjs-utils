@@ -3,6 +3,9 @@ import { Invoke } from '../helpers';
 import { Empty } from 'type-core';
 
 export class Hooks<T = any> implements Push.Hooks<T> {
+  public static from<T = any>(hooks?: Push.Hooks<T> | Empty): Hooks {
+    return hooks instanceof this ? hooks : new this(hooks);
+  }
   #hooks: Push.Hooks<T> | Empty;
   public constructor(hooks?: Push.Hooks<T> | Empty) {
     this.#hooks = hooks;

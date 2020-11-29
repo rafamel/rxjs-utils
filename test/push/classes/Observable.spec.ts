@@ -1,8 +1,8 @@
-import { Observable } from '@push';
+import { Observable, configure } from '@push';
 import { compliance } from '../../es-observable/compliance';
 import assert from 'assert';
 
-Observable.configure({ onUnhandledError: null });
+configure({ onUnhandledError: null });
 
 test(`Observable passes compliance tests`, async () => {
   const response = await compliance('Observable', Observable, 'silent');
