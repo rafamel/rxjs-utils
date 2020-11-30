@@ -76,14 +76,14 @@
     "husky": "^4.2.5",
     "kpo": "^0.11.1",
     "onchange": "^7.0.2",
-    "prettier": "^2.2.0",
+    "prettier": "^2.2.1",
     "typescript": "^3.9.7"
   },
   "dependencies": {
     "equal-strategies": "^0.1.0",
-    "pipettes": "^0.1.1",
+    "pipettes": "^0.1.2",
     "symbol-observable": "^2.0.3",
-    "type-core": "^0.2.0"
+    "type-core": "^0.3.0"
   },
   "husky": {
     "hooks": {
