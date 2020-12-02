@@ -1,4 +1,4 @@
-import { Empty, NullaryFn, UnaryFn } from 'type-core';
+import { Empty, Intersection, NullaryFn, UnaryFn } from 'type-core';
 import 'symbol-observable';
 
 /* Constructor */
@@ -34,20 +34,26 @@ export interface Observable<T = any> extends Compatible<T>, Like<T> {
   ): Subscription;
 }
 
-export interface Subject<T = any, U extends T | void = T | void>
-  extends Observable<T>,
-    SubscriptionObserver<T> {
+export interface Multicast<T = any, U extends T | void = T | void>
+  extends Observable<T> {
   value: T | U;
+  closed: boolean;
 }
+
+export type Subject<T = any, U extends T | void = T | void> = Intersection<
+  Observable<T>,
+  SubscriptionObserver<T>,
+  Multicast<T, U>
+>;
 
 /* Observer */
 export interface ObserverLike<T = any> {
-  next?: (value: T) => void;
+  next: (value: T) => void;
   error?: (error: Error) => void;
   complete?: () => void;
 }
 
-export interface Observer<T = any> extends ObserverLike<T> {
+export interface Observer<T = any> {
   start?: (subscription: Subscription) => void;
   next?: (value: T) => void;
   error?: (error: Error) => void;

@@ -1,21 +1,20 @@
 import { Push } from '@definitions';
-import { Observable } from '../../classes/Observable';
-import { Subject } from '../../classes/Subject';
+import { Multicast, MulticastOptions } from '../../classes/Multicast';
 import { transform } from '../../utils/transform';
 
-export interface ConnectOptions {
-  replay?: boolean | number;
-}
+export type ConnectOptions = MulticastOptions;
 
 /**
  * Creates a new Observable that multicasts the original Observable.
  * The original Observable will be immediately subscribed,
  * and will continue to be even if there are no subscribers.
  */
-export function connect<T>(options?: ConnectOptions): Push.Operation<T> {
+export function connect<T>(
+  options?: ConnectOptions
+): Push.Transformation<T, Push.Multicast<T>> {
   return transform((source) => {
-    const subject = new Subject(options);
-    source.subscribe(subject);
-    return new Observable((obs) => subject.subscribe(obs));
+    return Multicast.from(source, options, {
+      onCreate: (connect) => connect()
+    });
   });
 }

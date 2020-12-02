@@ -1,12 +1,10 @@
 import { Push } from '@definitions';
-import { Observable } from '../../classes/Observable';
-import { Subject } from '../../classes/Subject';
+import { Multicast, MulticastOptions } from '../../classes/Multicast';
 import { transform } from '../../utils/transform';
-import { TypeGuard } from 'type-core';
+import { Empty, TypeGuard } from 'type-core';
 
-export interface ShareOptions {
+export interface ShareOptions extends MulticastOptions {
   policy?: SharePolicy;
-  replay?: boolean | number;
 }
 
 /**
@@ -23,42 +21,48 @@ export type SharePolicy = 'on-demand' | 'keep-open' | 'keep-closed';
  */
 export function share<T>(
   policy?: SharePolicy | ShareOptions
-): Push.Operation<T> {
+): Push.Transformation<T, Push.Multicast<T>> {
   const options = !policy || TypeGuard.isString(policy) ? { policy } : policy;
 
   return transform((observable) => {
     let count = 0;
-    let subscription: null | Push.Subscription = null;
+    let observer: Push.SubscriptionObserver | Empty;
+    let subscription: Push.Subscription | Empty;
 
-    const subject = new Subject(options);
-    return new Observable((obs) => {
-      count++;
-      const subs = subject.subscribe(obs);
+    return new Multicast(
+      (obs) => {
+        observer = obs;
+        return observable.subscribe(obs);
+      },
+      options,
+      {
+        onSubscribe(connect) {
+          count++;
+          subscription = connect();
+        },
+        onUnsubscribe() {
+          count--;
 
-      if (!subscription && !subject.closed) {
-        subscription = observable.subscribe(subject);
-      }
-      return () => {
-        count--;
-        subs.unsubscribe();
-
-        if (count > 0) return;
-
-        switch (options.policy) {
-          case 'keep-open': {
-            return;
-          }
-          case 'keep-closed': {
-            if (subscription) subscription.unsubscribe();
-            subject.error(Error('Multicasted subscription is already closed'));
-            return;
-          }
-          default: {
-            if (subscription) subscription.unsubscribe();
-            subscription = null;
+          if (count > 0) return;
+          switch (options.policy) {
+            case 'keep-open': {
+              return;
+            }
+            case 'keep-closed': {
+              if (observer && !observer.closed) {
+                const err = Error('Multicast is already closed');
+                observer.error(err);
+              }
+              if (subscription) subscription.unsubscribe();
+              return;
+            }
+            default: {
+              if (subscription) subscription.unsubscribe();
+              subscription = null;
+            }
           }
         }
-      };
-    });
+      }
+    );
   });
 }

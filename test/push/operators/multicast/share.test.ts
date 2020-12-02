@@ -1,7 +1,11 @@
-import { Observable, share } from '@push';
+import { interval, Multicast, Observable, share } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
+test(`returns Multicast`, () => {
+  const obs = into(interval({ every: 10, cancel: (i) => i >= 8 }), share());
+  expect(obs).toBeInstanceOf(Multicast);
+});
 test(`succeeds w/ on-demand policy`, async () => {
   const times = [0, 0, 0, 0, 0, 0];
   const obs = into(

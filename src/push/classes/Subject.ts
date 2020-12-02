@@ -1,16 +1,17 @@
 import { Push } from '@definitions';
+import { Accessor } from '@helpers';
+import { from } from '../creators/from';
 import { tap } from '../operators/tap';
-import { Invoke } from './helpers';
-import { Observable } from './Observable';
+import { Multicast, MulticastOptions } from './Multicast';
 import { into } from 'pipettes';
 
-export interface SubjectOptions {
-  replay?: boolean | number;
-}
+export type SubjectOptions = MulticastOptions;
+
+const $observer = Symbol('observer');
 
 export class Subject<T = any, U extends T | void = T | void>
-  extends Observable<T>
-  implements Push.Subject<T> {
+  extends Multicast<T, U>
+  implements Push.Subject<T, U> {
   public static of<T>(item: T, options?: SubjectOptions): Subject<T, T> {
     const subject = new this<T, T>(options);
     subject.next(item);
@@ -20,11 +21,13 @@ export class Subject<T = any, U extends T | void = T | void>
     item: Push.Convertible<T>,
     options?: SubjectOptions
   ): Subject<T> {
-    const obs = super.from(item);
+    if (item.constructor === this) return item;
+
+    const observable = from(item);
     const subject = new this(options);
 
     let subscription: any;
-    into(obs, tap({ start: (subs) => (subscription = subs) })).subscribe(
+    into(observable, tap({ start: (subs) => (subscription = subs) })).subscribe(
       subject
     );
 
@@ -35,68 +38,25 @@ export class Subject<T = any, U extends T | void = T | void>
 
     return subject;
   }
-  #items: Set<Push.SubscriptionObserver<T>>;
-  #replay: number;
-  #value: T | U;
-  #values: T[];
-  #termination: boolean | [Error];
+  private [$observer]: Push.SubscriptionObserver<T>;
   public constructor(options?: SubjectOptions) {
-    super((obs) => {
-      const termination = this.#termination;
-      if (termination) {
-        return typeof termination === 'boolean'
-          ? obs.complete()
-          : obs.error(termination[0]);
-      }
-
-      for (const value of this.#values) {
-        obs.next(value);
-      }
-
-      const items = this.#items;
-      items.add(obs);
-      return () => items.delete(obs);
-    });
-
-    const opts = options || {};
-    this.#items = new Set();
-    this.#replay = Math.max(0, Number(opts.replay));
-    this.#values = [];
-    this.#termination = false;
-  }
-  public get value(): T | U {
-    return this.#value;
-  }
-  public get closed(): boolean {
-    return Boolean(this.#termination);
-  }
-  public [Symbol.observable](): Observable<T> {
-    return Observable.from(this);
+    let observer: any;
+    super(
+      (obs) => {
+        observer = obs;
+      },
+      options,
+      { onCreate: (connect) => connect() }
+    );
+    Accessor.define(this, $observer, observer);
   }
   public next(value: T): void {
-    if (this.closed) return;
-
-    this.#value = value;
-
-    const replay = this.#replay;
-    if (replay) {
-      const values = this.#values;
-      values.push(value);
-      if (values.length > replay) values.shift();
-    }
-
-    Invoke.subscriptionObservers('next', value, this.#items);
+    return this[$observer].next(value);
   }
   public error(error: Error): void {
-    if (this.closed) return;
-
-    this.#termination = [error];
-    Invoke.subscriptionObservers('error', error, this.#items);
+    return this[$observer].error(error);
   }
   public complete(): void {
-    if (this.closed) return;
-
-    this.#termination = true;
-    Invoke.subscriptionObservers('complete', undefined, this.#items);
+    return this[$observer].complete();
   }
 }
