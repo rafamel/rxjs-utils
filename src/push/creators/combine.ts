@@ -2,7 +2,6 @@ import { Push } from '@definitions';
 import { Observable } from '../classes/Observable';
 import { map } from '../operators/map';
 import { intercept } from '../utils/intercept';
-import { isObservableConvertible } from '../utils/type-guards';
 import { from } from './from';
 import { merge } from './merge';
 import { Members } from 'type-core';
@@ -15,57 +14,67 @@ export type CombineResponse<T extends Members<Push.Convertible>> = {
 export function combine<T extends Members<Push.Convertible>>(
   observables: T
 ): Push.Observable<CombineResponse<T>>;
-export function combine<A>(a?: Push.Convertible<A>): Push.Observable<[A]>;
+export function combine<A>(
+  observables: [Push.Convertible<A>]
+): Push.Observable<[A]>;
 export function combine<A, B>(
-  a: Push.Convertible<A>,
-  b: Push.Convertible<B>
+  observables: [Push.Convertible<A>, Push.Convertible<B>]
 ): Push.Observable<[A, B]>;
 export function combine<A, B, C>(
-  a: Push.Convertible<A>,
-  b: Push.Convertible<B>,
-  c: Push.Convertible<C>
+  observables: [Push.Convertible<A>, Push.Convertible<B>, Push.Convertible<C>]
 ): Push.Observable<[A, B, C]>;
 export function combine<A, B, C, D>(
-  a: Push.Convertible<A>,
-  b: Push.Convertible<B>,
-  c: Push.Convertible<C>,
-  d: Push.Convertible<D>
+  observables: [
+    Push.Convertible<A>,
+    Push.Convertible<B>,
+    Push.Convertible<C>,
+    Push.Convertible<D>
+  ]
 ): Push.Observable<[A, B, C, D]>;
 export function combine<A, B, C, D, E>(
-  a: Push.Convertible<A>,
-  b: Push.Convertible<B>,
-  c: Push.Convertible<C>,
-  d: Push.Convertible<D>,
-  e: Push.Convertible<E>
+  observables: [
+    Push.Convertible<A>,
+    Push.Convertible<B>,
+    Push.Convertible<C>,
+    Push.Convertible<D>,
+    Push.Convertible<E>
+  ]
 ): Push.Observable<[A, B, C, D, E]>;
 export function combine<A, B, C, D, E, F>(
-  a: Push.Convertible<A>,
-  b: Push.Convertible<B>,
-  c: Push.Convertible<C>,
-  d: Push.Convertible<D>,
-  e: Push.Convertible<E>,
-  f: Push.Convertible<F>
+  observables: [
+    Push.Convertible<A>,
+    Push.Convertible<B>,
+    Push.Convertible<C>,
+    Push.Convertible<D>,
+    Push.Convertible<E>,
+    Push.Convertible<F>
+  ]
 ): Push.Observable<[A, B, C, D, E, F]>;
 export function combine<A, B, C, D, E, F, G>(
-  a: Push.Convertible<A>,
-  b: Push.Convertible<B>,
-  c: Push.Convertible<C>,
-  d: Push.Convertible<D>,
-  e: Push.Convertible<E>,
-  g: Push.Convertible<G>
+  observables: [
+    Push.Convertible<A>,
+    Push.Convertible<B>,
+    Push.Convertible<C>,
+    Push.Convertible<D>,
+    Push.Convertible<E>,
+    Push.Convertible<F>,
+    Push.Convertible<G>
+  ]
 ): Push.Observable<[A, B, C, D, E, F, G]>;
 export function combine<T>(
-  ...arr: Array<Push.Convertible<T>>
+  observables: Array<Push.Convertible<T>>
 ): Push.Observable<T[]>;
-export function combine(...arr: any): Push.Observable {
-  if (isObservableConvertible(arr[0])) {
+export function combine(observables: any): Push.Observable {
+  if (!observables) return combineList();
+
+  if (Array.isArray(observables)) {
     return into(
-      combineList(arr),
+      combineList(observables),
       map((current: any[]) => Array.from(current))
     );
   }
 
-  const record: Members<Push.Convertible> = arr[0];
+  const record: Members<Push.Convertible> = observables;
   const dict: Members<string> = {};
   const list: Push.Convertible[] = [];
   for (const [key, obs] of Object.entries(record)) {
@@ -83,8 +92,10 @@ export function combine(...arr: any): Push.Observable {
   );
 }
 
-function combineList(arr: Push.Convertible[]): Push.Observable<any[]> {
-  if (arr.length < 1) return new Observable(() => undefined);
+function combineList(arr?: Push.Convertible[]): Push.Observable<any[]> {
+  if (!arr || arr.length < 1) {
+    throw Error(`Must provide at least one observable to combine`);
+  }
 
   const observables: Push.Observable[] = arr.map(from);
   if (observables.length === 1) {
