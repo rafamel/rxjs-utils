@@ -3,12 +3,12 @@ import { operate } from '../../utils/operate';
 import { BinaryFn, TypeGuard } from 'type-core';
 import { compare as strategy } from 'equal-strategies';
 
-export type CompareStrategy = 'strict' | 'shallow' | 'deep';
+export type ChangesStrategy = 'strict' | 'shallow' | 'deep';
 
 const $empty = Symbol('empty');
 
 export function changes<T>(
-  compare?: CompareStrategy | BinaryFn<[T, T], boolean>
+  compare?: ChangesStrategy | BinaryFn<[T, T], boolean>
 ): Push.Operation<T> {
   const fn =
     !compare || TypeGuard.isString(compare)
