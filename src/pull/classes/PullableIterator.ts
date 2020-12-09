@@ -1,7 +1,7 @@
 import { Pull } from '@definitions';
 import { Handler, Resolver } from '@helpers';
 import { Validate } from './helpers';
-import { Members, TypeGuard } from 'type-core';
+import { MaybePromise, Members, TypeGuard } from 'type-core';
 
 export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
   #closed: boolean;
@@ -12,7 +12,7 @@ export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
     this.#closed = false;
     this.#iterator = iterator;
   }
-  public next(value: I): Pull.Response<O> {
+  public next(value: I): MaybePromise<Pull.Response<O>> {
     if (this.#closed) return { complete: true };
 
     const iterator = this.#iterator;
@@ -30,7 +30,7 @@ export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
       }
     );
   }
-  public error(error: Error): Pull.Response<O> {
+  public error(error: Error): MaybePromise<Pull.Response<O>> {
     if (this.#closed) return { complete: true };
 
     const iterator = this.#iterator;
@@ -51,7 +51,7 @@ export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
       }
     );
   }
-  public complete(): void | Promise<void> {
+  public complete(): MaybePromise<void> {
     if (this.#closed) return;
 
     const iterator = this.#iterator;

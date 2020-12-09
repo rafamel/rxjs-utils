@@ -1,3 +1,4 @@
+import { MaybePromise } from 'type-core';
 import { Iterable } from './iterable';
 
 /* Constructor */
@@ -21,22 +22,19 @@ export type Sink<O, I> = () => PullableIterator<I, O>;
 /* Iterators */
 // TODO: add "finally" to iterators
 export interface PureIterator<O, I> {
-  next?: (value: I) => Response<O>;
-  error?: (error: Error) => Response<O>;
-  complete?: () => void | Promise<void>;
+  next?: (value: I) => MaybePromise<Response<O>>;
+  error?: (error: Error) => MaybePromise<Response<O>>;
+  complete?: () => MaybePromise<void>;
 }
 
 export interface PullableIterator<O, I> extends PureIterator<O, I> {
-  next: (value: I) => Response<O>;
-  error: (error: Error) => Response<O>;
-  complete: () => void | Promise<void>;
+  next: (value: I) => MaybePromise<Response<O>>;
+  error: (error: Error) => MaybePromise<Response<O>>;
+  complete: () => MaybePromise<void>;
 }
 
 /* Response */
-export type Response<T> = Result<T> | Promise<Result<T>>;
-
-/* Result */
-export type Result<T> =
+export type Response<T> =
   | { complete: true; value?: void }
   | { complete?: false; value: T }
   | (T extends void | undefined
