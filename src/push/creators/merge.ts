@@ -3,16 +3,46 @@ import { Observable } from '../classes/Observable';
 import { intercept } from '../utils/intercept';
 import { from } from './from';
 
-export function merge<A, B = A, C = A, D = A, E = A, F = A, G = A, T = A>(
+export function merge<A>(a: Push.Convertible<A>): Push.Observable<A>;
+export function merge<A, B>(
   a: Push.Convertible<A>,
-  b?: Push.Convertible<B>,
-  c?: Push.Convertible<C>,
-  d?: Push.Convertible<D>,
-  e?: Push.Convertible<E>,
-  f?: Push.Convertible<F>,
-  g?: Push.Convertible<G>,
-  ...arr: Array<Push.Convertible<T>>
-): Push.Observable<A | B | C | D | E | F | G | T>;
+  b: Push.Convertible<B>
+): Push.Observable<A | B>;
+export function merge<A, B, C>(
+  a: Push.Convertible<A>,
+  b: Push.Convertible<B>,
+  c: Push.Convertible<C>
+): Push.Observable<A | B | C>;
+export function merge<A, B, C, D>(
+  a: Push.Convertible<A>,
+  b: Push.Convertible<B>,
+  c: Push.Convertible<C>,
+  d: Push.Convertible<D>
+): Push.Observable<A | B | C | D>;
+export function merge<A, B, C, D, E>(
+  a: Push.Convertible<A>,
+  b: Push.Convertible<B>,
+  c: Push.Convertible<C>,
+  d: Push.Convertible<D>,
+  e: Push.Convertible<E>
+): Push.Observable<A | B | C | D | E>;
+export function merge<A, B, C, D, E, F>(
+  a: Push.Convertible<A>,
+  b: Push.Convertible<B>,
+  c: Push.Convertible<C>,
+  d: Push.Convertible<D>,
+  e: Push.Convertible<E>,
+  f: Push.Convertible<F>
+): Push.Observable<A | B | C | D | E | F>;
+export function merge<A, B, C, D, E, F, G>(
+  a: Push.Convertible<A>,
+  b: Push.Convertible<B>,
+  c: Push.Convertible<C>,
+  d: Push.Convertible<D>,
+  e: Push.Convertible<E>,
+  f: Push.Convertible<F>,
+  g: Push.Convertible<G>
+): Push.Observable<A | B | C | D | E | F | G>;
 export function merge<T>(
   ...arr: Array<Push.Convertible<T>>
 ): Push.Observable<T>;
