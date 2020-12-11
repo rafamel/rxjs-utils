@@ -1,5 +1,5 @@
 import { Push } from '@definitions';
-import { Hooks, Subscription, TalkbackOptions } from '../assistance';
+import { Hooks, Subscription, Talkback } from '../assistance';
 import { SubscriptionManager } from './SubscriptionManager';
 import { Empty, NullaryFn, TypeGuard } from 'type-core';
 
@@ -61,7 +61,7 @@ export class Invoke {
     action: keyof Push.Observer,
     payload: any,
     items: Push.Observer[],
-    options: TalkbackOptions
+    options: Talkback.Options
   ): void {
     for (const item of items) {
       let method: any = $empty;

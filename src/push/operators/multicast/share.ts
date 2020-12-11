@@ -1,9 +1,9 @@
 import { Push } from '@definitions';
-import { Multicast, MulticastOptions } from '../../classes/Multicast';
+import { Multicast } from '../../classes/Multicast';
 import { transform } from '../../utils/transform';
 import { Empty, TypeGuard } from 'type-core';
 
-export interface ShareOptions extends MulticastOptions {
+export interface ShareOptions extends Multicast.Options {
   policy?: SharePolicy;
 }
 

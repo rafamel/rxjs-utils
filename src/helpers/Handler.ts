@@ -4,6 +4,9 @@ export class Handler {
   public static noop(): void {
     return undefined;
   }
+  public static identity<T>(value: T): T {
+    return value;
+  }
   public static tries(
     tries: Empty | NullaryFn,
     catches: Empty | UnaryFn<Error>,

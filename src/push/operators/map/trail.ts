@@ -8,14 +8,14 @@ import { TypeGuard } from 'type-core';
 export function trail<T>(count?: number): Push.Operation<T, T[]> {
   const number = TypeGuard.isEmpty(count) ? 2 : count;
 
-  return operate<T, T[]>((tb) => {
+  return operate<T, T[]>((obs) => {
     const arr: T[] = [];
     return {
       next(value: T): void {
         arr.push(value);
         if (arr.length > number) arr.shift();
         if (arr.length === number) {
-          tb.next(Array.from(arr));
+          obs.next(Array.from(arr));
         }
       }
     };

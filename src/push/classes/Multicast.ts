@@ -6,17 +6,17 @@ import { Invoke } from './helpers';
 import { Observable } from './Observable';
 import { NullaryFn, TypeGuard, UnaryFn } from 'type-core';
 
-export interface MulticastOptions {
-  replay?: boolean | number;
+export declare namespace Multicast {
+  export interface Options {
+    replay?: boolean | number;
+  }
+  export interface Hooks {
+    onCreate?: UnaryFn<Multicast.Connect>;
+    onSubscribe?: UnaryFn<Multicast.Connect>;
+    onUnsubscribe?: UnaryFn<Multicast.Connect>;
+  }
+  export type Connect = NullaryFn<Push.Subscription>;
 }
-
-export interface MulticastHooks {
-  onCreate?: UnaryFn<MulticastConnect>;
-  onSubscribe?: UnaryFn<MulticastConnect>;
-  onUnsubscribe?: UnaryFn<MulticastConnect>;
-}
-
-export type MulticastConnect = NullaryFn<Push.Subscription>;
 
 export class Multicast<T = any, U extends T | void = T | void>
   extends Observable<T>
@@ -24,8 +24,8 @@ export class Multicast<T = any, U extends T | void = T | void>
   public static of<T>(item: T): Multicast<T, T>;
   public static of<T>(
     item: T,
-    options?: MulticastOptions,
-    hooks?: MulticastHooks
+    options?: Multicast.Options,
+    hooks?: Multicast.Hooks
   ): Multicast<T, T>;
   public static of<T>(item: T, ...args: any[]): Multicast<T, T> {
     const options = args[0];
@@ -42,8 +42,8 @@ export class Multicast<T = any, U extends T | void = T | void>
   }
   public static from<T>(
     item: Push.Convertible<T>,
-    options?: MulticastOptions,
-    hooks?: MulticastHooks
+    options?: Multicast.Options,
+    hooks?: Multicast.Hooks
   ): Multicast<T> {
     if (item.constructor === this) return item;
 
@@ -54,8 +54,8 @@ export class Multicast<T = any, U extends T | void = T | void>
   #termination: boolean | [Error];
   public constructor(
     subscriber: Push.Subscriber<T>,
-    options?: MulticastOptions,
-    hooks?: MulticastHooks
+    options?: Multicast.Options,
+    hooks?: Multicast.Hooks
   ) {
     super((obs) => {
       const termination = this.#termination;

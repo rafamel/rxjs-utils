@@ -6,7 +6,7 @@ import { MaybePromise, Members, TypeGuard } from 'type-core';
 export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
   #closed: boolean;
   #iterator: Members;
-  public constructor(iterator: Pull.PureIterator<O, I>) {
+  public constructor(iterator: Pull.Iterator<O, I>) {
     Validate.counter(iterator);
 
     this.#closed = false;

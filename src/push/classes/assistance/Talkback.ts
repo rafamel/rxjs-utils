@@ -2,17 +2,19 @@ import { Push } from '@definitions';
 import { Invoke } from '../helpers';
 import { UnaryFn, TypeGuard } from 'type-core';
 
-export interface TalkbackOptions {
-  multicast?: boolean;
-  onError?: UnaryFn<Error>;
+export declare namespace Talkback {
+  export interface Options {
+    multicast?: boolean;
+    onError?: UnaryFn<Error>;
+  }
 }
 
 export class Talkback<T = any> implements Push.Talkback<T> {
   #items: Array<Push.Observer<T>>;
-  #options: TalkbackOptions;
+  #options: Talkback.Options;
   public constructor(
     item: Push.Observer<T> | Array<Push.Observer<T>>,
-    options?: TalkbackOptions
+    options?: Talkback.Options
   ) {
     this.#items = TypeGuard.isArray(item) ? item : [item];
     this.#options = options || {};

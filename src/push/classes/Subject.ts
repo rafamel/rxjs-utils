@@ -2,24 +2,26 @@ import { Push } from '@definitions';
 import { Accessor } from '@helpers';
 import { from } from '../creators/from';
 import { tap } from '../operators/tap';
-import { Multicast, MulticastOptions } from './Multicast';
+import { Multicast } from './Multicast';
 import { into } from 'pipettes';
 
-export type SubjectOptions = MulticastOptions;
-
 const $observer = Symbol('observer');
+
+export declare namespace Subject {
+  export type Options = Multicast.Options;
+}
 
 export class Subject<T = any, U extends T | void = T | void>
   extends Multicast<T, U>
   implements Push.Subject<T, U> {
-  public static of<T>(item: T, options?: SubjectOptions): Subject<T, T> {
+  public static of<T>(item: T, options?: Subject.Options): Subject<T, T> {
     const subject = new this<T, T>(options);
     subject.next(item);
     return subject;
   }
   public static from<T>(
     item: Push.Convertible<T>,
-    options?: SubjectOptions
+    options?: Subject.Options
   ): Subject<T> {
     if (item.constructor === this) return item;
 
@@ -39,7 +41,7 @@ export class Subject<T = any, U extends T | void = T | void>
     return subject;
   }
   private [$observer]: Push.SubscriptionObserver<T>;
-  public constructor(options?: SubjectOptions) {
+  public constructor(options?: Subject.Options) {
     let observer: any;
     super(
       (obs) => {

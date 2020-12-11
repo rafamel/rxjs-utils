@@ -7,10 +7,10 @@ export interface Timestamp<T> {
 }
 
 export function timestamp<T>(): Push.Operation<T, Timestamp<T>> {
-  return operate<T, Timestamp<T>>((tb) => {
+  return operate<T, Timestamp<T>>((obs) => {
     return {
       next(value: T): void {
-        tb.next({ value, timestamp: Date.now() });
+        obs.next({ value, timestamp: Date.now() });
       }
     };
   });

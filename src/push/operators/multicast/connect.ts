@@ -1,8 +1,8 @@
 import { Push } from '@definitions';
-import { Multicast, MulticastOptions } from '../../classes/Multicast';
+import { Multicast } from '../../classes/Multicast';
 import { transform } from '../../utils/transform';
 
-export type ConnectOptions = MulticastOptions;
+export type ConnectOptions = Multicast.Options;
 
 /**
  * Creates a new Observable that multicasts the original Observable.

@@ -8,7 +8,7 @@ export class Pullable<O = any, I = void> implements Pull.Pullable<O, I> {
     Validate.provider(provider);
     this.#source = () => new PullableIterator(provider());
   }
-  public [Symbol.asyncIterator](): Pull.Iterator<O, I> {
+  public [Symbol.asyncIterator](): AsyncIterator<O, void, I> {
     const source = this.source();
     return {
       async next(value: I): Promise<IteratorResult<O, void>> {

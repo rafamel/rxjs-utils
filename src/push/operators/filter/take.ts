@@ -10,7 +10,7 @@ export interface TakeOptions<T> {
 export function take<T>(count: number | TakeOptions<T>): Push.Operation<T> {
   const options = !count || TypeGuard.isNumber(count) ? { count } : count;
 
-  return operate<T>((tb) => {
+  return operate<T>((obs) => {
     let index = -1;
     let stop = false;
     return {
@@ -19,14 +19,14 @@ export function take<T>(count: number | TakeOptions<T>): Push.Operation<T> {
 
         index++;
         if (options.count && index < options.count) {
-          return tb.next(value);
+          return obs.next(value);
         }
         if (options.while && options.while(value, index)) {
-          return tb.next(value);
+          return obs.next(value);
         }
 
         stop = true;
-        return tb.complete();
+        return obs.complete();
       }
     };
   });
