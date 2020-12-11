@@ -5,6 +5,7 @@ import { tap } from '../operators/tap';
 import { Multicast } from './Multicast';
 import { into } from 'pipettes';
 
+/** @ignore */
 const $observer = Symbol('observer');
 
 export declare namespace Subject {

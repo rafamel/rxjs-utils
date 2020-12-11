@@ -16,7 +16,7 @@ module.exports = create({
     // Build project on version bump. Boolean.
     build: true,
     // Generate docs from TS on version bump. Boolean.
-    docs: false
+    docs: true
   },
   assign: {
     todo: ['xxx', 'fixme', 'todo', 'refactor'],
@@ -59,7 +59,8 @@ module.exports = create({
     typedoc: {
       strategy: 'deep',
       configure: {
-        exclude: ['**/__mocks__/**/*']
+        excludeNotExported: true,
+        exclude: ['**/__mocks__/**/*', '**/helpers/**/*', '**/helpers.ts']
       }
     }
   }

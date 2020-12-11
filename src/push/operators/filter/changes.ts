@@ -3,9 +3,10 @@ import { operate } from '../../utils/operate';
 import { BinaryFn, TypeGuard } from 'type-core';
 import { compare as strategy } from 'equal-strategies';
 
-export type ChangesStrategy = 'strict' | 'shallow' | 'deep';
-
+/** @ignore */
 const $empty = Symbol('empty');
+
+export type ChangesStrategy = 'strict' | 'shallow' | 'deep';
 
 export function changes<T>(
   compare?: ChangesStrategy | BinaryFn<[T, T], boolean>

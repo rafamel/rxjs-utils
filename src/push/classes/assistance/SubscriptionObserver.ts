@@ -5,7 +5,9 @@ import { Subscription } from './Subscription';
 import { Hooks } from './Hooks';
 import { Empty, TypeGuard } from 'type-core';
 
+/** @ignore */
 const $empty = Symbol('empty');
+/** @ignore */
 const $subscription = Symbol('subscription');
 
 class SubscriptionObserver<T = any> implements Push.SubscriptionObserver<T> {
