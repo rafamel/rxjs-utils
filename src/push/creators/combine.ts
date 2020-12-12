@@ -92,6 +92,7 @@ export function combine(observables: any): Push.Observable {
   );
 }
 
+/** @ignore */
 function combineList(arr?: Push.Convertible[]): Push.Observable<any[]> {
   if (!arr || arr.length < 1) {
     throw Error(`Must provide at least one observable to combine`);

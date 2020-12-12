@@ -8,8 +8,12 @@
 [![License](https://img.shields.io/github/license/rafamel/multitude.svg)](https://github.com/rafamel/multitude/blob/master/LICENSE)
 [![Types](https://img.shields.io/npm/types/multitude.svg)](https://www.npmjs.com/package/multitude)
 
-> Comprehensive streams for push and pull
+> Comprehensive streams for push and pull.
 
 ## Install
 
 [`npm install multitude`](https://www.npmjs.com/package/multitude)
+
+## Documentation
+
+[See documentation.](https://rafamel.github.io/multitude/globals.html)
