@@ -19,7 +19,7 @@ test(`succeeds wo/ arguments`, async () => {
   assert(values[0] === 0);
 });
 test(`succeeds w/ every`, async () => {
-  const obs = interval(100);
+  const obs = interval(300);
 
   let errorCalled = false;
   const values: any[] = [];
@@ -28,14 +28,14 @@ test(`succeeds w/ every`, async () => {
     error: () => (errorCalled = true)
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 550));
+  await new Promise((resolve) => setTimeout(resolve, 1650));
   subscription.unsubscribe();
 
   assert(!errorCalled);
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
 test(`succeeds w/ every, cancel (callback success)`, async () => {
-  const obs = interval({ every: 100, cancel: (i) => i >= 4 });
+  const obs = interval({ every: 300, cancel: (i) => i >= 4 });
 
   let errorCalled = false;
   const values: any[] = [];
@@ -44,14 +44,14 @@ test(`succeeds w/ every, cancel (callback success)`, async () => {
     error: () => (errorCalled = true)
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 750));
+  await new Promise((resolve) => setTimeout(resolve, 2250));
   subscription.unsubscribe();
 
   assert(!errorCalled);
   assert.deepStrictEqual(values, [0, 1, 2, 3, 4]);
 });
 test(`succeeds w/ every, cancel (callback failure)`, async () => {
-  const obs = interval({ every: 100, cancel: () => Handler.throws(Error()) });
+  const obs = interval({ every: 300, cancel: () => Handler.throws(Error()) });
 
   let errorCalled = false;
   const values: any[] = [];
@@ -60,7 +60,7 @@ test(`succeeds w/ every, cancel (callback failure)`, async () => {
     error: () => (errorCalled = true)
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 450));
   subscription.unsubscribe();
 
   assert(errorCalled);
@@ -68,8 +68,8 @@ test(`succeeds w/ every, cancel (callback failure)`, async () => {
 });
 test(`succeeds w/ every, cancel (Promise resolution)`, async () => {
   const obs = interval({
-    every: 100,
-    cancel: new Promise((resolve) => setTimeout(resolve, 550))
+    every: 300,
+    cancel: new Promise((resolve) => setTimeout(resolve, 1650))
   });
 
   let errorCalled = false;
@@ -79,7 +79,7 @@ test(`succeeds w/ every, cancel (Promise resolution)`, async () => {
     error: () => (errorCalled = true)
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 750));
+  await new Promise((resolve) => setTimeout(resolve, 2250));
   subscription.unsubscribe();
 
   assert(!errorCalled);
@@ -87,9 +87,9 @@ test(`succeeds w/ every, cancel (Promise resolution)`, async () => {
 });
 test(`succeeds w/ every, cancel (Promise rejection)`, async () => {
   const obs = interval({
-    every: 100,
+    every: 300,
     cancel: new Promise((resolve, reject) => {
-      setTimeout(() => reject(Error()), 550);
+      setTimeout(() => reject(Error()), 1650);
     })
   });
 
@@ -100,7 +100,7 @@ test(`succeeds w/ every, cancel (Promise rejection)`, async () => {
     error: () => (errorCalled = true)
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 750));
+  await new Promise((resolve) => setTimeout(resolve, 2250));
   subscription.unsubscribe();
 
   assert(errorCalled);
