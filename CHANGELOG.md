@@ -1,3 +1,12 @@
+## [0.0.2](https://github.com/rafamel/multitude/compare/v0.0.1...v0.0.2) (2020-12-15)
+
+
+### Features
+
+* **push:** adds first consume operator ([94a0b30](https://github.com/rafamel/multitude/commit/94a0b30715969cfd55a735501832a74d0ea9d9c5))
+
+
+
 ## 0.0.1 (2020-12-12)
 
 
