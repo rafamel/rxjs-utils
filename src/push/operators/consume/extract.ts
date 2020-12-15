@@ -4,10 +4,10 @@ import { take } from '../filter/take';
 import { into } from 'pipettes';
 
 /**
- * Returns the first synchronous value of an Observable,
+ * Returns the first synchronous value of an Observable, if any,
  * `onEmpty` if none is produced, or `onError` if
  * the Observable errors synchronously.
- * If `onError` doesn't exist, `extract` will
+ * When `onError` doesn't exist, `extract` will
  * synchronously throw.
  */
 export function extract<T, U = void, V = U>(
