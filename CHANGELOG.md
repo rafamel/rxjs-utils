@@ -1,3 +1,17 @@
+## [0.0.3](https://github.com/rafamel/multitude/compare/v0.0.2...v0.0.3) (2020-12-18)
+
+
+### Bug Fixes
+
+* **push:** fixes mergeMap operator types ([53a9fd4](https://github.com/rafamel/multitude/commit/53a9fd471e559a21491e60c0c8b1ad1e76a537b8))
+
+
+### Features
+
+* **push:** adds start operator ([d34bc11](https://github.com/rafamel/multitude/commit/d34bc11a41a96fc9017871da15afbdf17624f37b))
+
+
+
 ## [0.0.2](https://github.com/rafamel/multitude/compare/v0.0.1...v0.0.2) (2020-12-15)
 
 
