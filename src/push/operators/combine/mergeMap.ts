@@ -3,7 +3,7 @@ import { operate } from '../../utils/operate';
 import { intercept } from '../../utils/intercept';
 
 export function mergeMap<T, U>(
-  projection: (value: T, index: number) => Push.Convertible<T>
+  projection: (value: T, index: number) => Push.Convertible<U>
 ): Push.Operation<T, U> {
   return operate<T, U>((obs) => {
     let index = 0;
