@@ -1,4 +1,4 @@
-export * from './changes';
+export * from './compare';
 export * from './distinct';
 export * from './filter';
 export * from './omit';

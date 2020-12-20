@@ -1,11 +1,11 @@
-import { changes, from } from '@push';
+import { compare, from } from '@push';
 import { into } from 'pipettes';
 import assert from 'assert';
 
 test(`succeeds w/ strict strategy`, () => {
   const obj = {};
   const arr = [1, 1, 2, 1, {}, {}, obj, obj, obj, 'a', 'b', 'a'];
-  const obs = into(from(arr), changes());
+  const obs = into(from(arr), compare());
 
   const values: any[] = [];
   obs.subscribe((x) => values.push(x));
@@ -32,7 +32,7 @@ test(`succeeds w/ shallow strategy`, () => {
     { foo: {} },
     { foo: {} }
   ];
-  const obs = into(from(arr), changes('shallow'));
+  const obs = into(from(arr), compare('shallow'));
 
   const values: any[] = [];
   obs.subscribe((x) => values.push(x));
@@ -49,7 +49,7 @@ test(`succeeds w/ deep strategy`, () => {
     { foo: {} },
     { foo: {} }
   ];
-  const obs = into(from(arr), changes('deep'));
+  const obs = into(from(arr), compare('deep'));
 
   const values: any[] = [];
   obs.subscribe((x) => values.push(x));
@@ -59,7 +59,7 @@ test(`succeeds w/ deep strategy`, () => {
 test(`succeeds w/ custom compare`, () => {
   const obs = into(
     from([10, 4, 10]),
-    changes<number>((a, b) => a - b !== 0)
+    compare<number>((a, b) => a - b !== 0)
   );
 
   const values: any[] = [];

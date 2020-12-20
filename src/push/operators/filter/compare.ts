@@ -1,20 +1,20 @@
 import { Push } from '@definitions';
 import { operate } from '../../utils/operate';
 import { BinaryFn, TypeGuard } from 'type-core';
-import { compare as strategy } from 'equal-strategies';
+import { compare as isEqual } from 'equal-strategies';
 
 /** @ignore */
 const $empty = Symbol('empty');
 
-export type ChangesStrategy = 'strict' | 'shallow' | 'deep';
+export type CompareStrategy = 'strict' | 'shallow' | 'deep';
 
-export function changes<T>(
-  compare?: ChangesStrategy | BinaryFn<[T, T], boolean>
+export function compare<T>(
+  strategy?: CompareStrategy | BinaryFn<[T, T], boolean>
 ): Push.Operation<T> {
   const fn =
-    !compare || TypeGuard.isString(compare)
-      ? strategy.bind(null, compare || 'strict')
-      : compare;
+    !strategy || TypeGuard.isString(strategy)
+      ? isEqual.bind(null, strategy || 'strict')
+      : strategy;
 
   return operate<T>((obs) => {
     let last: any = $empty;
