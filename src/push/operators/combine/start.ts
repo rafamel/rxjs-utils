@@ -1,7 +1,6 @@
 import { Push } from '@definitions';
 import { Observable } from '../../classes/Observable';
 import { transform } from '../../utils/transform';
-import { intercept } from '../../utils/intercept';
 import { merge } from '../../creators/merge';
 
 export type StartStrategy = 'always' | 'no-emit';
@@ -17,10 +16,20 @@ export function start<T, U>(
       ? merge(Observable.of(value), observable)
       : new Observable((obs) => {
           let didEmit = false;
-          const subscription = intercept(observable, obs, {
+          const subscription = observable.subscribe({
             next(value) {
               didEmit = true;
               obs.next(value);
+            },
+            error(err) {
+              didEmit = true;
+              obs.next(value);
+              obs.error(err);
+            },
+            complete() {
+              didEmit = true;
+              obs.next(value);
+              obs.complete();
             }
           });
 
