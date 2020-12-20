@@ -1,3 +1,22 @@
+## [0.0.4](https://github.com/rafamel/multitude/compare/v0.0.3...v0.0.4) (2020-12-20)
+
+
+### Code Refactoring
+
+* **push:** renames changes operator as compare ([e8c0671](https://github.com/rafamel/multitude/commit/e8c067118c9042aa879d53b374280373e1a9a24c))
+
+
+### Features
+
+* **push:** adds start operator ([51de47f](https://github.com/rafamel/multitude/commit/51de47f75e5e2614e06a3d75c1f44593f45f7d99))
+
+
+### BREAKING CHANGES
+
+* **push:** The changes operator is now exported as compare
+
+
+
 ## [0.0.3](https://github.com/rafamel/multitude/compare/v0.0.2...v0.0.3) (2020-12-18)
 
 
