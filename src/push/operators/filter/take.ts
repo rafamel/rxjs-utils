@@ -12,20 +12,21 @@ export function take<T>(count: number | TakeOptions<T>): Push.Operation<T> {
 
   return operate<T>((obs) => {
     let index = -1;
-    let stop = false;
     return {
       next(value: T): void {
-        if (stop) return;
-
         index++;
+
         if (options.count && index < options.count) {
-          return obs.next(value);
+          obs.next(value);
+          return !options.while && index + 1 >= options.count
+            ? obs.complete()
+            : undefined;
         }
+
         if (options.while && options.while(value, index)) {
           return obs.next(value);
         }
 
-        stop = true;
         return obs.complete();
       }
     };
