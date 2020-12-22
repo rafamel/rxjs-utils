@@ -1,3 +1,12 @@
+## [0.0.5](https://github.com/rafamel/multitude/compare/v0.0.4...v0.0.5) (2020-12-22)
+
+
+### Bug Fixes
+
+* **push:** fixes take operator leak ([ce10ecc](https://github.com/rafamel/multitude/commit/ce10ecc54605a1e242bc7abc0e55ba1bef552b46))
+
+
+
 ## [0.0.4](https://github.com/rafamel/multitude/compare/v0.0.3...v0.0.4) (2020-12-20)
 
 
