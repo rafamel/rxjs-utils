@@ -1,3 +1,12 @@
+## [0.0.6](https://github.com/rafamel/multitude/compare/v0.0.5...v0.0.6) (2021-06-11)
+
+
+### Bug Fixes
+
+* **push:** fix filter operator types ([41e7bf9](https://github.com/rafamel/multitude/commit/41e7bf9a29bd9e71e1315436621d497e64d64c24))
+
+
+
 ## [0.0.5](https://github.com/rafamel/multitude/compare/v0.0.4...v0.0.5) (2020-12-22)
 
 
