@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { Observable, Subscription, tap } from '@push';
 import { into } from 'pipettes';
-import assert from 'assert';
 
 test(`Observer.start`, () => {
   let pass = false;

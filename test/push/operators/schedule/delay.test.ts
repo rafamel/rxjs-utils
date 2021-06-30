@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { delay, Observable } from '@push';
 import { into } from 'pipettes';
-import assert from 'assert';
 
 test(`succeeds (error, 1)`, async () => {
   const error = Error('foo');

@@ -106,14 +106,12 @@ function combineList(arr?: Push.Convertible[]): Push.Observable<any[]> {
     );
   }
 
-  const sources = observables.map(
-    (obs, i): Push.Observable<[number, any]> => {
-      return into(
-        from(obs),
-        map((value) => [i, value])
-      );
-    }
-  );
+  const sources = observables.map((obs, i): Push.Observable<[number, any]> => {
+    return into(
+      from(obs),
+      map((value) => [i, value])
+    );
+  });
 
   return new Observable((obs) => {
     const pending = new Set<number>(

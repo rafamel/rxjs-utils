@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
-import { Observable, configure } from '@push';
-import { ESObservable } from './module';
-import { compliance } from './compliance';
 import chalk from 'chalk';
+import { Observable, configure } from '@push';
+import { compliance } from './compliance';
+import { ESObservable } from './module';
 
 configure({ onUnhandledError: null });
 

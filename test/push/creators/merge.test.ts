@@ -1,5 +1,6 @@
-import { merge, Observable } from '@push';
+import { test } from '@jest/globals';
 import assert from 'assert';
+import { merge, Observable } from '@push';
 
 test(`throws for < 1 arguments`, () => {
   let pass = false;

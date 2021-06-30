@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { Observable, take } from '@push';
 import { into } from 'pipettes';
-import assert from 'assert';
 
 test(`succeeds w/ count (1)`, () => {
   const obs = into(

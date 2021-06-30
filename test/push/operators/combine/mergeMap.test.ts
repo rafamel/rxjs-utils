@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { mergeMap, Observable } from '@push';
 import { into } from 'pipettes';
-import assert from 'assert';
 
 test(`succeeds: inner error (sync)`, () => {
   const times = [0, 0, 0, 0, 0, 0];

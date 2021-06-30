@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { catches, Observable } from '@push';
 import { into } from 'pipettes';
-import assert from 'assert';
 
 test(`non error flow succeeds`, () => {
   let catchesCalled = false;

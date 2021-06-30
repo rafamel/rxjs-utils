@@ -1,3 +1,4 @@
+import { test, expect } from '@jest/globals';
 import { isObservableLike, isObservableCompatible } from '@push';
 import 'symbol-observable';
 

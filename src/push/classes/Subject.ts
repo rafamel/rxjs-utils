@@ -14,7 +14,8 @@ export declare namespace Subject {
 
 export class Subject<T = any, U extends T | void = T | void>
   extends Multicast<T, U>
-  implements Push.Subject<T, U> {
+  implements Push.Subject<T, U>
+{
   public static of<T>(item: T, options?: Subject.Options<T>): Subject<T, T> {
     const subject = new this<T, T>(options);
     subject.next(item);

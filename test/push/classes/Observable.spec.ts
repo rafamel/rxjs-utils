@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { Observable, configure } from '@push';
 import { compliance } from '../../es-observable/compliance';
-import assert from 'assert';
 
 configure({ onUnhandledError: null });
 

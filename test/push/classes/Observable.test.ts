@@ -1,3 +1,5 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import {
   Observable,
   isObservableCompatible,
@@ -6,7 +8,6 @@ import {
   configure
 } from '@push';
 import { Handler } from '@helpers';
-import assert from 'assert';
 
 configure();
 

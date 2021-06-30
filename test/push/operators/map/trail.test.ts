@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { Observable, trail } from '@push';
 import { into } from 'pipettes';
-import assert from 'assert';
 
 test(`succeeds w/ default`, () => {
   const obs = into(

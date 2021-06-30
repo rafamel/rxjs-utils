@@ -1,5 +1,6 @@
-import { from, Observable, Subject } from '@push';
+import { test } from '@jest/globals';
 import assert from 'assert';
+import { from, Observable, Subject } from '@push';
 import 'symbol-observable';
 
 test(`succeeds w/ Observable`, () => {

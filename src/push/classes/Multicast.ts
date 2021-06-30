@@ -22,7 +22,8 @@ export declare namespace Multicast {
 
 export class Multicast<T = any, U extends T | void = T | void>
   extends Observable<T>
-  implements Push.Multicast<T, U> {
+  implements Push.Multicast<T, U>
+{
   public static of<T>(item: T): Multicast<T, T>;
   public static of<T>(
     item: T,

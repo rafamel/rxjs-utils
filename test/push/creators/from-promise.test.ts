@@ -1,5 +1,6 @@
-import { Observable, fromPromise } from '@push';
+import { test } from '@jest/globals';
 import assert from 'assert';
+import { Observable, fromPromise } from '@push';
 
 test(`succeeds w/ Promise resolution`, async () => {
   const observable = fromPromise(Promise.resolve(1));

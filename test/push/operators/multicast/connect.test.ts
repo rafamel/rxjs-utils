@@ -1,6 +1,7 @@
+import { test, expect } from '@jest/globals';
+import assert from 'assert';
 import { connect, interval, Multicast } from '@push';
 import { into } from 'pipettes';
-import assert from 'assert';
 
 test(`returns Multicast`, () => {
   const obs = into(interval({ every: 10, cancel: (i) => i >= 8 }), connect());

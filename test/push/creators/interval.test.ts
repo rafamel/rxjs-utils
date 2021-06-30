@@ -1,6 +1,7 @@
+import { test } from '@jest/globals';
+import assert from 'assert';
 import { interval } from '@push';
 import { Handler } from '@helpers';
-import assert from 'assert';
 
 test(`succeeds wo/ arguments`, async () => {
   const obs = interval();
@@ -88,7 +89,8 @@ test(`succeeds w/ every, cancel (Promise resolution)`, async () => {
 test(`succeeds w/ every, cancel (Promise rejection)`, async () => {
   const obs = interval({
     every: 300,
-    cancel: new Promise((resolve, reject) => {
+    // eslint-disable-next-line promise/param-names
+    cancel: new Promise((_, reject) => {
       setTimeout(() => reject(Error()), 1650);
     })
   });
