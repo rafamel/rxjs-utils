@@ -7,7 +7,9 @@ import { Observable } from './Observable';
 import { NullaryFn, TypeGuard, UnaryFn } from 'type-core';
 
 export declare namespace Multicast {
-  export interface Options {
+  export interface Options<U> {
+    /** Sets initial `multicast.value`; it won't be emitted. */
+    value?: U;
     replay?: boolean | number;
   }
   export interface Hooks {
@@ -24,7 +26,7 @@ export class Multicast<T = any, U extends T | void = T | void>
   public static of<T>(item: T): Multicast<T, T>;
   public static of<T>(
     item: T,
-    options?: Multicast.Options,
+    options?: Multicast.Options<T>,
     hooks?: Multicast.Hooks
   ): Multicast<T, T>;
   public static of<T>(item: T, ...args: any[]): Multicast<T, T> {
@@ -40,21 +42,21 @@ export class Multicast<T = any, U extends T | void = T | void>
       options
     );
   }
-  public static from<T>(
+  public static from<T, U extends T | void = T | void>(
     item: Push.Convertible<T>,
-    options?: Multicast.Options,
+    options?: Multicast.Options<U>,
     hooks?: Multicast.Hooks
-  ): Multicast<T> {
+  ): Multicast<T, U> {
     if (item.constructor === this) return item;
 
     const observable = from(item);
-    return new this<T>((obs) => observable.subscribe(obs), options, hooks);
+    return new this<T, U>((obs) => observable.subscribe(obs), options, hooks);
   }
   #value: T | U;
   #termination: boolean | [Error];
   public constructor(
     subscriber: Push.Subscriber<T>,
-    options?: Multicast.Options,
+    options?: Multicast.Options<U>,
     hooks?: Multicast.Hooks
   ) {
     super((obs) => {
@@ -95,6 +97,7 @@ export class Multicast<T = any, U extends T | void = T | void>
     const values: T[] = [];
     const replay = Math.max(0, Number(opts.replay));
     const observable = new Observable(subscriber);
+    this.#value = opts.value as U;
     this.#termination = false;
 
     let subscription: any;

@@ -3,7 +3,7 @@ import { Multicast } from '../../classes/Multicast';
 import { transform } from '../../utils/transform';
 import { Empty, TypeGuard } from 'type-core';
 
-export interface ShareOptions extends Multicast.Options {
+export interface ShareOptions<U> extends Multicast.Options<U> {
   policy?: SharePolicy;
 }
 
@@ -19,9 +19,9 @@ export type SharePolicy = 'on-demand' | 'keep-open' | 'keep-closed';
  * The original Observable won't be subscribed until there is at least
  * one subscriber.
  */
-export function share<T>(
-  policy?: SharePolicy | ShareOptions
-): Push.Transformation<T, Push.Multicast<T>> {
+export function share<T, U extends T | void = T | void>(
+  policy?: SharePolicy | ShareOptions<U>
+): Push.Transformation<T, Push.Multicast<T, U>> {
   const options = !policy || TypeGuard.isString(policy) ? { policy } : policy;
 
   return transform((observable) => {

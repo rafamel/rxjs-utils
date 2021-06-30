@@ -9,21 +9,21 @@ import { into } from 'pipettes';
 const $observer = Symbol('observer');
 
 export declare namespace Subject {
-  export type Options = Multicast.Options;
+  export type Options<U> = Multicast.Options<U>;
 }
 
 export class Subject<T = any, U extends T | void = T | void>
   extends Multicast<T, U>
   implements Push.Subject<T, U> {
-  public static of<T>(item: T, options?: Subject.Options): Subject<T, T> {
+  public static of<T>(item: T, options?: Subject.Options<T>): Subject<T, T> {
     const subject = new this<T, T>(options);
     subject.next(item);
     return subject;
   }
-  public static from<T>(
+  public static from<T, U extends T | void = T | void>(
     item: Push.Convertible<T>,
-    options?: Subject.Options
-  ): Subject<T> {
+    options?: Subject.Options<U>
+  ): Subject<T, U> {
     if (item.constructor === this) return item;
 
     const observable = from(item);
@@ -42,7 +42,7 @@ export class Subject<T = any, U extends T | void = T | void>
     return subject;
   }
   private [$observer]: Push.SubscriptionObserver<T>;
-  public constructor(options?: Subject.Options) {
+  public constructor(options?: Subject.Options<U>) {
     let observer: any;
     super(
       (obs) => {
