@@ -1,7 +1,7 @@
 import { Push } from '@definitions';
 import { Accessor } from '@helpers';
 import { Subscription } from '../assistance';
-import { Members } from 'type-core';
+import { Dictionary } from 'type-core';
 
 const $observer = Symbol('observer');
 
@@ -12,8 +12,8 @@ export class SubscriptionManager {
   ): void {
     Accessor.define(subscription, $observer, observer);
   }
-  public static getObserver<T>(subscription: Subscription<T>): Members {
-    return (subscription as any)[$observer] as Members;
+  public static getObserver<T>(subscription: Subscription<T>): Dictionary {
+    return (subscription as any)[$observer] as Dictionary;
   }
   public static close<T>(subscription: Subscription<T>): void {
     Accessor.define(subscription, $observer, null);

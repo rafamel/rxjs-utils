@@ -1,8 +1,8 @@
-import { Members, NullaryFn } from 'type-core';
+import { Dictionary, NullaryFn } from 'type-core';
 
 export class Accessor {
   public static define<T>(
-    obj: Members,
+    obj: Dictionary,
     key: string | number | symbol,
     value: T
   ): void {
@@ -13,7 +13,7 @@ export class Accessor {
     });
   }
   public static fallback<T>(
-    obj: Members,
+    obj: Dictionary,
     key: string | number | symbol,
     fn: NullaryFn<T>
   ): T {

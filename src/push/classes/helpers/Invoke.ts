@@ -1,12 +1,12 @@
 import { Push } from '@definitions';
 import { Hooks, Subscription, Talkback } from '../assistance';
 import { SubscriptionManager } from './SubscriptionManager';
-import { Empty, Members, NullaryFn, TypeGuard } from 'type-core';
+import { Empty, Dictionary, NullaryFn, TypeGuard } from 'type-core';
 
 const $empty = Symbol('empty');
 
 export class Invoke {
-  public static method<T extends Members, K extends keyof T>(
+  public static method<T extends Dictionary, K extends keyof T>(
     obj: T | Empty,
     key: K,
     payload?: Empty | any[],

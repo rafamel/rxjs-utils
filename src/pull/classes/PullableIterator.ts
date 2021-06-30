@@ -1,11 +1,11 @@
 import { Pull } from '@definitions';
 import { Handler, Resolver } from '@helpers';
 import { Validate } from './helpers';
-import { MaybePromise, Members, TypeGuard } from 'type-core';
+import { MaybePromise, Dictionary, TypeGuard } from 'type-core';
 
 export class PullableIterator<O, I> implements Pull.PullableIterator<O, I> {
   #closed: boolean;
-  #iterator: Members;
+  #iterator: Dictionary;
   public constructor(iterator: Pull.Iterator<O, I>) {
     Validate.counter(iterator);
 

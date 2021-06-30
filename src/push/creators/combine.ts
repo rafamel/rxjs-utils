@@ -4,14 +4,14 @@ import { map } from '../operators/map';
 import { intercept } from '../utils/intercept';
 import { from } from './from';
 import { merge } from './merge';
-import { Members } from 'type-core';
+import { Dictionary } from 'type-core';
 import { into } from 'pipettes';
 
-export type CombineResponse<T extends Members<Push.Convertible>> = {
+export type CombineResponse<T extends Dictionary<Push.Convertible>> = {
   [P in keyof T]: T[P] extends Push.Convertible<infer U> ? U : never;
 };
 
-export function combine<T extends Members<Push.Convertible>>(
+export function combine<T extends Dictionary<Push.Convertible>>(
   observables: T
 ): Push.Observable<CombineResponse<T>>;
 export function combine<A>(
@@ -74,8 +74,8 @@ export function combine(observables: any): Push.Observable {
     );
   }
 
-  const record: Members<Push.Convertible> = observables;
-  const dict: Members<string> = {};
+  const record: Dictionary<Push.Convertible> = observables;
+  const dict: Dictionary<string> = {};
   const list: Push.Convertible[] = [];
   for (const [key, obs] of Object.entries(record)) {
     dict[list.length] = key;

@@ -60,7 +60,7 @@
     "equal-strategies": "^0.1.0",
     "pipettes": "^0.1.3",
     "symbol-observable": "^2.0.3",
-    "type-core": "^0.7.0"
+    "type-core": "^0.12.0"
   },
   "simple-git-hooks": {
     "pre-commit": "kpo validate"
