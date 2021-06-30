@@ -1,0 +1,167 @@
+@startuml consume
+
+partition Consume {
+  start
+  : Call **Source**;
+  if (Error?) then (yes)
+    : Reason: **terminate**;
+    (W)
+    detach
+    ' Capture
+    (W)
+    if (Consumer.close exists?) then (yes)
+      : Consumer.close(error: Error, reason: StreamReason): void;
+      if (Error?) then (yes)
+        : **Reject** StreamBroker;
+      else (no)
+        : **Resolve** StreamBroker;
+      endif
+    else (no)
+      : **Reject** StreamBroker;
+    endif
+    stop
+    ' / Capture
+  else (no)
+    (A)
+    detach
+    ' Provider Process
+    (A)
+    if (Provider.data exists?) then (yes)
+      : Provider.data(value: I | void): StreamResponse<O>;
+      if (Externally cancelled?) then (yes)
+        stop
+      else (no)
+        if (Error?) then (yes)
+          if (Consumer.error exists?) then (no)
+            : Reason: **terminate**;
+            (Y)
+            detach
+            ' Provider Termination
+            (Y)
+            : Provider.close(error: Error, reason: StreamReason): void;
+            (W)
+            detach
+            ' / Provider Termination
+          else (yes)
+            : Consumer.error(error: Error): StreamResponse<I>;
+            if (Externally cancelled) then (yes)
+              stop
+            else (no)
+              if (Error?) then (yes)
+                : Reason: **terminate**;
+                (Y)
+                detach
+              else (no)
+                stop
+              endif
+            endif
+          endif
+        else (no)
+          if (Returns **{ complete: true }**?) then (yes)
+            : Reason: **complete**;
+            (X)
+            detach
+          else (no)
+            (B)
+            detach
+            ' Consumer Process
+            (B)
+            if (Consumer.data exists?) then (no)
+              : Reason: **complete**;
+              (X)
+              detach
+            else (yes)
+              : Consumer.data(value: O): StreamResponse<I>;
+              if (Externally cancelled?) then (yes)
+                stop
+              else (no)
+                if (Error?) then (yes)
+                  if (Provider.error exists?) then (yes)
+                    : Provider.error(error: Error): StreamResponse<O>;
+                    if (Externally cancelled?) then (yes)
+                      stop
+                    else (no)
+                      if (Error?) then (yes)
+                        : Reason: **terminate**;
+                        (Z)
+                        detach
+                      else (no)
+                        if (Returns **{ complete: true }**?) then (yes)
+                          : Return: **complete**;
+                          (X)
+                          detach
+                        else (no)
+                          (A)
+                          detach
+                        endif
+                      endif
+                    endif
+                  else (no)
+                    : Reason: **terminate**;
+                    (Z)
+                    detach
+                    ' Consumer Termination
+                    (Z)
+                    : Provider.close(): void;
+                    if (Error?) then (yes)
+                      : Consumer.close(error: Error, reason: StreamReason): void;
+                    else (no)
+                      : Consumer.close(error: null, reason: StreamReason): void;
+                    endif
+                    : **Reject** StreamBroker;
+                    stop
+                    ' / Consumer Termination
+                  endif
+                else (no)
+                  if (Returns **{ complete: true }**?) then (yes)
+                    : Reason: **complete**;
+                    (X)
+                    detach
+                  else (no)
+                    (A)
+                    detach
+                  endif
+                endif
+              endif
+            endif
+            ' / Consumer Process
+          endif
+        endif
+      endif
+    else (no)
+      : Reason: **complete**;
+      (X)
+      detach
+      ' Finalization
+      (X)
+      : Provider.close(error: null, reason: StreamReason): void;
+      if (Error?) then (yes)
+        (W)
+      else (no)
+        : Consumer.close(error: null, reason: StreamReason): void;
+        if (Error?) then (yes)
+          : **Reject** StreamBroker;
+        else (no)
+          : **Resolve** StreamBroker;
+        endif
+      endif
+      stop
+      ' / Finalization
+    endif
+    ' / Provider Process
+  endif
+}
+
+partition "External Cancellation" {
+  start
+  : Broker.cancel();
+  if (Done?) then (yes)
+    stop
+  else (no)
+    : Reason: **cancel**;
+    (X)
+    detach
+  endif
+}
+
+@enduml

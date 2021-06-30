@@ -35,7 +35,9 @@ module.exports = library(
       // Documentation build folder
       destination: 'docs/',
       // Configuration overrides for typedoc
-      overrides: { exclude: [] }
+      overrides: {
+        exclude: ['**/helpers/**/*', '**/helpers.ts']
+      }
     },
     fix: {
       // Directories to fix

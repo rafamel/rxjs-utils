@@ -16,4 +16,4 @@
 
 ## Documentation
 
-[See documentation.](https://rafamel.github.io/multitude/globals.html)
+[See documentation.](https://rafamel.github.io/multitude/modules.html)

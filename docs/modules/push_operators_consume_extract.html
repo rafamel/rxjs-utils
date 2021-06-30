@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>pull | multitude v0.0.6</title>
+	<title>push/operators/consume/extract | multitude v0.0.6</title>
 	<meta name="description" content="Documentation for multitude v0.0.6">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -53,10 +53,10 @@
 					<a href="../modules.html">multitude v0.0.6</a>
 				</li>
 				<li>
-					<a href="pull.html">pull</a>
+					<a href="push_operators_consume_extract.html">push/operators/consume/extract</a>
 				</li>
 			</ul>
-			<h1>Module pull</h1>
+			<h1>Module push/operators/consume/extract</h1>
 		</div>
 	</div>
 </header>
@@ -68,44 +68,62 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>References</h3>
+							<h3>Functions</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="pull.html#pullable" class="tsd-kind-icon">Pullable</a></li>
-								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="pull.html#pullableiterator" class="tsd-kind-icon">Pullable<wbr>Iterator</a></li>
-								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="pull.html#ispullablecompatible" class="tsd-kind-icon">is<wbr>Pullable<wbr>Compatible</a></li>
-								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="pull.html#ispullableconvertible" class="tsd-kind-icon">is<wbr>Pullable<wbr>Convertible</a></li>
-								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="pull.html#ispullablelike" class="tsd-kind-icon">is<wbr>Pullable<wbr>Like</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="push_operators_consume_extract.html#extract" class="tsd-kind-icon">extract</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>References</h2>
-				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
-					<a name="pullable" class="tsd-anchor"></a>
-					<h3>Pullable</h3>
-					Re-exports <a href="../classes/pull_classes_pullable.pullable.html">Pullable</a>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
-					<a name="pullableiterator" class="tsd-anchor"></a>
-					<h3>Pullable<wbr>Iterator</h3>
-					Re-exports <a href="../classes/pull_classes_pullableiterator.pullableiterator.html">PullableIterator</a>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
-					<a name="ispullablecompatible" class="tsd-anchor"></a>
-					<h3>is<wbr>Pullable<wbr>Compatible</h3>
-					Re-exports <a href="pull_utils_type_guards.html#ispullablecompatible">isPullableCompatible</a>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
-					<a name="ispullableconvertible" class="tsd-anchor"></a>
-					<h3>is<wbr>Pullable<wbr>Convertible</h3>
-					Re-exports <a href="pull_utils_type_guards.html#ispullableconvertible">isPullableConvertible</a>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
-					<a name="ispullablelike" class="tsd-anchor"></a>
-					<h3>is<wbr>Pullable<wbr>Like</h3>
-					Re-exports <a href="pull_utils_type_guards.html#ispullablelike">isPullableLike</a>
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+					<a name="extract" class="tsd-anchor"></a>
+					<h3>extract</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">extract&lt;T, U, V&gt;<span class="tsd-signature-symbol">(</span>onEmpty<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">U</span>, onError<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">V</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="definitions_push.push.html#transformation" class="tsd-signature-type" data-tsd-kind="Type alias">Transformation</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">U</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">V</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/rafamel/multitude/blob/2b0695c/src/push/operators/consume/extract.ts#L13">push/operators/consume/extract.ts:13</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns the first synchronous value of an Observable, if any,
+										<code>onEmpty</code> if none is produced, or <code>onError</code> if
+										the Observable errors synchronously.
+										When <code>onError</code> doesn&#39;t exist, <code>extract</code> will
+									synchronously throw.</p>
+								</div>
+							</div>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T</h4>
+								</li>
+								<li>
+									<h4>U = <span class="tsd-signature-type">void</span></h4>
+								</li>
+								<li>
+									<h4>V = <span class="tsd-signature-type">U</span></h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> onEmpty: <span class="tsd-signature-type">U</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> onError: <span class="tsd-signature-type">V</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="definitions_push.push.html#transformation" class="tsd-signature-type" data-tsd-kind="Type alias">Transformation</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">U</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">V</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -116,26 +134,14 @@
 						<a href="../modules.html">Modules</a>
 					</li>
 					<li class="current tsd-kind-module">
-						<a href="pull.html">pull</a>
+						<a href="push_operators_consume_extract.html">push/operators/consume/extract</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-reference tsd-parent-kind-module">
-						<a href="pull.html#pullable" class="tsd-kind-icon">Pullable</a>
-					</li>
-					<li class=" tsd-kind-reference tsd-parent-kind-module">
-						<a href="pull.html#pullableiterator" class="tsd-kind-icon">Pullable<wbr>Iterator</a>
-					</li>
-					<li class=" tsd-kind-reference tsd-parent-kind-module">
-						<a href="pull.html#ispullablecompatible" class="tsd-kind-icon">is<wbr>Pullable<wbr>Compatible</a>
-					</li>
-					<li class=" tsd-kind-reference tsd-parent-kind-module">
-						<a href="pull.html#ispullableconvertible" class="tsd-kind-icon">is<wbr>Pullable<wbr>Convertible</a>
-					</li>
-					<li class=" tsd-kind-reference tsd-parent-kind-module">
-						<a href="pull.html#ispullablelike" class="tsd-kind-icon">is<wbr>Pullable<wbr>Like</a>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="push_operators_consume_extract.html#extract" class="tsd-kind-icon">extract</a>
 					</li>
 				</ul>
 			</nav>
