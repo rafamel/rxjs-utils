@@ -1,7 +1,7 @@
 {
   "name": "multitude",
   "description": "Comprehensive streams for push and pull",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "author": "Rafa Mel",
   "license": "MIT",
   "private": false,

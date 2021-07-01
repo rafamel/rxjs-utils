@@ -1,3 +1,17 @@
+## [0.0.7](https://github.com/rafamel/multitude/compare/v0.0.6...v0.0.7) (2021-07-01)
+
+
+### Bug Fixes
+
+* **deps:** update type-core dependency ([5a0ce49](https://github.com/rafamel/multitude/commit/5a0ce4937ea515a895c4597d0d22aae41e45223d))
+
+
+### Features
+
+* **push:** adds value option to Multicast ([5bbfc3b](https://github.com/rafamel/multitude/commit/5bbfc3bd7a743e975591b9a6f7a471a2f1c510e9))
+
+
+
 ## [0.0.6](https://github.com/rafamel/multitude/compare/v0.0.5...v0.0.6) (2021-06-11)
 
 
@@ -58,7 +72,7 @@
 
 
 
-## 0.0.1 (2020-12-12)
+## [0.0.1](https://github.com/rafamel/multitude/compare/d1e23e122f835ef452f719d306a7b5ecb2f9569f...v0.0.1) (2020-12-12)
 
 
 ### Bug Fixes
